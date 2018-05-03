@@ -43,9 +43,10 @@ class SwissLocatorFilter(QgsLocatorFilter):
     ISLAND = 250000
     COUNTRY = 4000000
 
-    resultProblem = pyqtSignal(str)
+    failed = pyqtSignal(str)
 
     def __init__(self, iface):
+        self.iface = iface
         super().__init__(iface)
 
     def name(self):
@@ -81,13 +82,14 @@ class SwissLocatorFilter(QgsLocatorFilter):
             if response.status_code == 200:  # other codes are handled by NetworkAccessManager
                 content_string = content.decode('utf-8')
                 locations = json.loads(content_string)
-                for loc in locations:
-                    result = QgsLocatorResult()
-                    result.filter = self
-                    result.displayString = '{} ({})'.format(loc['display_name'], loc['type'])
-                    # use the json full item as userData, so all info is in it:
-                    result.userData = loc
-                    self.resultFetched.emit(result)
+                for loc in locations['results']:
+                    print(loc)
+                    # result = QgsLocatorResult()
+                    # result.filter = self
+                    # result.displayString = '{} ({})'.format(loc['display_name'], loc['type'])
+                    # # use the json full item as userData, so all info is in it:
+                    # result.userData = loc
+                    # self.resultFetched.emit(result)
 
         except RequestsException as err:
             # Handle exception..
@@ -96,7 +98,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             # THIS: results in a floating window with a warning in it, wrong thread/parent?
             #self.iface.messageBar().pushWarning("NominatimLocatorFilter Error", '{}'.format(err))
             # THIS: emitting the signal here does not work either?
-            self.resultProblem.emit('{}'.format(err))
+            self.failed.emit('{}'.format(err))
 
     def triggerResult(self, result):
         self.info("UserClick: {}".format(result.displayString))

@@ -34,7 +34,12 @@ class SwissLocatorPlugin:
         self.canvas = iface.mapCanvas()
 
         self.swiss_filter = SwissLocatorFilter(self.iface)
+        self.swiss_filter.failed.connect(self.show_issue)
         self.iface.registerLocatorFilter(self.swiss_filter)
+
+    def show_issue(self, err):
+        self.filter.info("showing issue???")  # never come here?
+        self.iface.messageBar().pushWarning("Swiss Locator Error", '{}'.format(err))
 
     def initGui(self):
         pass
