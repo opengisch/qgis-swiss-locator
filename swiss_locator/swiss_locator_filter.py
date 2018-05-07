@@ -23,9 +23,10 @@
 
 
 import json
-from qgis.PyQt.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal, QUrl, QEventLoop
+from PyQt5.QtNetwork import QNetworkRequest, QNetworkReply
 from qgis.core import Qgis, QgsMessageLog, QgsLocatorFilter, QgsLocatorResult, QgsRectangle, \
-    QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject
+    QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsNetworkAccessManager
 
 from .network_access_manager import NetworkAccessManager, RequestsException
 
@@ -47,6 +48,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
     def __init__(self, iface):
         self.iface = iface
+        self.reply = None
         super().__init__(iface)
 
     def name(self):
@@ -62,6 +64,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         return 'ch'
 
     def fetchResults(self, search, context, feedback):
+        self.reply = None
 
         if len(search) < 2:
             return
@@ -70,35 +73,63 @@ class SwissLocatorFilter(QgsLocatorFilter):
             type='locations', search=search)
 
         self.info('Search url {}'.format(url))
-        nam = NetworkAccessManager()
-        try:
-            # see https://operations.osmfoundation.org/policies/nominatim/
-            # "Provide a valid HTTP Referer or User-Agent identifying the application (QGIS geocoder)"
-            headers = {b'User-Agent': self.USER_AGENT}
-            # use BLOCKING request, as fetchResults already has it's own thread!
-            (response, content) = nam.request(url, headers=headers, blocking=True)
-            self.info(response)
-            #self.info(response.status_code)
-            if response.status_code == 200:  # other codes are handled by NetworkAccessManager
-                content_string = content.decode('utf-8')
-                locations = json.loads(content_string)
-                for loc in locations['results']:
-                    print(loc)
-                    # result = QgsLocatorResult()
-                    # result.filter = self
-                    # result.displayString = '{} ({})'.format(loc['display_name'], loc['type'])
-                    # # use the json full item as userData, so all info is in it:
-                    # result.userData = loc
-                    # self.resultFetched.emit(result)
+        #nam = NetworkAccessManager()
+        nam = QgsNetworkAccessManager().instance()
 
-        except RequestsException as err:
-            # Handle exception..
-            # only this one seems to work
-            self.info(err)
-            # THIS: results in a floating window with a warning in it, wrong thread/parent?
-            #self.iface.messageBar().pushWarning("NominatimLocatorFilter Error", '{}'.format(err))
-            # THIS: emitting the signal here does not work either?
-            self.failed.emit('{}'.format(err))
+
+        reply = nam.get(QNetworkRequest(QUrl(url)))
+
+        # loop = QEventLoop()
+        # connect(mFetcher, & QgsNetworkContentFetcher::finished, & loop, & QEventLoop::quit );
+        # connect(mFetcher, & QgsNetworkContentFetcher::downloadProgress, this, [ =](qint64
+        # loop.exec()
+
+
+    def handleResponse(self, reply):
+        if reply.error() != QNetworkReply.NoError:
+            self.info("Error occured: ", reply.error())
+            self.info(reply.error().errorString())
+            return
+
+        content = str(reply.readAll(), 'utf-8')
+        locations = json.loads(content)
+        self.info(content)
+        for loc in locations['results']:
+            for k,v in loc['attrs'].items():
+                self.info("{}: {}{}".format(k,v))
+            break
+
+        # try:
+        #     # see https://operations.osmfoundation.org/policies/nominatim/
+        #     # "Provide a valid HTTP Referer or User-Agent identifying the application (QGIS geocoder)"
+        #     headers = {b'User-Agent': self.USER_AGENT}
+        #     # use BLOCKING request, as fetchResults already has it's own thread!
+        #     (response, content) = nam.request(url, headers=headers, blocking=True)
+        #     #self.info(response)
+        #     #self.info(response.status_code)
+        #     if response.status_code == 200:  # other codes are handled by NetworkAccessManager
+        #         content_string = content.decode('utf-8')
+        #         locations = json.loads(content_string)
+        #         for loc in locations['results']:
+        #             for k,v in loc['attrs'].items():
+        #                 self.info("{}: {}{}".format(search,k,v))
+        #             break
+        #
+        #             # result = QgsLocatorResult()
+        #             # result.filter = self
+        #             # result.displayString = '{} ({})'.format(loc['display_name'], loc['type'])
+        #             # # use the json full item as userData, so all info is in it:
+        #             # result.userData = loc
+        #             # self.resultFetched.emit(result)
+        #
+        # except RequestsException as err:
+        #     # Handle exception..
+        #     # only this one seems to work
+        #     self.info(err)
+        #     # THIS: results in a floating window with a warning in it, wrong thread/parent?
+        #     #self.iface.messageBar().pushWarning("NominatimLocatorFilter Error", '{}'.format(err))
+        #     # THIS: emitting the signal here does not work either?
+        #     self.failed.emit('{}'.format(err))
 
     def triggerResult(self, result):
         self.info("UserClick: {}".format(result.displayString))
