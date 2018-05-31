@@ -23,145 +23,238 @@
 
 
 import json
-from PyQt5.QtCore import pyqtSignal, QUrl, QEventLoop
-from PyQt5.QtNetwork import QNetworkRequest, QNetworkReply
-from qgis.core import Qgis, QgsMessageLog, QgsLocatorFilter, QgsLocatorResult, QgsRectangle, \
-    QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsNetworkAccessManager
+import os
+import re
 
-from .network_access_manager import NetworkAccessManager, RequestsException
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QColor
+from PyQt5.QtCore import QUrl, QUrlQuery, QByteArray
+from PyQt5.QtWidgets import QDialog
+from PyQt5.uic import loadUiType
+
+from qgis.core import Qgis, QgsMessageLog, QgsLocatorFilter, QgsLocatorResult, QgsRectangle, \
+    QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsGeometry, QgsWkbTypes
+from qgis.gui import QgsRubberBand
+from osgeo import ogr
+
+from .qgissettingmanager.setting_dialog import SettingDialog, UpdateMode
+from .network_access_manager import NetworkAccessManager, RequestsException, RequestsExceptionUserAbort
+from .settings import Settings
+from .swiss_locator_plugin import DEBUG
+
+DialogUi, _ = loadUiType(os.path.join(os.path.dirname(__file__), 'ui/config.ui'))
+
+
+class ConfigDialog(QDialog, DialogUi, SettingDialog):
+    def __init__(self, parent=None):
+        settings = Settings()
+        QDialog.__init__(self, parent)
+        SettingDialog.__init__(self, setting_manager=settings, mode=UpdateMode.DialogAccept)
+        self.setupUi(self)
+        self.settings = settings
+        self.init_widgets()
+
+
+class InvalidBox(Exception):
+    pass
 
 
 class SwissLocatorFilter(QgsLocatorFilter):
 
-    USER_AGENT = b'Mozilla/5.0 QGIS NominatimLocatorFilter'
+    USER_AGENT = b'Mozilla/5.0 QGIS Swiss MapGeoAdmin Locator Filter'
 
-    # some magic numbers to be able to zoom to more or less defined levels
-    ADDRESS = 1000
-    STREET = 1500
-    ZIP = 3000
-    PLACE = 30000
-    CITY = 120000
-    ISLAND = 250000
-    COUNTRY = 4000000
-
-    failed = pyqtSignal(str)
-
-    def __init__(self, iface):
-        self.iface = iface
+    def __init__(self, map_canvas):
+        super().__init__()
+        self.rubber_band = None
+        self.map_canvas = None
+        self.settings = Settings()
         self.reply = None
-        super().__init__(iface)
+
+        if map_canvas is not None:
+            self.map_canvas = map_canvas
+            self.rubber_band = QgsRubberBand(map_canvas)
+            self.rubber_band.setColor(QColor(255, 255, 50, 200))
+            self.rubber_band.setIcon(self.rubber_band.ICON_CIRCLE)
+            self.rubber_band.setIconSize(15)
+            self.rubber_band.setWidth(4)
+            self.rubber_band.setBrushStyle(Qt.NoBrush)
+
+    def translate_group(self, group) -> str:
+        if group == 'zipcode':
+            return self.tr('ZIP code')
+        if group == 'gg25':
+            return self.tr('Municipal boundaries')
+        if group == 'district':
+            return self.tr('District')
+        if group == 'kantone':
+            return self.tr('Cantons')
+        if group == 'gazetteer':
+            return self.tr('Index')
+        if group == 'address':
+            return self.tr('Address')
+        if group == 'parcel':
+            return self.tr('Parcel')
+        raise NameError('Could not find group {} in dictionary'.format(group))
+
+    @staticmethod
+    def rank2priority(rank) -> float:
+        """
+        Translate the rank from GeoAdmin to the priority of the result
+        see https://api3.geo.admin.ch/services/sdiservices.html#search
+        :param rank: an integer from 1 to 7
+        :return: the priority as a float from 0 to 1, 1 being a perfect match
+        """
+        return float(-rank / 7 + 1)
+
+    @staticmethod
+    def box2geometry(box: str) -> QgsRectangle:
+        """
+        Creates a rectangle from a Box definition as string
+        :param box: the box as a string
+        :return: the rectangle
+        """
+        coords = re.findall(r'\b(\d+(?:\.\d+)?)\b', box)
+        if len(coords) != 4:
+            raise InvalidBox('Could not parse: {}'.format(box))
+        return QgsRectangle(float(coords[0]), float(coords[1]), float(coords[2]), float(coords[3]))
 
     def name(self):
         return self.__class__.__name__
 
     def clone(self):
-        return SwissLocatorFilter(self.iface)
+        return SwissLocatorFilter(self.map_canvas)
 
     def displayName(self):
         return self.tr('Swiss Geoadmin locations')
 
     def prefix(self):
-        return 'ch'
+        return 'swi'
+
+    def hasConfigWidget(self):
+        return True
+
+    def openConfigWidget(self, parent=None):
+        ConfigDialog(parent).exec_()
+
+    @staticmethod
+    def url_with_param(url, params) -> str:
+        url = QUrl(url)
+        q = QUrlQuery(url)
+        for key, value in params.items():
+            q.addQueryItem(key, value)
+        url.setQuery(q)
+        return url.url()
 
     def fetchResults(self, search, context, feedback):
-        self.reply = None
+        self.dbg_info("start Swiss locator search...")
 
         if len(search) < 2:
             return
 
-        url = 'https://api3.geo.admin.ch/rest/services/api/SearchServer?type={type}&searchText={search}'.format(
-            type='locations', search=search)
+        if self.reply is not None and self.reply.isRunning():
+            self.reply.abort()
 
-        self.info('Search url {}'.format(url))
-        #nam = NetworkAccessManager()
-        nam = QgsNetworkAccessManager().instance()
+        url = 'https://api3.geo.admin.ch/rest/services/api/SearchServer'
+        params = {
+            'type': 'locations',
+            'searchText': str(search),
+            'returnGeometry': 'true'
+        }
+        #bbox Must be provided if the searchText is not. A comma separated list of 4 coordinates representing the bounding box on which features should be filtered (SRID: 21781).
 
+        headers = {b'User-Agent': self.USER_AGENT}
+        url = self.url_with_param(url, params)
+        self.dbg_info(url)
 
-        reply = nam.get(QNetworkRequest(QUrl(url)))
+        nam = NetworkAccessManager()
+        feedback.canceled.connect(nam.abort)
+        try:
+            (response, content) = nam.request(url, headers=headers, blocking=True)
+            self.handle_response(response, content)
+        except RequestsExceptionUserAbort:
+            pass
+        except RequestsException as err:
+            self.info(err)
 
-        # loop = QEventLoop()
-        # connect(mFetcher, & QgsNetworkContentFetcher::finished, & loop, & QEventLoop::quit );
-        # connect(mFetcher, & QgsNetworkContentFetcher::downloadProgress, this, [ =](qint64
-        # loop.exec()
-
-
-    def handleResponse(self, reply):
-        if reply.error() != QNetworkReply.NoError:
-            self.info("Error occured: ", reply.error())
-            self.info(reply.error().errorString())
+    def handle_response(self, response, content):
+        if response.status_code != 200:
+            self.info("Error with status code: {}".format(response.status_code))
             return
 
-        content = str(reply.readAll(), 'utf-8')
-        locations = json.loads(content)
-        self.info(content)
-        for loc in locations['results']:
-            for k,v in loc['attrs'].items():
-                self.info("{}: {}{}".format(k,v))
-            break
+        data = json.loads(content.decode('utf-8'))
+        # self.dbg_info(data)
 
-        # try:
-        #     # see https://operations.osmfoundation.org/policies/nominatim/
-        #     # "Provide a valid HTTP Referer or User-Agent identifying the application (QGIS geocoder)"
-        #     headers = {b'User-Agent': self.USER_AGENT}
-        #     # use BLOCKING request, as fetchResults already has it's own thread!
-        #     (response, content) = nam.request(url, headers=headers, blocking=True)
-        #     #self.info(response)
-        #     #self.info(response.status_code)
-        #     if response.status_code == 200:  # other codes are handled by NetworkAccessManager
-        #         content_string = content.decode('utf-8')
-        #         locations = json.loads(content_string)
-        #         for loc in locations['results']:
-        #             for k,v in loc['attrs'].items():
-        #                 self.info("{}: {}{}".format(search,k,v))
-        #             break
-        #
-        #             # result = QgsLocatorResult()
-        #             # result.filter = self
-        #             # result.displayString = '{} ({})'.format(loc['display_name'], loc['type'])
-        #             # # use the json full item as userData, so all info is in it:
-        #             # result.userData = loc
-        #             # self.resultFetched.emit(result)
-        #
-        # except RequestsException as err:
-        #     # Handle exception..
-        #     # only this one seems to work
-        #     self.info(err)
-        #     # THIS: results in a floating window with a warning in it, wrong thread/parent?
-        #     #self.iface.messageBar().pushWarning("NominatimLocatorFilter Error", '{}'.format(err))
-        #     # THIS: emitting the signal here does not work either?
-        #     self.failed.emit('{}'.format(err))
+        for loc in data['results']:
+            self.dbg_info("keys: {}".format(loc['attrs'].keys()))
+            self.dbg_info("label: {}".format(loc['attrs']['label']))
+            self.dbg_info("detail: {}".format(loc['attrs']['detail']))
+            self.dbg_info("priority: {} (rank: {})".format(self.rank2priority(loc['attrs']['rank']), loc['attrs']['rank']))
+            self.dbg_info("category: {} ({})".format(self.translate_group(loc['attrs']['origin']), loc['attrs']['origin']))
+            self.dbg_info("bbox: {}".format(loc['attrs']['geom_st_box2d']))
+
+            result = QgsLocatorResult()
+            result.filter = self
+            result.displayString = loc['attrs']['label']
+            result.description = loc['attrs']['detail']
+            result.group = self.translate_group(loc['attrs']['origin'])
+            result.userData = self.box2geometry(loc['attrs']['geom_st_box2d'])
+            self.resultFetched.emit(result)
+
+        return
+
+        wkt = ogr_geom.ExportToWkt()
+        geometry = QgsGeometry.fromWkt(wkt)
+        self.dbg_info('---------')
+        self.dbg_info(QgsWkbTypes.geometryDisplayString(geometry.type()))
+        self.dbg_info(f.keys())
+        self.dbg_info('{} {}'.format(f['properties']['layer_name'], f['properties']['label']))
+        self.dbg_info(f['bbox'])
+        self.dbg_info(f['geometry'])
+        #if geometry is None:
+        #continue
+        result = QgsLocatorResult()
+        result.filter = self
+        result.displayString = f['properties']['label']
+        result.group = self.beautify_group(f['properties']['layer_name'])
+        result.userData = geometry
+        self.resultFetched.emit(result)
 
     def triggerResult(self, result):
-        self.info("UserClick: {}".format(result.displayString))
-        doc = result.userData
-        extent = doc['boundingbox']
-        # "boundingbox": ["52.641015", "52.641115", "5.6737302", "5.6738302"]
-        rect = QgsRectangle(float(extent[2]), float(extent[0]), float(extent[3]), float(extent[1]))
-        dest_crs = QgsProject.instance().crs()
-        results_crs = QgsCoordinateReferenceSystem(4326, QgsCoordinateReferenceSystem.PostgisCrsId)
-        transform = QgsCoordinateTransform(results_crs, dest_crs, QgsProject.instance())
-        r = transform.transformBoundingBox(rect)
-        self.iface.mapCanvas().setExtent(r, False)
-        # map the result types to generic GeocoderLocator types to determine the zoom
-        # BUT only if the extent < 100 meter (as for other objects it is probably ok)
-        # mmm, some objects return 'type':'province', but extent is point
-        scale_denominator = self.ZIP  # defaulting to something
-        # TODO add other types?
-        if doc['type'] in ['house', 'information']:
-            scale_denominator = self.ADDRESS
-        elif doc['type'] in ['way', 'motorway_junction', 'cycleway']:
-            scale_denominator = self.STREET
-        elif doc['type'] in ['postcode']:
-            scale_denominator = self.ZIP
-        elif doc['type'] in ['city']:
-            scale_denominator = self.CITY
-        elif doc['type'] in ['island']:
-            scale_denominator = self.ISLAND
-        elif doc['type'] in ['administrative']:  # ?? can also be a city etc...
-            scale_denominator = self.COUNTRY
+        return
+        # this should be run in the main thread, i.e. mapCanvas should not be None
+        geometry = result.userData
 
-        self.iface.mapCanvas().zoomScale(scale_denominator)
-        self.iface.mapCanvas().refresh()
+        srv_crs_authid = self.settings.value('geomapfish_crs')
+        src_crs = QgsCoordinateReferenceSystem(srv_crs_authid)
+        if src_crs.isValid():
+            dst_crs = self.map_canvas.mapSettings().destinationCrs()
+            tr = QgsCoordinateTransform(src_crs, dst_crs, QgsProject.instance())
+            geometry.transform(tr)
 
-    def info(self, msg=""):
-        QgsMessageLog.logMessage('{} {}'.format(self.__class__.__name__, msg), 'QgsLocatorFilter', Qgis.Info)
+        self.rubber_band.reset(geometry.type())
+        self.rubber_band.addGeometry(geometry, None)
+        rect = geometry.boundingBox()
+        rect.scale(1.5)
+        self.map_canvas.setExtent(rect)
+        self.map_canvas.refresh()
+
+    def beautify_group(self, group):
+        if self.settings.value("remove_leading_digits"):
+            group = re.sub('^\d+', '', group)
+        if self.settings.value("replace_underscore"):
+            group = group.replace("_", " ")
+        if self.settings.value("break_camelcase"):
+            group = self.break_camelcase(group)
+        return group
+
+    def info(self, msg="", level=Qgis.Info):
+        QgsMessageLog.logMessage('{} {}'.format(self.__class__.__name__, msg), 'QgsLocatorFilter', level)
+
+    def dbg_info(self, msg=""):
+        if DEBUG:
+            self.info(msg)
+
+    @staticmethod
+    def break_camelcase(identifier):
+        matches = re.finditer('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)', identifier)
+        return ' '.join([m.group(0) for m in matches])

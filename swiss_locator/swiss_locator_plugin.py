@@ -21,42 +21,30 @@
  ***************************************************************************/
 """
 
-from qgis.core import QgsApplication
+DEBUG = True
+
+import os
+from PyQt5.QtCore import QCoreApplication, QLocale, QSettings, QTranslator
+from qgis.gui import QgisInterface
 from .swiss_locator_filter import SwissLocatorFilter
 
 
 class SwissLocatorPlugin:
 
-    def __init__(self, iface):
-
-        # Save reference to the QGIS interface
+    def __init__(self, iface: QgisInterface):
         self.iface = iface
-        self.canvas = iface.mapCanvas()
+        self.filter = SwissLocatorFilter(iface.mapCanvas())
+        self.iface.registerLocatorFilter(self.filter)
 
-        self.swiss_filter = SwissLocatorFilter(self.iface)
-        self.swiss_filter.failed.connect(self.show_issue)
-        self.iface.registerLocatorFilter(self.swiss_filter)
-
-    def show_issue(self, err):
-        self.filter.info("showing issue???")  # never come here?
-        self.iface.messageBar().pushWarning("Swiss Locator Error", '{}'.format(err))
+        # initialize translation
+        qgis_locale = QLocale(QSettings().value('locale/userLocale'))
+        locale_path = os.path.join(os.path.dirname(__file__), 'i18n')
+        self.translator = QTranslator()
+        self.translator.load(qgis_locale, 'geomapfish_locator', '_', locale_path)
+        QCoreApplication.installTranslator(self.translator)
 
     def initGui(self):
         pass
 
     def unload(self):
-        self.iface.deregisterLocatorFilter(self.swiss_filter)
-
-    # noinspection PyMethodMayBeStatic
-    def tr(self, message):
-        """Get the translation for a string using Qt translation API.
-
-        We implement this ourselves since we do not inherit QObject.
-
-        :param message: String for translation.
-        :type message: str, QString
-
-        :returns: Translated version of message.
-        :rtype: QString
-        """
-        return QgsApplication.translate('QGIS Locator Plugin', message)
+        self.iface.deregisterLocatorFilter(self.filter)
