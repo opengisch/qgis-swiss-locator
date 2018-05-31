@@ -33,7 +33,7 @@ from PyQt5.QtWidgets import QDialog
 from PyQt5.uic import loadUiType
 
 from qgis.core import Qgis, QgsMessageLog, QgsLocatorFilter, QgsLocatorResult, QgsRectangle, \
-    QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsGeometry, QgsWkbTypes
+    QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsGeometry, QgsWkbTypes, QgsPointXY
 from qgis.gui import QgsRubberBand, QgsMapCanvas
 
 from .qgissettingmanager.setting_dialog import SettingDialog, UpdateMode
@@ -94,7 +94,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
         if map_canvas is not None:
             self.map_canvas = map_canvas
-            self.rubber_band = QgsRubberBand(map_canvas)
+            self.rubber_band = QgsRubberBand(map_canvas, QgsWkbTypes.PointGeometry)
             self.rubber_band.setColor(QColor(255, 255, 50, 200))
             self.rubber_band.setIcon(self.rubber_band.ICON_CIRCLE)
             self.rubber_band.setIconSize(15)
@@ -215,34 +215,52 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.dbg_info("priority: {} (rank: {})".format(self.rank2priority(loc['attrs']['rank']), loc['attrs']['rank']))
             self.dbg_info("category: {} ({})".format(self.translate_group(loc['attrs']['origin']), loc['attrs']['origin']))
             self.dbg_info("bbox: {}".format(loc['attrs']['geom_st_box2d']))
+            self.dbg_info("pos: {} {}".format(loc['attrs']['y'], loc['attrs']['x']))
+            self.dbg_info("geom_quadindex: {}".format(loc['attrs']['geom_quadindex']))
+            if 'layerBodId' in loc['attrs']:
+                self.dbg_info("layer: {}".format(loc['attrs']['layerBodId']))
+            if 'featureId' in loc['attrs']:
+                self.dbg_info("feature: {}".format(loc['attrs']['featureId']))
 
             result = QgsLocatorResult()
             result.filter = self
             result.displayString = loc['attrs']['label']
             # result.description = loc['attrs']['detail']
+            if 'featureId' in loc['attrs']:
+                result.description = loc['attrs']['featureId']
             result.group = self.translate_group(loc['attrs']['origin'])
-            result.userData = self.box2geometry(loc['attrs']['geom_st_box2d'])
+            result.userData = {'point': QgsPointXY(loc['attrs']['y'], loc['attrs']['x']),
+                               'bbox': self.box2geometry(loc['attrs']['geom_st_box2d'])}
             self.resultFetched.emit(result)
         return
 
-    def triggerResult(self, result):
+    def triggerResult(self, result: QgsLocatorResult):
         # this should be run in the main thread, i.e. mapCanvas should not be None
-        geometry = QgsGeometry.fromRect(result.userData)
-        if not geometry:
+        point = QgsGeometry.fromPointXY(result.userData['point'])
+        bbox = QgsGeometry.fromRect(result.userData['bbox'])
+        if not point or not bbox:
             return
 
+        self.dbg_info('point: {}'.format(point.asWkt()))
+        self.dbg_info('bbox: {}'.format(bbox.asWkt()))
+        self.dbg_info('descr: {}'.format(result.description))
+
+        # create transform
         srv_crs_authid = self.settings.value('crs')
         assert srv_crs_authid in AVAILABLE_CRS
         src_crs = QgsCoordinateReferenceSystem('EPSG:{}'.format(srv_crs_authid))
         assert src_crs.isValid()
         dst_crs = self.map_canvas.mapSettings().destinationCrs()
         tr = QgsCoordinateTransform(src_crs, dst_crs, QgsProject.instance())
-        geometry.transform(tr)
 
-        self.rubber_band.reset(geometry.type())
-        self.rubber_band.addGeometry(geometry, None)
-        rect = geometry.boundingBox()
-        rect.scale(1.5)
+        point.transform(tr)
+        bbox.transform(tr)
+
+        self.rubber_band.reset(QgsWkbTypes.PointGeometry)
+        self.rubber_band.addGeometry(point, None)
+
+        rect = bbox.boundingBox()
+        rect.scale(1.1)
         self.map_canvas.setExtent(rect)
         self.map_canvas.refresh()
 
