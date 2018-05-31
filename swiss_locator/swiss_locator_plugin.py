@@ -33,8 +33,6 @@ class SwissLocatorPlugin:
 
     def __init__(self, iface: QgisInterface):
         self.iface = iface
-        self.filter = SwissLocatorFilter(iface.mapCanvas())
-        self.iface.registerLocatorFilter(self.filter)
 
         # initialize translation
         qgis_locale = QLocale(QSettings().value('locale/userLocale'))
@@ -42,6 +40,11 @@ class SwissLocatorPlugin:
         self.translator = QTranslator()
         self.translator.load(qgis_locale, 'geomapfish_locator', '_', locale_path)
         QCoreApplication.installTranslator(self.translator)
+
+        locale_lang = QLocale.languageToString(QLocale(QSettings().value('locale/userLocale')).language())
+
+        self.filter = SwissLocatorFilter(locale_lang, iface.mapCanvas())
+        self.iface.registerLocatorFilter(self.filter)
 
     def initGui(self):
         pass

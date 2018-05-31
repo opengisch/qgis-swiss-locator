@@ -28,14 +28,13 @@ import re
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
-from PyQt5.QtCore import QUrl, QUrlQuery, QByteArray
+from PyQt5.QtCore import QUrl, QUrlQuery
 from PyQt5.QtWidgets import QDialog
 from PyQt5.uic import loadUiType
 
 from qgis.core import Qgis, QgsMessageLog, QgsLocatorFilter, QgsLocatorResult, QgsRectangle, \
     QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsGeometry, QgsWkbTypes
-from qgis.gui import QgsRubberBand
-from osgeo import ogr
+from qgis.gui import QgsRubberBand, QgsMapCanvas
 
 from .qgissettingmanager.setting_dialog import SettingDialog, UpdateMode
 from .network_access_manager import NetworkAccessManager, RequestsException, RequestsExceptionUserAbort
@@ -44,6 +43,14 @@ from .swiss_locator_plugin import DEBUG
 
 DialogUi, _ = loadUiType(os.path.join(os.path.dirname(__file__), 'ui/config.ui'))
 
+AVAILABLE_CRS = ['2056', '21781']
+AVAILABLE_LANGUAGES = {'German': 'de',
+                       'SwissGerman': 'de',
+                       'French': 'fr',
+                       'Italian': 'it',
+                       'Romansh': 'rm',
+                       'English': 'en'}
+
 
 class ConfigDialog(QDialog, DialogUi, SettingDialog):
     def __init__(self, parent=None):
@@ -51,6 +58,11 @@ class ConfigDialog(QDialog, DialogUi, SettingDialog):
         QDialog.__init__(self, parent)
         SettingDialog.__init__(self, setting_manager=settings, mode=UpdateMode.DialogAccept)
         self.setupUi(self)
+        self.lang.addItem(self.tr('use the application locale, defaults to English'), '')
+        for key, val in AVAILABLE_LANGUAGES.items():
+            self.lang.addItem(key, val)
+        self.crs.addItem('CH 1903+ (EPSG:2056)', '2056')
+        self.crs.addItem('CH 1903 (EPSG:21781)', '21781')
         self.settings = settings
         self.init_widgets()
 
@@ -63,12 +75,22 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
     USER_AGENT = b'Mozilla/5.0 QGIS Swiss MapGeoAdmin Locator Filter'
 
-    def __init__(self, map_canvas):
+    def __init__(self,  locale_lang: str, map_canvas: QgsMapCanvas = None):
         super().__init__()
         self.rubber_band = None
         self.map_canvas = None
         self.settings = Settings()
         self.reply = None
+
+        self.locale_lang = locale_lang
+        lang = self.settings.value('lang')
+        if not lang:
+            if locale_lang in AVAILABLE_LANGUAGES:
+                self.lang = AVAILABLE_LANGUAGES[locale_lang]
+            else:
+                self.lang = 'en'
+        else:
+            self.lang = lang
 
         if map_canvas is not None:
             self.map_canvas = map_canvas
@@ -122,7 +144,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         return self.__class__.__name__
 
     def clone(self):
-        return SwissLocatorFilter(self.map_canvas)
+        return SwissLocatorFilter(self.locale_lang)
 
     def displayName(self):
         return self.tr('Swiss Geoadmin locations')
@@ -158,7 +180,9 @@ class SwissLocatorFilter(QgsLocatorFilter):
         params = {
             'type': 'locations',
             'searchText': str(search),
-            'returnGeometry': 'true'
+            'returnGeometry': 'true',
+            'lang': self.lang,
+            'sr': self.settings.value('crs')
         }
         #bbox Must be provided if the searchText is not. A comma separated list of 4 coordinates representing the bounding box on which features should be filtered (SRID: 21781).
 
@@ -195,41 +219,25 @@ class SwissLocatorFilter(QgsLocatorFilter):
             result = QgsLocatorResult()
             result.filter = self
             result.displayString = loc['attrs']['label']
-            result.description = loc['attrs']['detail']
+            # result.description = loc['attrs']['detail']
             result.group = self.translate_group(loc['attrs']['origin'])
             result.userData = self.box2geometry(loc['attrs']['geom_st_box2d'])
             self.resultFetched.emit(result)
-
         return
-
-        wkt = ogr_geom.ExportToWkt()
-        geometry = QgsGeometry.fromWkt(wkt)
-        self.dbg_info('---------')
-        self.dbg_info(QgsWkbTypes.geometryDisplayString(geometry.type()))
-        self.dbg_info(f.keys())
-        self.dbg_info('{} {}'.format(f['properties']['layer_name'], f['properties']['label']))
-        self.dbg_info(f['bbox'])
-        self.dbg_info(f['geometry'])
-        #if geometry is None:
-        #continue
-        result = QgsLocatorResult()
-        result.filter = self
-        result.displayString = f['properties']['label']
-        result.group = self.beautify_group(f['properties']['layer_name'])
-        result.userData = geometry
-        self.resultFetched.emit(result)
 
     def triggerResult(self, result):
-        return
         # this should be run in the main thread, i.e. mapCanvas should not be None
-        geometry = result.userData
+        geometry = QgsGeometry.fromRect(result.userData)
+        if not geometry:
+            return
 
-        srv_crs_authid = self.settings.value('geomapfish_crs')
-        src_crs = QgsCoordinateReferenceSystem(srv_crs_authid)
-        if src_crs.isValid():
-            dst_crs = self.map_canvas.mapSettings().destinationCrs()
-            tr = QgsCoordinateTransform(src_crs, dst_crs, QgsProject.instance())
-            geometry.transform(tr)
+        srv_crs_authid = self.settings.value('crs')
+        assert srv_crs_authid in AVAILABLE_CRS
+        src_crs = QgsCoordinateReferenceSystem('EPSG:{}'.format(srv_crs_authid))
+        assert src_crs.isValid()
+        dst_crs = self.map_canvas.mapSettings().destinationCrs()
+        tr = QgsCoordinateTransform(src_crs, dst_crs, QgsProject.instance())
+        geometry.transform(tr)
 
         self.rubber_band.reset(geometry.type())
         self.rubber_band.addGeometry(geometry, None)

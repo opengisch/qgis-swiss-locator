@@ -33,9 +33,10 @@ class Settings(SettingManager):
     def __init__(self):
         SettingManager.__init__(self, pluginName)
 
-        # change filter name
-        self.add_setting(String("filter_name", Scope.Global, ''))
+        # lang of the service
+        # possible values are de, fr, it , rm, en
+        # if left empty or NULL, try to use locale and defaults to en
+        self.add_setting(String("lang", Scope.Global, ''))
+        self.add_setting(String("crs", Scope.Global, '2056'))
 
-        # number of results
-        self.add_setting(Integer("category_limit", Scope.Global, 8))
-        self.add_setting(Integer("total_limit", Scope.Global, 50))
+
