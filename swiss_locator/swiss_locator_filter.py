@@ -40,8 +40,11 @@ from .qgissettingmanager.setting_dialog import SettingDialog, UpdateMode
 from .network_access_manager import NetworkAccessManager, RequestsException, RequestsExceptionUserAbort
 from .settings import Settings
 from .swiss_locator_plugin import DEBUG
+from .utils.html_stripper import strip_tags
+from .gui.maptip import MapTip
 
 DialogUi, _ = loadUiType(os.path.join(os.path.dirname(__file__), 'ui/config.ui'))
+
 
 AVAILABLE_CRS = ['2056', '21781']
 AVAILABLE_LANGUAGES = {'German': 'de',
@@ -101,22 +104,23 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.rubber_band.setWidth(4)
             self.rubber_band.setBrushStyle(Qt.NoBrush)
 
-    def translate_group(self, group) -> str:
-        if group == 'zipcode':
-            return self.tr('ZIP code')
-        if group == 'gg25':
-            return self.tr('Municipal boundaries')
-        if group == 'district':
-            return self.tr('District')
-        if group == 'kantone':
-            return self.tr('Cantons')
-        if group == 'gazetteer':
-            return self.tr('Index')
-        if group == 'address':
-            return self.tr('Address')
-        if group == 'parcel':
-            return self.tr('Parcel')
-        raise NameError('Could not find group {} in dictionary'.format(group))
+    def group_info(self, group: str) -> dict:
+        groups = {'zipcode': {'name': self.tr('ZIP code'),
+                              'layer': 'ch.swisstopo-vd.ortschaftenverzeichnis_plz'},
+                  'gg25': {'name': self.tr('Municipal boundaries'),
+                           'layer': 'ch.swisstopo.swissboundaries3d-gemeinde-flaeche.fill'},
+                  'district': {'name': self.tr('District'),
+                               'layer': 'ch.swisstopo.swissboundaries3d-bezirk-flaeche.fill'},
+                  'kantone': {'name': self.tr('Cantons'),
+                              'layer': 'ch.swisstopo.swissboundaries3d-kanton-flaeche.fill'},
+                  'gazetteer': {'name': self.tr('Index'),
+                                'layer': ['ch.swisstopo.swissnames3d, ch.bav.haltestellen-oev']},
+                  'address': {'name': self.tr('Address'), 'layer': 'ch.bfs.gebaeude_wohnungs_register'},
+                  'parcel': {'name': self.tr('Parcel'), 'layer': None}
+                  }
+        if group not in groups:
+            raise NameError('Could not find group {} in dictionary'.format(group))
+        return groups[group]
 
     @staticmethod
     def rank2priority(rank) -> float:
@@ -213,7 +217,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.dbg_info("label: {}".format(loc['attrs']['label']))
             self.dbg_info("detail: {}".format(loc['attrs']['detail']))
             self.dbg_info("priority: {} (rank: {})".format(self.rank2priority(loc['attrs']['rank']), loc['attrs']['rank']))
-            self.dbg_info("category: {} ({})".format(self.translate_group(loc['attrs']['origin']), loc['attrs']['origin']))
+            self.dbg_info("category: {} ({})".format(self.group_info(loc['attrs']['origin'])['name'], loc['attrs']['origin']))
             self.dbg_info("bbox: {}".format(loc['attrs']['geom_st_box2d']))
             self.dbg_info("pos: {} {}".format(loc['attrs']['y'], loc['attrs']['x']))
             self.dbg_info("geom_quadindex: {}".format(loc['attrs']['geom_quadindex']))
@@ -224,13 +228,16 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
             result = QgsLocatorResult()
             result.filter = self
-            result.displayString = loc['attrs']['label']
+            result.displayString = strip_tags(loc['attrs']['label'])
             # result.description = loc['attrs']['detail']
             if 'featureId' in loc['attrs']:
                 result.description = loc['attrs']['featureId']
-            result.group = self.translate_group(loc['attrs']['origin'])
+            if Qgis.QGIS_VERSION_INT >= 30100:
+                result.group = self.group_info(loc['attrs']['origin'])['name']
             result.userData = {'point': QgsPointXY(loc['attrs']['y'], loc['attrs']['x']),
-                               'bbox': self.box2geometry(loc['attrs']['geom_st_box2d'])}
+                               'bbox': self.box2geometry(loc['attrs']['geom_st_box2d']),
+                               'layer': self.group_info(loc['attrs']['origin'])['layer'],
+                               'feature_id': loc['attrs']['featureId'] if 'featureId' in loc['attrs'] else None }
             self.resultFetched.emit(result)
         return
 
@@ -238,12 +245,16 @@ class SwissLocatorFilter(QgsLocatorFilter):
         # this should be run in the main thread, i.e. mapCanvas should not be None
         point = QgsGeometry.fromPointXY(result.userData['point'])
         bbox = QgsGeometry.fromRect(result.userData['bbox'])
+        layer = result.userData['layer']
+        feature_id = result.userData['feature_id']
         if not point or not bbox:
             return
 
         self.dbg_info('point: {}'.format(point.asWkt()))
         self.dbg_info('bbox: {}'.format(bbox.asWkt()))
         self.dbg_info('descr: {}'.format(result.description))
+        self.dbg_info('layer: {}'.format(layer))
+        self.dbg_info('feature_id: {}'.format(feature_id))
 
         # create transform
         srv_crs_authid = self.settings.value('crs')
@@ -263,6 +274,58 @@ class SwissLocatorFilter(QgsLocatorFilter):
         rect.scale(1.1)
         self.map_canvas.setExtent(rect)
         self.map_canvas.refresh()
+
+        # Try to get more info
+        self.get_more_info(layer, feature_id, point.asPoint())
+
+    def get_more_info(self, layer: str, feature_id: str, point: QgsPointXY):
+        if not layer or not feature_id:
+            return
+
+        headers = {b'User-Agent': self.USER_AGENT}
+
+        url_html = 'https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}/htmlPopup'\
+            .format(layer=layer, feature_id=feature_id)
+        params = {
+            'lang': self.lang,
+            'sr': self.settings.value('crs')
+        }
+
+        url_html = self.url_with_param(url_html, params)
+        self.dbg_info(url_html)
+
+        nam = NetworkAccessManager()
+        try:
+            (response, content) = nam.request(url_html, headers=headers, blocking=True)
+            if response.status_code != 200:
+                self.info("Error with status code: {}".format(response.status_code))
+            else:
+                self.dbg_info(content.decode('utf-8'))
+                self.map_tip = MapTip(self.map_canvas, content.decode('utf-8'), point)
+        except RequestsExceptionUserAbort:
+            pass
+        except RequestsException as err:
+            self.info(err)
+
+
+
+        url_detail = 'https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}'\
+            .format(layer=layer, feature_id=feature_id)
+        params = {
+            'lang': self.lang,
+            'sr': self.settings.value('crs')
+        }
+        """
+        p = re.compile(r'\[\d+(\.\d+)?, \d+(\.\d+)?\]')
+        r = re.sub(r'\[(\d+(:?\.\d+)?, \d+(:?\.\d+)?)\]', r'\1', rings)
+        r = re.sub(r'^\[\[', r'Polygon((', r)
+        r = re.sub(r'\]\]$', r'))', r)
+        r = re.sub(r'\], \[', r'), (', r)
+        x = QgsGeometry.fromWkt(r)
+        """
+
+        url_html = self.url_with_param(url_html, params)
+        self.dbg_info(url_html)
 
     def beautify_group(self, group):
         if self.settings.value("remove_leading_digits"):
