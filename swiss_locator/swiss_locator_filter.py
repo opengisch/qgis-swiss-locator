@@ -188,7 +188,9 @@ class SwissLocatorFilter(QgsLocatorFilter):
             'lang': self.lang,
             'sr': self.settings.value('crs')
         }
-        #bbox Must be provided if the searchText is not. A comma separated list of 4 coordinates representing the bounding box on which features should be filtered (SRID: 21781).
+        # bbox Must be provided if the searchText is not.
+        # A comma separated list of 4 coordinates representing
+        # the bounding box on which features should be filtered (SRID: 21781).
 
         headers = {b'User-Agent': self.USER_AGENT}
         url = self.url_with_param(url, params)
@@ -290,11 +292,11 @@ class SwissLocatorFilter(QgsLocatorFilter):
             'lang': self.lang,
             'sr': self.settings.value('crs')
         }
-
         url_html = self.url_with_param(url_html, params)
         self.dbg_info(url_html)
 
         nam = NetworkAccessManager()
+
         try:
             (response, content) = nam.request(url_html, headers=headers, blocking=True)
             if response.status_code != 200:
@@ -307,25 +309,41 @@ class SwissLocatorFilter(QgsLocatorFilter):
         except RequestsException as err:
             self.info(err)
 
-
-
         url_detail = 'https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}'\
             .format(layer=layer, feature_id=feature_id)
         params = {
             'lang': self.lang,
             'sr': self.settings.value('crs')
         }
-        """
-        p = re.compile(r'\[\d+(\.\d+)?, \d+(\.\d+)?\]')
-        r = re.sub(r'\[(\d+(:?\.\d+)?, \d+(:?\.\d+)?)\]', r'\1', rings)
-        r = re.sub(r'^\[\[', r'Polygon((', r)
-        r = re.sub(r'\]\]$', r'))', r)
-        r = re.sub(r'\], \[', r'), (', r)
-        x = QgsGeometry.fromWkt(r)
-        """
+        url_detail = self.url_with_param(url_detail, params)
+        self.dbg_info(url_detail)
 
-        url_html = self.url_with_param(url_html, params)
-        self.dbg_info(url_html)
+        try:
+            (response, content) = nam.request(url_detail, headers=headers, blocking=True)
+            if response.status_code != 200:
+                self.info("Error with status code: {}".format(response.status_code))
+            else:
+                #self.dbg_info(content.decode('utf-8'))
+                self.parse_feature_response(content.decode('utf-8'))
+        except RequestsExceptionUserAbort:
+            pass
+        except RequestsException as err:
+            self.info(err)
+
+    def parse_feature_response(self, content):
+        data = json.loads(content)
+        if 'feature' not in data:
+            return
+        if 'geometry' not in data['feature']:
+            return
+
+        if 'rings' in data['feature']['geometry']:
+            rings = data['feature']['geometry']['rings']
+            r = re.sub(r'\[(\d+(:?\.\d+)?, \d+(:?\.\d+)?)\]', r'\1', rings)
+            r = re.sub(r'^\[\[', r'Polygon((', r)
+            r = re.sub(r'\]\]$', r'))', r)
+            r = re.sub(r'\], \[', r'), (', r)
+            x = QgsGeometry.fromWkt(r)
 
     def beautify_group(self, group):
         if self.settings.value("remove_leading_digits"):

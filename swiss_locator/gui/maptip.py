@@ -52,7 +52,7 @@ class MapTip():
         self.layout = QHBoxLayout()
         self.layout.addWidget(self.web_view)
 
-        self.widget.setSizePolicy( QSizePolicy.Expanding, QSizePolicy.Expanding )
+        self.widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.widget.setLayout(self.layout)
 
         # assure the map tip is never larger than half the map canvas
@@ -63,7 +63,7 @@ class MapTip():
 
         # start with 0 size,
         # the content will automatically make it grow up to MaximumSize
-        self.widget.resize(0, 0)
+        #self.widget.resize(0, 0)
 
         background_color = self.widget.palette().base().color().name()
         stroke_color = self.widget.palette().shadow().color().name()
