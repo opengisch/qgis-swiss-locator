@@ -355,11 +355,14 @@ class SwissLocatorFilter(QgsLocatorFilter):
             geometry.transform(self.transform)
 
             rubber_band = QgsRubberBand(self.map_canvas, QgsWkbTypes.PolygonGeometry)
-            rubber_band.setColor(QColor(255, 255, 50, 200))
+            rubber_band.setColor(QColor(255, 50, 50, 200))
+            rubber_band.setFillColor(QColor(255, 255, 50, 160))
+            rubber_band.setBrushStyle(Qt.SolidPattern)
             # rubber_band.setIcon(self.rubber_band.ICON_CIRCLE)
             # rubber_band.setIconSize(15)
+            rubber_band.setLineStyle(Qt.SolidLine)
             rubber_band.setWidth(4)
-            self.rubber_band.addGeometry(geometry, None)
+            rubber_band.addGeometry(geometry, None)
 
     def beautify_group(self, group):
         if self.settings.value("remove_leading_digits"):

@@ -25,6 +25,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWebKit import QWebSettings
 from PyQt5.QtWebKitWidgets import QWebView, QWebPage
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QSizePolicy
+from PyQt5.QtGui import QColor, QPalette
 from qgis.core import Qgis, QgsPointXY, QgsMessageLog
 from qgis.gui import QgsMapCanvas
 
@@ -63,51 +64,43 @@ class MapTip():
 
         # start with 0 size,
         # the content will automatically make it grow up to MaximumSize
-        #self.widget.resize(0, 0)
+        self.widget.resize(0, 0)
 
-        background_color = self.widget.palette().base().color().name()
-        stroke_color = self.widget.palette().shadow().color().name()
+        background_color = self.widget.palette().base().color()
+        background_color.setAlpha(220)
+        stroke_color = self.widget.palette().shadow().color()
         self.widget.setStyleSheet(".QWidget{{ border: 1px solid {stroke}; background-color: {bg} }}"
-                                  .format(stroke=stroke_color, bg=background_color))
+                                  .format(stroke=stroke_color.name(QColor.HexArgb), bg=background_color.name(QColor.HexArgb)))
+
+        palette = self.web_view.palette()
+        palette.setBrush(QPalette.Base, Qt.transparent)
+        self.web_view.page().setPalette(palette)
+        self.web_view.setAttribute(Qt.WA_OpaquePaintEvent, False)
 
         body_style = "background-color: {bg}; margin: 0".format(bg=background_color)
         container_style = "display: inline-block; margin: 0px"
 
-        """
-        tipHtml = QString(
-              "<html>"
-              "<body style='%1'>"
-              "<div id='QgsWebViewContainer' style='%2'>%3</div>"
-              "</body>"
-              "</html>" ).arg( bodyStyle, containerStyle, tipText );
-        """
+        body_html = "<html><body style='{body_style}'>" \
+                    "<div id='QgsWebViewContainer' style='{container_style}'>{html}</div><" \
+                    "/body></html>".format(body_style=body_style,
+                                           container_style=container_style,
+                                           html=html )
 
         self.widget.move(pixel_position.x(), pixel_position.y())
 
-        self.web_view.setHtml(html)
+        self.web_view.setHtml(body_html)
 
         self.widget.show()
 
-        """
-        #if WITH_QTWEBKIT
-        int scrollbarWidth = self.web_view.page().mainFrame().scrollBarGeometry(
-                             Qt.Vertical ).width()
-        int scrollbarHeight = self.web_view.page().mainFrame().scrollBarGeometry(
-                              Qt.Horizontal ).height()
-        
-        if ( scrollbarWidth > 0 || scrollbarHeight > 0 )
-        {
-        # Get the content size
-        QWebElement container = self.web_view.page().mainFrame().findFirstElement(
-                                  QStringLiteral( "#QgsWebViewContainer" ) )
-        int width = container.geometry().width() + 5 + scrollbarWidth
-        int height = container.geometry().height() + 5 + scrollbarHeight
-        
-        self.widget.resize( width, height )
-        }
-        #endif
-        }
-        """
+        scrollbar_width = self.web_view.page().mainFrame().scrollBarGeometry(Qt.Vertical).width()
+        scrollbar_height = self.web_view.page().mainFrame().scrollBarGeometry(Qt.Horizontal).height()
+        if scrollbar_width > 0 or scrollbar_height > 0:
+            # Get the content size
+            container = self.web_view.page().mainFrame().findFirstElement("#QgsWebViewContainer")
+            width = container.geometry().width() + 5 + scrollbar_width
+            height = container.geometry().height() + 5 + scrollbar_height
+
+            self.widget.resize( width, height )
 
     def on_link_clicked(self, url):
         pass
