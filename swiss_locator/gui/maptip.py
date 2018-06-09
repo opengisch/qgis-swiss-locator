@@ -25,7 +25,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWebKit import QWebSettings
 from PyQt5.QtWebKitWidgets import QWebView, QWebPage
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QSizePolicy
-from PyQt5.QtGui import QColor, QPalette
+from PyQt5.QtGui import QColor, QPalette, QDesktopServices
 from qgis.core import Qgis, QgsPointXY, QgsMessageLog
 from qgis.gui import QgsMapCanvas
 
@@ -64,7 +64,7 @@ class MapTip():
 
         # start with 0 size,
         # the content will automatically make it grow up to MaximumSize
-        self.widget.resize(0, 0)
+        self.widget.resize(300, 200)
 
         background_color = self.widget.palette().base().color()
         background_color.setAlpha(220)
@@ -100,10 +100,10 @@ class MapTip():
             width = container.geometry().width() + 5 + scrollbar_width
             height = container.geometry().height() + 5 + scrollbar_height
 
-            self.widget.resize( width, height )
+            self.widget.resize(width, height)
 
     def on_link_clicked(self, url):
-        pass
+        QDesktopServices.openUrl(url)
 
     def info(self, msg="", level=Qgis.Info):
         QgsMessageLog.logMessage('{} {}'.format(self.__class__.__name__, msg), 'QgsLocatorFilter', level)

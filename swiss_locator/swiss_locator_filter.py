@@ -81,6 +81,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
     def __init__(self,  locale_lang: str, map_canvas: QgsMapCanvas = None):
         super().__init__()
         self.rubber_band = None
+        self.feature_rubber_band = None
         self.map_canvas = None
         self.settings = Settings()
         self.reply = None
@@ -98,12 +99,20 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
         if map_canvas is not None:
             self.map_canvas = map_canvas
+
             self.rubber_band = QgsRubberBand(map_canvas, QgsWkbTypes.PointGeometry)
             self.rubber_band.setColor(QColor(255, 255, 50, 200))
             self.rubber_band.setIcon(self.rubber_band.ICON_CIRCLE)
             self.rubber_band.setIconSize(15)
             self.rubber_band.setWidth(4)
             self.rubber_band.setBrushStyle(Qt.NoBrush)
+
+            self.feature_rubber_band = QgsRubberBand(self.map_canvas, QgsWkbTypes.PolygonGeometry)
+            self.feature_rubber_band.setColor(QColor(255, 50, 50, 200))
+            self.feature_rubber_band.setFillColor(QColor(255, 255, 50, 160))
+            self.feature_rubber_band.setBrushStyle(Qt.SolidPattern)
+            self.feature_rubber_band.setLineStyle(Qt.SolidLine)
+            self.feature_rubber_band.setWidth(4)
 
             # create transform
             srv_crs_authid = self.settings.value('crs')
@@ -250,6 +259,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                                'layer': self.group_info(loc['attrs']['origin'])['layer'],
                                'feature_id': loc['attrs']['featureId'] if 'featureId' in loc['attrs'] else None }
             self.resultFetched.emit(result)
+        self.finished.emit()
         return
 
     def triggerResult(self, result: QgsLocatorResult):
@@ -354,15 +364,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
             # geometry = QgsGeometry.fromWkt(rings)
             geometry.transform(self.transform)
 
-            rubber_band = QgsRubberBand(self.map_canvas, QgsWkbTypes.PolygonGeometry)
-            rubber_band.setColor(QColor(255, 50, 50, 200))
-            rubber_band.setFillColor(QColor(255, 255, 50, 160))
-            rubber_band.setBrushStyle(Qt.SolidPattern)
-            # rubber_band.setIcon(self.rubber_band.ICON_CIRCLE)
-            # rubber_band.setIconSize(15)
-            rubber_band.setLineStyle(Qt.SolidLine)
-            rubber_band.setWidth(4)
-            rubber_band.addGeometry(geometry, None)
+            self.feature_rubber_band.reset(QgsWkbTypes.PolygonGeometry)
+            self.feature_rubber_band.addGeometry(geometry, None)
 
     def beautify_group(self, group):
         if self.settings.value("remove_leading_digits"):
