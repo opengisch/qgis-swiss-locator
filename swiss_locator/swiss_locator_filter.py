@@ -84,6 +84,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         self.map_canvas = None
         self.settings = Settings()
         self.reply = None
+        self.transform = None
 
         self.locale_lang = locale_lang
         lang = self.settings.value('lang')
@@ -103,6 +104,14 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.rubber_band.setIconSize(15)
             self.rubber_band.setWidth(4)
             self.rubber_band.setBrushStyle(Qt.NoBrush)
+
+            # create transform
+            srv_crs_authid = self.settings.value('crs')
+            assert srv_crs_authid in AVAILABLE_CRS
+            src_crs = QgsCoordinateReferenceSystem('EPSG:{}'.format(srv_crs_authid))
+            assert src_crs.isValid()
+            dst_crs = self.map_canvas.mapSettings().destinationCrs()
+            self.transform = QgsCoordinateTransform(src_crs, dst_crs, QgsProject.instance())
 
     def group_info(self, group: str) -> dict:
         groups = {'zipcode': {'name': self.tr('ZIP code'),
@@ -258,16 +267,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
         self.dbg_info('layer: {}'.format(layer))
         self.dbg_info('feature_id: {}'.format(feature_id))
 
-        # create transform
-        srv_crs_authid = self.settings.value('crs')
-        assert srv_crs_authid in AVAILABLE_CRS
-        src_crs = QgsCoordinateReferenceSystem('EPSG:{}'.format(srv_crs_authid))
-        assert src_crs.isValid()
-        dst_crs = self.map_canvas.mapSettings().destinationCrs()
-        tr = QgsCoordinateTransform(src_crs, dst_crs, QgsProject.instance())
-
-        point.transform(tr)
-        bbox.transform(tr)
+        point.transform(self.transform)
+        bbox.transform(self.transform)
 
         self.rubber_band.reset(QgsWkbTypes.PointGeometry)
         self.rubber_band.addGeometry(point, None)
@@ -339,11 +340,26 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
         if 'rings' in data['feature']['geometry']:
             rings = data['feature']['geometry']['rings']
-            r = re.sub(r'\[(\d+(:?\.\d+)?, \d+(:?\.\d+)?)\]', r'\1', rings)
-            r = re.sub(r'^\[\[', r'Polygon((', r)
-            r = re.sub(r'\]\]$', r'))', r)
-            r = re.sub(r'\], \[', r'), (', r)
-            x = QgsGeometry.fromWkt(r)
+            self.dbg_info(rings)
+            for r in range(0, len(rings)):
+                for p in range(0, len(rings[r])):
+                    rings[r][p] = QgsPointXY(rings[r][p][0], rings[r][p][1])
+            geometry = QgsGeometry.fromPolygonXY(rings)
+            # self.dbg_info(str(type(rings)))
+            # rings = re.sub(r'\[(\d+(:?\.\d+)?, \d+(:?\.\d+)?)\]', r'\1', rings)
+            # rings = re.sub(r'^\[\[', r'Polygon((', rings)
+            # rings = re.sub(r'\]\]$', r'))', rings)
+            # rings = re.sub(r'\], \[', r'), (', rings)
+            #self.dbg_info(rings)
+            # geometry = QgsGeometry.fromWkt(rings)
+            geometry.transform(self.transform)
+
+            rubber_band = QgsRubberBand(self.map_canvas, QgsWkbTypes.PolygonGeometry)
+            rubber_band.setColor(QColor(255, 255, 50, 200))
+            # rubber_band.setIcon(self.rubber_band.ICON_CIRCLE)
+            # rubber_band.setIconSize(15)
+            rubber_band.setWidth(4)
+            self.rubber_band.addGeometry(geometry, None)
 
     def beautify_group(self, group):
         if self.settings.value("remove_leading_digits"):
