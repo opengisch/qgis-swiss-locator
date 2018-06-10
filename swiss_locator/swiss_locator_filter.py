@@ -343,6 +343,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
     def parse_feature_response(self, content):
         data = json.loads(content)
+        self.dbg_info(data)
+
         if 'feature' not in data:
             return
         if 'geometry' not in data['feature']:

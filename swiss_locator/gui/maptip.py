@@ -21,27 +21,25 @@
  ***************************************************************************/
 """
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtWebKit import QWebSettings
 from PyQt5.QtWebKitWidgets import QWebView, QWebPage
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QSizePolicy
-from PyQt5.QtGui import QColor, QPalette, QDesktopServices
+from PyQt5.QtWidgets import QSizePolicy, QDockWidget
+from PyQt5.QtGui import QPalette, QDesktopServices
 from qgis.core import Qgis, QgsPointXY, QgsMessageLog
 from qgis.gui import QgsMapCanvas
 
 from ..swiss_locator_plugin import DEBUG
 
 
-class MapTip():
+class MapTip:
     def __init__(self, map_canvas: QgsMapCanvas, html: str, point: QgsPointXY):
-
-        self.widget = QWidget(map_canvas)
+        self.map_canvas = map_canvas
+        self.point = point
+        self.widget = QDockWidget()
         self.web_view = QWebView(self.widget)
 
-        pixel_position = map_canvas.mapSettings().mapToPixel().transform(point)
-
-        self.dbg_info(point.asWkt())
-        self.dbg_info('pix: {} {}'.format(pixel_position.x(), pixel_position.y()))
+        self.dbg_info('map position: {}'.format(point.asWkt()))
 
         self.web_view.page().setLinkDelegationPolicy(QWebPage.DelegateAllLinks)  # Handle link clicks by yourself
         self.web_view.setContextMenuPolicy(Qt.NoContextMenu)  # No context menu is allowed if you don't need it
@@ -50,30 +48,32 @@ class MapTip():
         self.web_view.page().settings().setAttribute(QWebSettings.DeveloperExtrasEnabled, True)
         self.web_view.page().settings().setAttribute(QWebSettings.JavascriptEnabled, True)
 
-        self.layout = QHBoxLayout()
-        self.layout.addWidget(self.web_view)
-
         self.widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.widget.setLayout(self.layout)
+        self.widget.setWidget(self.web_view)
 
         # assure the map tip is never larger than half the map canvas
-        max_width = map_canvas.geometry().width() / 2
-        max_height = map_canvas.geometry().height() / 2
-        self.dbg_info('max {} {}'.format(max_height, max_width))
+        max_width = int(self.map_canvas.geometry().width() / 1.1)
+        max_height = int(self.map_canvas.geometry().height() / 1.1)
+        self.dbg_info('max size {} {}'.format(max_height, max_width))
         self.widget.setMaximumSize(max_width, max_height)
 
         # start with 0 size,
         # the content will automatically make it grow up to MaximumSize
         self.widget.resize(300, 200)
+        pixel_position = self.map_canvas.mapSettings().mapToPixel().transform(self.point)
+        pixel_position = self.map_canvas.mapToGlobal(QPoint(pixel_position.x(), pixel_position.y()))
+        self.widget.move(pixel_position.x() + 10, pixel_position.y() + 10)
 
         background_color = self.widget.palette().base().color()
-        background_color.setAlpha(220)
+        background_color.setAlpha(235)
         stroke_color = self.widget.palette().shadow().color()
-        self.widget.setStyleSheet(".QWidget{{ border: 1px solid {stroke}; background-color: {bg} }}"
-                                  .format(stroke=stroke_color.name(QColor.HexArgb), bg=background_color.name(QColor.HexArgb)))
+        #self.widget.setStyleSheet(".QDocWidget{{ border: 1px solid {stroke}; background-color: {bg} }}"
+        #                          .format(stroke=stroke_color.name(QColor.HexArgb),
+        #                                  bg=background_color.name(QColor.HexArgb)))
 
         palette = self.web_view.palette()
         palette.setBrush(QPalette.Base, Qt.transparent)
+        palette.setBrush(QPalette.Base, background_color)
         self.web_view.page().setPalette(palette)
         self.web_view.setAttribute(Qt.WA_OpaquePaintEvent, False)
 
@@ -84,12 +84,12 @@ class MapTip():
                     "<div id='QgsWebViewContainer' style='{container_style}'>{html}</div><" \
                     "/body></html>".format(body_style=body_style,
                                            container_style=container_style,
-                                           html=html )
-
-        self.widget.move(pixel_position.x(), pixel_position.y())
+                                           html=html)
 
         self.web_view.setHtml(body_html)
 
+        self.widget.setWindowOpacity(0.9)
+        self.widget.setWindowFlags(self.widget.windowFlags() | Qt.WindowStaysOnTopHint ^ Qt.WindowMinimizeButtonHint)
         self.widget.show()
 
         scrollbar_width = self.web_view.page().mainFrame().scrollBarGeometry(Qt.Vertical).width()
@@ -97,10 +97,10 @@ class MapTip():
         if scrollbar_width > 0 or scrollbar_height > 0:
             # Get the content size
             container = self.web_view.page().mainFrame().findFirstElement("#QgsWebViewContainer")
-            width = container.geometry().width() + 5 + scrollbar_width
-            height = container.geometry().height() + 5 + scrollbar_height
+            width = container.geometry().width() + 25 + scrollbar_width
+            height = container.geometry().height() + 25 + scrollbar_height
 
-            self.widget.resize(width, height)
+            #self.widget.resize(width, height)
 
     def on_link_clicked(self, url):
         QDesktopServices.openUrl(url)
