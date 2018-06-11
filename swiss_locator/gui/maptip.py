@@ -21,11 +21,11 @@
  ***************************************************************************/
 """
 
-from PyQt5.QtCore import Qt, QPoint
+from PyQt5.QtCore import Qt, QPoint, pyqtSignal
 from PyQt5.QtWebKit import QWebSettings
 from PyQt5.QtWebKitWidgets import QWebView, QWebPage
 from PyQt5.QtWidgets import QSizePolicy, QDockWidget
-from PyQt5.QtGui import QPalette, QDesktopServices
+from PyQt5.QtGui import QPalette, QDesktopServices, QCloseEvent
 from qgis.core import Qgis, QgsPointXY, QgsMessageLog
 from qgis.gui import QgsMapCanvas
 
@@ -33,6 +33,9 @@ from ..swiss_locator_plugin import DEBUG
 
 
 class MapTip(QDockWidget):
+
+    closed = pyqtSignal()
+
     def __init__(self, map_canvas: QgsMapCanvas, html: str, point: QgsPointXY):
         super().__init__()
         self.map_canvas = map_canvas
@@ -104,6 +107,9 @@ class MapTip(QDockWidget):
 
     def on_link_clicked(self, url):
         QDesktopServices.openUrl(url)
+
+    def closeEvent(self, event: QCloseEvent):
+        self.closed.emit()
 
     def info(self, msg="", level=Qgis.Info):
         QgsMessageLog.logMessage('{} {}'.format(self.__class__.__name__, msg), 'QgsLocatorFilter', level)

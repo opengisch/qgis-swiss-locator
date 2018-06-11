@@ -28,7 +28,7 @@ import re
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
-from PyQt5.QtCore import QUrl, QUrlQuery
+from PyQt5.QtCore import QUrl, QUrlQuery, pyqtSlot
 from PyQt5.QtWidgets import QDialog
 from PyQt5.uic import loadUiType
 
@@ -190,6 +190,14 @@ class SwissLocatorFilter(QgsLocatorFilter):
         url.setQuery(q)
         return url.url()
 
+    @pyqtSlot()
+    def clear_results(self):
+        self.rubber_band.reset(QgsWkbTypes.PointGeometry)
+        self.feature_rubber_band.reset(QgsWkbTypes.PolygonGeometry)
+        if self.map_tip is not None:
+            del self.map_tip
+            self.map_tip = None
+
     def fetchResults(self, search, context, feedback):
         self.dbg_info("start Swiss locator search...")
 
@@ -316,6 +324,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 else:
                     self.dbg_info(content.decode('utf-8'))
                     self.map_tip = MapTip(self.map_canvas, content.decode('utf-8'), point.asPoint())
+                    self.map_tip.closed.connect(self.clear_results)
             except RequestsExceptionUserAbort:
                 pass
             except RequestsException as err:
@@ -342,7 +351,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 self.info(err)
 
         if self.map_tip is None:
-            self.map_tip = MapTip(self.map_canvas, result.userData['html_label'])
+            self.map_tip = MapTip(self.map_canvas, result.userData['html_label'], point.asPoint())
+            self.map_tip.closed.connect(self.clear_results)
 
     def parse_feature_response(self, content):
         data = json.loads(content)
