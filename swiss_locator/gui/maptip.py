@@ -32,12 +32,12 @@ from qgis.gui import QgsMapCanvas
 from ..swiss_locator_plugin import DEBUG
 
 
-class MapTip:
+class MapTip(QDockWidget):
     def __init__(self, map_canvas: QgsMapCanvas, html: str, point: QgsPointXY):
+        super().__init__()
         self.map_canvas = map_canvas
         self.point = point
-        self.widget = QDockWidget()
-        self.web_view = QWebView(self.widget)
+        self.web_view = QWebView(self)
 
         self.dbg_info('map position: {}'.format(point.asWkt()))
 
@@ -48,26 +48,26 @@ class MapTip:
         self.web_view.page().settings().setAttribute(QWebSettings.DeveloperExtrasEnabled, True)
         self.web_view.page().settings().setAttribute(QWebSettings.JavascriptEnabled, True)
 
-        self.widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.widget.setWidget(self.web_view)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.setWidget(self.web_view)
 
         # assure the map tip is never larger than half the map canvas
         max_width = int(self.map_canvas.geometry().width() / 1.1)
         max_height = int(self.map_canvas.geometry().height() / 1.1)
         self.dbg_info('max size {} {}'.format(max_height, max_width))
-        self.widget.setMaximumSize(max_width, max_height)
+        self.setMaximumSize(max_width, max_height)
 
         # start with 0 size,
         # the content will automatically make it grow up to MaximumSize
-        self.widget.resize(300, 200)
+        self.resize(300, 200)
         pixel_position = self.map_canvas.mapSettings().mapToPixel().transform(self.point)
         pixel_position = self.map_canvas.mapToGlobal(QPoint(pixel_position.x(), pixel_position.y()))
-        self.widget.move(pixel_position.x() + 10, pixel_position.y() + 10)
+        self.move(pixel_position.x() + 10, pixel_position.y() + 10)
 
-        background_color = self.widget.palette().base().color()
+        background_color = self.palette().base().color()
         background_color.setAlpha(235)
-        stroke_color = self.widget.palette().shadow().color()
-        #self.widget.setStyleSheet(".QDocWidget{{ border: 1px solid {stroke}; background-color: {bg} }}"
+        stroke_color = self.palette().shadow().color()
+        #self.setStyleSheet(".QDocWidget{{ border: 1px solid {stroke}; background-color: {bg} }}"
         #                          .format(stroke=stroke_color.name(QColor.HexArgb),
         #                                  bg=background_color.name(QColor.HexArgb)))
 
@@ -88,9 +88,9 @@ class MapTip:
 
         self.web_view.setHtml(body_html)
 
-        self.widget.setWindowOpacity(0.9)
-        self.widget.setWindowFlags(self.widget.windowFlags() | Qt.WindowStaysOnTopHint ^ Qt.WindowMinimizeButtonHint)
-        self.widget.show()
+        self.setWindowOpacity(0.9)
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint ^ Qt.WindowMinimizeButtonHint)
+        self.show()
 
         scrollbar_width = self.web_view.page().mainFrame().scrollBarGeometry(Qt.Vertical).width()
         scrollbar_height = self.web_view.page().mainFrame().scrollBarGeometry(Qt.Horizontal).height()
@@ -100,7 +100,7 @@ class MapTip:
             width = container.geometry().width() + 25 + scrollbar_width
             height = container.geometry().height() + 25 + scrollbar_height
 
-            #self.widget.resize(width, height)
+            #self.resize(width, height)
 
     def on_link_clicked(self, url):
         QDesktopServices.openUrl(url)

@@ -86,6 +86,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         self.settings = Settings()
         self.reply = None
         self.transform = None
+        self.map_tip = None
 
         self.locale_lang = locale_lang
         lang = self.settings.value('lang')
@@ -257,7 +258,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
             result.userData = {'point': QgsPointXY(loc['attrs']['y'], loc['attrs']['x']),
                                'bbox': self.box2geometry(loc['attrs']['geom_st_box2d']),
                                'layer': self.group_info(loc['attrs']['origin'])['layer'],
-                               'feature_id': loc['attrs']['featureId'] if 'featureId' in loc['attrs'] else None }
+                               'feature_id': loc['attrs']['featureId'] if 'featureId' in loc['attrs'] else None,
+                               'html_label': loc['attrs']['label']}
             self.resultFetched.emit(result)
         self.finished.emit()
         return
@@ -288,66 +290,65 @@ class SwissLocatorFilter(QgsLocatorFilter):
         self.map_canvas.setExtent(rect)
         self.map_canvas.refresh()
 
+        if self.map_tip is not None:
+            del self.map_tip
+            self.map_tip = None
+
         # Try to get more info
-        self.get_more_info(layer, feature_id, point.asPoint())
+        if layer and feature_id:
+            headers = {b'User-Agent': self.USER_AGENT}
 
-    def get_more_info(self, layer: str, feature_id: str, point: QgsPointXY):
-        if not layer or not feature_id:
-            return
+            url_html = 'https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}/htmlPopup'\
+                .format(layer=layer, feature_id=feature_id)
+            params = {
+                'lang': self.lang,
+                'sr': self.settings.value('crs')
+            }
+            url_html = self.url_with_param(url_html, params)
+            self.dbg_info(url_html)
 
-        headers = {b'User-Agent': self.USER_AGENT}
+            nam = NetworkAccessManager()
 
-        url_html = 'https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}/htmlPopup'\
-            .format(layer=layer, feature_id=feature_id)
-        params = {
-            'lang': self.lang,
-            'sr': self.settings.value('crs')
-        }
-        url_html = self.url_with_param(url_html, params)
-        self.dbg_info(url_html)
+            try:
+                (response, content) = nam.request(url_html, headers=headers, blocking=True)
+                if response.status_code != 200:
+                    self.info("Error with status code: {}".format(response.status_code))
+                else:
+                    self.dbg_info(content.decode('utf-8'))
+                    self.map_tip = MapTip(self.map_canvas, content.decode('utf-8'), point.asPoint())
+            except RequestsExceptionUserAbort:
+                pass
+            except RequestsException as err:
+                self.info(err)
 
-        nam = NetworkAccessManager()
+            url_detail = 'https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}'\
+                .format(layer=layer, feature_id=feature_id)
+            params = {
+                'lang': self.lang,
+                'sr': self.settings.value('crs')
+            }
+            url_detail = self.url_with_param(url_detail, params)
+            self.dbg_info(url_detail)
 
-        try:
-            (response, content) = nam.request(url_html, headers=headers, blocking=True)
-            if response.status_code != 200:
-                self.info("Error with status code: {}".format(response.status_code))
-            else:
-                self.dbg_info(content.decode('utf-8'))
-                self.map_tip = MapTip(self.map_canvas, content.decode('utf-8'), point)
-        except RequestsExceptionUserAbort:
-            pass
-        except RequestsException as err:
-            self.info(err)
+            try:
+                (response, content) = nam.request(url_detail, headers=headers, blocking=True)
+                if response.status_code != 200:
+                    self.info("Error with status code: {}".format(response.status_code))
+                else:
+                    self.parse_feature_response(content.decode('utf-8'))
+            except RequestsExceptionUserAbort:
+                pass
+            except RequestsException as err:
+                self.info(err)
 
-        url_detail = 'https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}'\
-            .format(layer=layer, feature_id=feature_id)
-        params = {
-            'lang': self.lang,
-            'sr': self.settings.value('crs')
-        }
-        url_detail = self.url_with_param(url_detail, params)
-        self.dbg_info(url_detail)
-
-        try:
-            (response, content) = nam.request(url_detail, headers=headers, blocking=True)
-            if response.status_code != 200:
-                self.info("Error with status code: {}".format(response.status_code))
-            else:
-                #self.dbg_info(content.decode('utf-8'))
-                self.parse_feature_response(content.decode('utf-8'))
-        except RequestsExceptionUserAbort:
-            pass
-        except RequestsException as err:
-            self.info(err)
+        if self.map_tip is None:
+            self.map_tip = MapTip(self.map_canvas, result.userData['html_label'])
 
     def parse_feature_response(self, content):
         data = json.loads(content)
         self.dbg_info(data)
 
-        if 'feature' not in data:
-            return
-        if 'geometry' not in data['feature']:
+        if 'feature' not in data or 'geometry' not in data['feature']:
             return
 
         if 'rings' in data['feature']['geometry']:
@@ -357,13 +358,6 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 for p in range(0, len(rings[r])):
                     rings[r][p] = QgsPointXY(rings[r][p][0], rings[r][p][1])
             geometry = QgsGeometry.fromPolygonXY(rings)
-            # self.dbg_info(str(type(rings)))
-            # rings = re.sub(r'\[(\d+(:?\.\d+)?, \d+(:?\.\d+)?)\]', r'\1', rings)
-            # rings = re.sub(r'^\[\[', r'Polygon((', rings)
-            # rings = re.sub(r'\]\]$', r'))', rings)
-            # rings = re.sub(r'\], \[', r'), (', rings)
-            #self.dbg_info(rings)
-            # geometry = QgsGeometry.fromWkt(rings)
             geometry.transform(self.transform)
 
             self.feature_rubber_band.reset(QgsWkbTypes.PolygonGeometry)
