@@ -91,7 +91,6 @@ class SwissLocatorFilter(QgsLocatorFilter):
         self.feature_rubber_band = None
         self.map_canvas = None
         self.settings = Settings()
-        self.reply = None
         self.transform = None
         self.map_tip = None
         self.current_timer = None
@@ -131,6 +130,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.create_transform()
 
     def create_transform(self):
+        # this should happen in the main thread
         self.crs = self.settings.value('crs')
         if self.crs == 'project':
             map_crs = self.map_canvas.mapSettings().destinationCrs()
@@ -231,8 +231,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
             if len(search) < 2:
                 return
 
-            if self.reply is not None and self.reply.isRunning():
-                self.reply.abort()
+            nam = NetworkAccessManager()
+            feedback.canceled.connect(nam.abort)
 
             for search_type in ('locations', 'layers'):
                 url = 'https://api3.geo.admin.ch/rest/services/api/SearchServer'
@@ -241,7 +241,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     'searchText': str(search),
                     'returnGeometry': 'true',
                     'lang': self.lang,
-                    'sr': self.crs
+                    'sr': self.crs,
+                    #'limit': '10' if search_type == 'locations' else '30'
                 }
                 # bbox Must be provided if the searchText is not.
                 # A comma separated list of 4 coordinates representing
@@ -251,8 +252,6 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 url = self.url_with_param(url, params)
                 self.dbg_info(url)
 
-                nam = NetworkAccessManager()
-                feedback.canceled.connect(nam.abort)
                 try:
                     (response, content) = nam.request(url, headers=headers, blocking=True)
                     self.handle_response(response, content)
@@ -260,13 +259,13 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     pass
                 except RequestsException as err:
                     self.info(err)
-        except Exception:
-            #self.info(e, Qgis.Critical)
-            #exc_type, exc_obj, exc_tb = sys.exc_info()
-            #filename = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            #self.info('{} {} {}'.format(exc_type, filename, exc_tb.tb_lineno), Qgis.Critical)
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            self.info(traceback.print_exception(exc_type, exc_value, exc_traceback))
+
+        except Exception as e:
+            self.info(e, Qgis.Critical)
+            exc_type, exc_obj, exc_traceback = sys.exc_info()
+            filename = os.path.split(exc_traceback.tb_frame.f_code.co_filename)[1]
+            self.info('{} {} {}'.format(exc_type, filename, exc_traceback.tb_lineno), Qgis.Critical)
+            self.info(traceback.print_exception(exc_type, exc_obj, exc_traceback), Qgis.Critical)
 
     def handle_response(self, response, content):
         try:
@@ -281,9 +280,11 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 self.dbg_info("keys: {}".format(loc['attrs'].keys()))
                 if loc['attrs']['origin'] == 'layer':
                     # available keys: ﻿['origin', 'lang', 'layer', 'staging', 'title', 'topics', 'detail', 'label', 'id']
+                    for key, val in loc['attrs'].items():
+                        self.dbg_info('{}: {}'.format(key, val))
                     result = QgsLocatorResult()
                     result.filter = self
-                    result.displayString = loc['attrs']['label']
+                    result.displayString = strip_tags(loc['attrs']['label'])
                     result.description = loc['attrs']['layer']
                     if Qgis.QGIS_VERSION_INT >= 30100:
                         result.group = self.tr('WMS Layers')
@@ -317,13 +318,13 @@ class SwissLocatorFilter(QgsLocatorFilter):
                                        'feature_id': loc['attrs']['featureId'] if 'featureId' in loc['attrs'] else None,
                                        'html_label': loc['attrs']['label']}
                     self.resultFetched.emit(result)
-            self.finished.emit()
-        except Exception:
-            #exc_type, exc_obj, exc_tb = sys.exc_info()
-            #filename = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            #self.info('{} {} {}'.format(exc_type, filename, exc_tb.tb_lineno))
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            self.info(traceback.print_exception(exc_type, exc_value, exc_traceback))
+
+        except Exception as e:
+            self.info(e, Qgis.Critical)
+            exc_type, exc_obj, exc_traceback = sys.exc_info()
+            filename = os.path.split(exc_traceback.tb_frame.f_code.co_filename)[1]
+            self.info('{} {} {}'.format(exc_type, filename, exc_traceback.tb_lineno), Qgis.Critical)
+            self.info(traceback.print_exception(exc_type, exc_obj, exc_traceback), Qgis.Critical)
 
     def triggerResult(self, result: QgsLocatorResult):
         # this should be run in the main thread, i.e. mapCanvas should not be None
