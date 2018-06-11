@@ -48,7 +48,7 @@ from .gui.maptip import MapTip
 DialogUi, _ = loadUiType(os.path.join(os.path.dirname(__file__), 'ui/config.ui'))
 
 
-AVAILABLE_CRS = ['2056', '21781']
+AVAILABLE_CRS = ('2056', '21781')
 AVAILABLE_LANGUAGES = {'German': 'de',
                        'SwissGerman': 'de',
                        'French': 'fr',
@@ -66,6 +66,7 @@ class ConfigDialog(QDialog, DialogUi, SettingDialog):
         self.lang.addItem(self.tr('use the application locale, defaults to English'), '')
         for key, val in AVAILABLE_LANGUAGES.items():
             self.lang.addItem(key, val)
+        self.crs.addItem(self.tr('Use map CRS if possible, defaults to CH1903+'), 'project')
         self.crs.addItem('CH 1903+ (EPSG:2056)', '2056')
         self.crs.addItem('CH 1903 (EPSG:21781)', '21781')
         self.settings = settings
@@ -80,7 +81,11 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
     USER_AGENT = b'Mozilla/5.0 QGIS Swiss MapGeoAdmin Locator Filter'
 
-    def __init__(self,  locale_lang: str, map_canvas: QgsMapCanvas = None):
+    def __init__(self,  locale_lang: str, map_canvas: QgsMapCanvas = None, crs: str = None):
+        """"
+        :param locale_lang:
+        :param map_canvas: given when on the main thread (which will display/trigger results), None otherwise
+        """
         super().__init__()
         self.rubber_band = None
         self.feature_rubber_band = None
@@ -90,6 +95,10 @@ class SwissLocatorFilter(QgsLocatorFilter):
         self.transform = None
         self.map_tip = None
         self.current_timer = None
+        self.crs = None
+
+        if crs:
+            self.crs = crs
 
         self.locale_lang = locale_lang
         lang = self.settings.value('lang')
@@ -102,6 +111,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.lang = lang
 
         if map_canvas is not None:
+            # happens only in main thread
             self.map_canvas = map_canvas
 
             self.rubber_band = QgsRubberBand(map_canvas, QgsWkbTypes.PointGeometry)
@@ -118,13 +128,21 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.feature_rubber_band.setLineStyle(Qt.SolidLine)
             self.feature_rubber_band.setWidth(4)
 
-            # create transform
-            srv_crs_authid = self.settings.value('crs')
-            assert srv_crs_authid in AVAILABLE_CRS
-            src_crs = QgsCoordinateReferenceSystem('EPSG:{}'.format(srv_crs_authid))
-            assert src_crs.isValid()
-            dst_crs = self.map_canvas.mapSettings().destinationCrs()
-            self.transform = QgsCoordinateTransform(src_crs, dst_crs, QgsProject.instance())
+            self.create_transform()
+
+    def create_transform(self):
+        self.crs = self.settings.value('crs')
+        if self.crs == 'project':
+            map_crs = self.map_canvas.mapSettings().destinationCrs()
+            if map_crs.isValid():
+                self.crs = map_crs.authid().split(':')[1]
+            if self.crs not in AVAILABLE_CRS:
+                self.crs = '2056'
+        assert self.crs in AVAILABLE_CRS
+        src_crs = QgsCoordinateReferenceSystem('EPSG:{}'.format(self.crs))
+        assert src_crs.isValid()
+        dst_crs = self.map_canvas.mapSettings().destinationCrs()
+        self.transform = QgsCoordinateTransform(src_crs, dst_crs, QgsProject.instance())
 
     def group_info(self, group: str) -> (str, str):
         groups = {'zipcode': {'name': self.tr('ZIP code'),
@@ -171,7 +189,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         return self.__class__.__name__
 
     def clone(self):
-        return SwissLocatorFilter(self.locale_lang)
+        return SwissLocatorFilter(self.locale_lang, crs=self.crs)
 
     def displayName(self):
         return self.tr('Swiss Geoadmin locations')
@@ -223,7 +241,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     'searchText': str(search),
                     'returnGeometry': 'true',
                     'lang': self.lang,
-                    'sr': self.settings.value('crs')
+                    'sr': self.crs
                 }
                 # bbox Must be provided if the searchText is not.
                 # A comma separated list of 4 coordinates representing
@@ -346,7 +364,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 .format(layer=layer, feature_id=feature_id)
             params = {
                 'lang': self.lang,
-                'sr': self.settings.value('crs')
+                'sr': self.crs
             }
             url_detail = self.url_with_param(url_detail, params)
             self.dbg_info(url_detail)
@@ -368,7 +386,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     .format(layer=layer, feature_id=feature_id)
                 params = {
                     'lang': self.lang,
-                    'sr': self.settings.value('crs')
+                    'sr': self.crs
                 }
                 url_html = self.url_with_param(url_html, params)
                 self.dbg_info(url_html)

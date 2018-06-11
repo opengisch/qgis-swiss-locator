@@ -240,7 +240,7 @@ class NetworkAccessManager(object):
 
         # emit exception in case of error
         if not self.http_call_result.ok:
-            if self.http_call_result.exception and not self.exception_class:
+            if self.http_call_result.exception or not self.exception_class:
                 raise self.http_call_result.exception
             else:
                 raise self.exception_class(self.http_call_result.reason)
