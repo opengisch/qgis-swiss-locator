@@ -38,5 +38,6 @@ class Settings(SettingManager):
         # if left empty or NULL, try to use locale and defaults to en
         self.add_setting(String("lang", Scope.Global, ''))
         self.add_setting(String("crs", Scope.Global, '2056'))
+        self.add_setting(Bool("more_info", Scope.Global, True))
 
 

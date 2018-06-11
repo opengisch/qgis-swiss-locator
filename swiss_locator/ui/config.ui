@@ -14,7 +14,27 @@
    <string>Swiss locator filter configuration</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="4" column="2">
+   <item row="2" column="0">
+    <widget class="QLabel" name="label_4">
+     <property name="text">
+      <string>CRS</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1" colspan="2">
+    <widget class="QComboBox" name="lang"/>
+   </item>
+   <item row="2" column="1" colspan="2">
+    <widget class="QComboBox" name="crs"/>
+   </item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="label_5">
+     <property name="text">
+      <string>Lang</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="2">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -24,7 +44,7 @@
      </property>
     </widget>
    </item>
-   <item row="3" column="2">
+   <item row="4" column="2">
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -37,32 +57,12 @@
      </property>
     </spacer>
    </item>
-   <item row="2" column="0">
-    <widget class="QLabel" name="label_4">
+   <item row="3" column="0" colspan="3">
+    <widget class="QCheckBox" name="more_info">
      <property name="text">
-      <string>CRS</string>
+      <string>Display more information in a dock when available</string>
      </property>
     </widget>
-   </item>
-   <item row="0" column="1" colspan="2">
-    <widget class="QComboBox" name="lang"/>
-   </item>
-   <item row="1" column="0" colspan="3">
-    <widget class="QCheckBox" name="html_popup">
-     <property name="text">
-      <string>Display info widget on the map</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="0">
-    <widget class="QLabel" name="label_5">
-     <property name="text">
-      <string>Lang</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="1" colspan="2">
-    <widget class="QComboBox" name="crs"/>
    </item>
   </layout>
  </widget>

@@ -26,7 +26,7 @@ import json
 import os
 import re
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QColor
 from PyQt5.QtCore import QUrl, QUrlQuery, pyqtSlot
 from PyQt5.QtWidgets import QDialog
@@ -87,6 +87,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         self.reply = None
         self.transform = None
         self.map_tip = None
+        self.current_timer = None
 
         self.locale_lang = locale_lang
         lang = self.settings.value('lang')
@@ -197,6 +198,10 @@ class SwissLocatorFilter(QgsLocatorFilter):
         if self.map_tip is not None:
             del self.map_tip
             self.map_tip = None
+        if self.current_timer is not None:
+            self.current_timer.stop()
+            self.current_timer.deleteLater()
+            self.current_timer = None
 
     def fetchResults(self, search, context, feedback):
         self.dbg_info("start Swiss locator search...")
@@ -259,8 +264,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
             result.filter = self
             result.displayString = strip_tags(loc['attrs']['label'])
             # result.description = loc['attrs']['detail']
-            if 'featureId' in loc['attrs']:
-                result.description = loc['attrs']['featureId']
+            # if 'featureId' in loc['attrs']:
+            #     result.description = loc['attrs']['featureId']
             if Qgis.QGIS_VERSION_INT >= 30100:
                 result.group = self.group_info(loc['attrs']['origin'])['name']
             result.userData = {'point': QgsPointXY(loc['attrs']['y'], loc['attrs']['x']),
@@ -303,56 +308,61 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.map_tip = None
 
         # Try to get more info
-        if layer and feature_id:
-            headers = {b'User-Agent': self.USER_AGENT}
+        headers = {b'User-Agent': self.USER_AGENT}
+        nam = NetworkAccessManager()
 
-            url_html = 'https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}/htmlPopup'\
-                .format(layer=layer, feature_id=feature_id)
-            params = {
-                'lang': self.lang,
-                'sr': self.settings.value('crs')
-            }
-            url_html = self.url_with_param(url_html, params)
-            self.dbg_info(url_html)
+        url_detail = 'https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}' \
+            .format(layer=layer, feature_id=feature_id)
+        params = {
+            'lang': self.lang,
+            'sr': self.settings.value('crs')
+        }
+        url_detail = self.url_with_param(url_detail, params)
+        self.dbg_info(url_detail)
 
-            nam = NetworkAccessManager()
+        try:
+            (response, content) = nam.request(url_detail, headers=headers, blocking=True)
+            if response.status_code != 200:
+                self.info("Error with status code: {}".format(response.status_code))
+            else:
+                self.parse_feature_response(content.decode('utf-8'))
+        except RequestsExceptionUserAbort:
+            pass
+        except RequestsException as err:
+            self.info(err)
 
-            try:
-                (response, content) = nam.request(url_html, headers=headers, blocking=True)
-                if response.status_code != 200:
-                    self.info("Error with status code: {}".format(response.status_code))
-                else:
-                    self.dbg_info(content.decode('utf-8'))
-                    self.map_tip = MapTip(self.map_canvas, content.decode('utf-8'), point.asPoint())
-                    self.map_tip.closed.connect(self.clear_results)
-            except RequestsExceptionUserAbort:
-                pass
-            except RequestsException as err:
-                self.info(err)
+        if self.settings.value('more_info'):
+            if layer and feature_id:
+                url_html = 'https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}/htmlPopup'\
+                    .format(layer=layer, feature_id=feature_id)
+                params = {
+                    'lang': self.lang,
+                    'sr': self.settings.value('crs')
+                }
+                url_html = self.url_with_param(url_html, params)
+                self.dbg_info(url_html)
 
-            url_detail = 'https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}'\
-                .format(layer=layer, feature_id=feature_id)
-            params = {
-                'lang': self.lang,
-                'sr': self.settings.value('crs')
-            }
-            url_detail = self.url_with_param(url_detail, params)
-            self.dbg_info(url_detail)
+                try:
+                    (response, content) = nam.request(url_html, headers=headers, blocking=True)
+                    if response.status_code != 200:
+                        self.info("Error with status code: {}".format(response.status_code))
+                    else:
+                        self.dbg_info(content.decode('utf-8'))
+                        self.map_tip = MapTip(self.map_canvas, content.decode('utf-8'), point.asPoint())
+                        self.map_tip.closed.connect(self.clear_results)
+                except RequestsExceptionUserAbort:
+                    pass
+                except RequestsException as err:
+                    self.info(err)
 
-            try:
-                (response, content) = nam.request(url_detail, headers=headers, blocking=True)
-                if response.status_code != 200:
-                    self.info("Error with status code: {}".format(response.status_code))
-                else:
-                    self.parse_feature_response(content.decode('utf-8'))
-            except RequestsExceptionUserAbort:
-                pass
-            except RequestsException as err:
-                self.info(err)
-
-        if self.map_tip is None:
-            self.map_tip = MapTip(self.map_canvas, result.userData['html_label'], point.asPoint())
-            self.map_tip.closed.connect(self.clear_results)
+            if self.map_tip is None:
+                self.map_tip = MapTip(self.map_canvas, result.userData['html_label'], point.asPoint())
+                self.map_tip.closed.connect(self.clear_results)
+        else:
+            self.current_timer = QTimer()
+            self.current_timer.timeout.connect(self.clear_results)
+            self.current_timer.setSingleShot(True)
+            self.current_timer.start(4000)
 
     def parse_feature_response(self, content):
         data = json.loads(content)
