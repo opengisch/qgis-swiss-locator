@@ -35,7 +35,7 @@ from PyQt5.uic import loadUiType
 
 from qgis.core import Qgis, QgsMessageLog, QgsLocatorFilter, QgsLocatorResult, QgsRectangle, \
     QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsGeometry, QgsWkbTypes, QgsPointXY, \
-    QgsLocatorContext, QgsFeedback
+    QgsLocatorContext, QgsFeedback, QgsRasterLayer
 from qgis.gui import QgsRubberBand, QgsMapCanvas
 
 from .qgissettingmanager.setting_dialog import SettingDialog, UpdateMode
@@ -77,6 +77,10 @@ class InvalidBox(Exception):
     pass
 
 
+class WMSLayer:
+    pass
+
+
 class SwissLocatorFilter(QgsLocatorFilter):
 
     USER_AGENT = b'Mozilla/5.0 QGIS Swiss MapGeoAdmin Locator Filter'
@@ -112,6 +116,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         if map_canvas is not None:
             # happens only in main thread
             self.map_canvas = map_canvas
+            self.map_canvas.destinationCrsChanged.connect(self.create_transform)
 
             self.rubber_band = QgsRubberBand(map_canvas, QgsWkbTypes.PointGeometry)
             self.rubber_band.setColor(QColor(255, 255, 50, 200))
@@ -286,6 +291,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     result.filter = self
                     result.displayString = strip_tags(loc['attrs']['label'])
                     result.description = loc['attrs']['layer']
+                    result.userData = WMSLayer
                     if Qgis.QGIS_VERSION_INT >= 30100:
                         result.group = self.tr('WMS Layers')
                     self.resultFetched.emit(result)
@@ -328,91 +334,107 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
     def triggerResult(self, result: QgsLocatorResult):
         # this should be run in the main thread, i.e. mapCanvas should not be None
-        point = QgsGeometry.fromPointXY(result.userData['point'])
-        bbox = QgsGeometry.fromRect(result.userData['bbox'])
-        layer = result.userData['layer']
-        feature_id = result.userData['feature_id']
-        if not point or not bbox:
-            return
+        if result.userData == WMSLayer:
+            urlWithParams = 'contextualWMSLegend=0' \
+                            '&crs=EPSG:{crs}' \
+                            '&dpiMode=7' \
+                            '&featureCount=10' \
+                            '&format=image/jpeg' \
+                            '&layers={layer}' \
+                            '&styles=' \
+                            '&url=http://wms.geo.admin.ch/?VERSION%3D2.0.0'\
+                .format(crs=self.crs, layer=result.description)
+            wms_layer = QgsRasterLayer(urlWithParams, result.displayString, 'wms')
+            if not wms_layer.isValid():
+                self.info(self.tr('Cannot load WMS layer: {} ({})'.format(result.displayString, result.description)))
+            QgsProject.instance().addMapLayer(wms_layer)
 
-        self.dbg_info('point: {}'.format(point.asWkt()))
-        self.dbg_info('bbox: {}'.format(bbox.asWkt()))
-        self.dbg_info('descr: {}'.format(result.description))
-        self.dbg_info('layer: {}'.format(layer))
-        self.dbg_info('feature_id: {}'.format(feature_id))
+        else:
+            point = QgsGeometry.fromPointXY(result.userData['point'])
+            bbox = QgsGeometry.fromRect(result.userData['bbox'])
+            layer = result.userData['layer']
+            feature_id = result.userData['feature_id']
+            if not point or not bbox:
+                return
 
-        point.transform(self.transform)
-        bbox.transform(self.transform)
+            self.dbg_info('point: {}'.format(point.asWkt()))
+            self.dbg_info('bbox: {}'.format(bbox.asWkt()))
+            self.dbg_info('descr: {}'.format(result.description))
+            self.dbg_info('layer: {}'.format(layer))
+            self.dbg_info('feature_id: {}'.format(feature_id))
 
-        self.rubber_band.reset(QgsWkbTypes.PointGeometry)
-        self.rubber_band.addGeometry(point, None)
+            point.transform(self.transform)
+            bbox.transform(self.transform)
 
-        rect = bbox.boundingBox()
-        rect.scale(1.1)
-        self.map_canvas.setExtent(rect)
-        self.map_canvas.refresh()
+            self.rubber_band.reset(QgsWkbTypes.PointGeometry)
+            self.rubber_band.addGeometry(point, None)
 
-        if self.map_tip is not None:
-            del self.map_tip
-            self.map_tip = None
+            rect = bbox.boundingBox()
+            rect.scale(1.1)
+            self.map_canvas.setExtent(rect)
+            self.map_canvas.refresh()
 
-        # Try to get more info
-        headers = {b'User-Agent': self.USER_AGENT}
-        nam = NetworkAccessManager()
+            if self.map_tip is not None:
+                del self.map_tip
+                self.map_tip = None
 
-        if layer and feature_id:
-            url_detail = 'https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}' \
-                .format(layer=layer, feature_id=feature_id)
-            params = {
-                'lang': self.lang,
-                'sr': self.crs
-            }
-            url_detail = self.url_with_param(url_detail, params)
-            self.dbg_info(url_detail)
+            # Try to get more info
+            headers = {b'User-Agent': self.USER_AGENT}
+            nam = NetworkAccessManager()
 
-        try:
-            (response, content) = nam.request(url_detail, headers=headers, blocking=True)
-            if response.status_code != 200:
-                self.info("Error with status code: {}".format(response.status_code))
-            else:
-                self.parse_feature_response(content.decode('utf-8'))
-        except RequestsExceptionUserAbort:
-            pass
-        except RequestsException as err:
-            self.info(err)
-
-        if self.settings.value('more_info'):
             if layer and feature_id:
-                url_html = 'https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}/htmlPopup'\
+                url_detail = 'https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}' \
                     .format(layer=layer, feature_id=feature_id)
                 params = {
                     'lang': self.lang,
                     'sr': self.crs
                 }
-                url_html = self.url_with_param(url_html, params)
-                self.dbg_info(url_html)
+                url_detail = self.url_with_param(url_detail, params)
+                self.dbg_info(url_detail)
 
-                try:
-                    (response, content) = nam.request(url_html, headers=headers, blocking=True)
-                    if response.status_code != 200:
-                        self.info("Error with status code: {}".format(response.status_code))
-                    else:
-                        self.dbg_info(content.decode('utf-8'))
-                        self.map_tip = MapTip(self.map_canvas, content.decode('utf-8'), point.asPoint())
-                        self.map_tip.closed.connect(self.clear_results)
-                except RequestsExceptionUserAbort:
-                    pass
-                except RequestsException as err:
-                    self.info(err)
+            try:
+                (response, content) = nam.request(url_detail, headers=headers, blocking=True)
+                if response.status_code != 200:
+                    self.info("Error with status code: {}".format(response.status_code))
+                else:
+                    self.parse_feature_response(content.decode('utf-8'))
+            except RequestsExceptionUserAbort:
+                pass
+            except RequestsException as err:
+                self.info(err)
 
-            if self.map_tip is None:
-                self.map_tip = MapTip(self.map_canvas, result.userData['html_label'], point.asPoint())
-                self.map_tip.closed.connect(self.clear_results)
-        else:
-            self.current_timer = QTimer()
-            self.current_timer.timeout.connect(self.clear_results)
-            self.current_timer.setSingleShot(True)
-            self.current_timer.start(4000)
+            if self.settings.value('more_info'):
+                if layer and feature_id:
+                    url_html = 'https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}/htmlPopup'\
+                        .format(layer=layer, feature_id=feature_id)
+                    params = {
+                        'lang': self.lang,
+                        'sr': self.crs
+                    }
+                    url_html = self.url_with_param(url_html, params)
+                    self.dbg_info(url_html)
+
+                    try:
+                        (response, content) = nam.request(url_html, headers=headers, blocking=True)
+                        if response.status_code != 200:
+                            self.info("Error with status code: {}".format(response.status_code))
+                        else:
+                            self.dbg_info(content.decode('utf-8'))
+                            self.map_tip = MapTip(self.map_canvas, content.decode('utf-8'), point.asPoint())
+                            self.map_tip.closed.connect(self.clear_results)
+                    except RequestsExceptionUserAbort:
+                        pass
+                    except RequestsException as err:
+                        self.info(err)
+
+                if self.map_tip is None:
+                    self.map_tip = MapTip(self.map_canvas, result.userData['html_label'], point.asPoint())
+                    self.map_tip.closed.connect(self.clear_results)
+            else:
+                self.current_timer = QTimer()
+                self.current_timer.timeout.connect(self.clear_results)
+                self.current_timer.setSingleShot(True)
+                self.current_timer.start(5000)
 
     def parse_feature_response(self, content):
         data = json.loads(content)
@@ -433,17 +455,11 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.feature_rubber_band.reset(QgsWkbTypes.PolygonGeometry)
             self.feature_rubber_band.addGeometry(geometry, None)
 
-    def beautify_group(self, group):
-        if self.settings.value("remove_leading_digits"):
-            group = re.sub('^\d+', '', group)
-        if self.settings.value("replace_underscore"):
-            group = group.replace("_", " ")
-        if self.settings.value("break_camelcase"):
-            group = self.break_camelcase(group)
-        return group
-
     def info(self, msg="", level=Qgis.Info):
-        QgsMessageLog.logMessage('{} {}'.format(self.__class__.__name__, msg), 'QgsLocatorFilter', level)
+        if Qgis.QGIS_VERSION_INT >= 30100:
+            self.logMessage(msg, level)
+        else:
+            QgsMessageLog.logMessage('{} {}'.format(self.__class__.__name__, msg), 'QgsLocatorFilter', level)
 
     def dbg_info(self, msg=""):
         if DEBUG:

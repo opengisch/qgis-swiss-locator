@@ -39,5 +39,6 @@ class Settings(SettingManager):
         self.add_setting(String("lang", Scope.Global, ''))
         self.add_setting(String("crs", Scope.Global, 'project', {'value_list': ('2056', '21781', 'project')}))
         self.add_setting(Bool("more_info", Scope.Global, True))
+        self.add_setting(Bool("search_wms", Scope.Global, True))
 
 

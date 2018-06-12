@@ -46,8 +46,6 @@ class SwissLocatorPlugin:
         self.filter = SwissLocatorFilter(locale_lang, iface.mapCanvas())
         self.iface.registerLocatorFilter(self.filter)
 
-        iface.mapCanvas().destinationCrsChanged.connect(self.filter.create_transform)
-
     def initGui(self):
         pass
 

@@ -29,8 +29,8 @@ __date__ = 'August 2016'
 import re
 import urllib.request, urllib.error, urllib.parse
 
-from qgis.PyQt.QtCore import pyqtSlot, QUrl, QEventLoop, QTimer, QCoreApplication, QObject
-from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply
+from PyQt5.QtCore import pyqtSlot, Qt, QUrl, QEventLoop, QTimer, QCoreApplication, QObject
+from PyQt5.QtNetwork import QNetworkRequest, QNetworkReply
 
 from qgis.core import QgsNetworkAccessManager, QgsAuthManager, QgsMessageLog
 
@@ -173,7 +173,7 @@ class NetworkAccessManager(object):
         url = urllib.parse.unquote(url)
         req.setUrl(QUrl(url))
         if headers is not None:
-            # This fixes a wierd error with compressed content not being correctly
+            # This fixes a weird error with compressed content not being correctly
             # inflated.
             # If you set the header on the QNetworkRequest you are basically telling
             # QNetworkAccessManager "I know what I'm doing, please don't do any content
@@ -212,7 +212,7 @@ class NetworkAccessManager(object):
             self.msg_log("Update reply w/ authid: {0}".format(self.authid))
             QgsAuthManager.instance().updateNetworkReply(self.reply, self.authid)
 
-        # necessary to trap local timout manage by QgsNetworkAccessManager
+        # necessary to trap local timeout manage by QgsNetworkAccessManager
         # calling QgsNetworkAccessManager::abortRequest
         QgsNetworkAccessManager.instance().requestTimedOut.connect(self.requestTimedOut)
 
@@ -220,7 +220,7 @@ class NetworkAccessManager(object):
         self.reply.finished.connect(self.replyFinished)
         self.reply.downloadProgress.connect(self.downloadProgress)
 
-        # block if blocking mode otherwise return immediatly
+        # block if blocking mode otherwise return immediately
         # it's up to the caller to manage listeners in case of no blocking mode
         if not self.blocking_mode:
             return None, None
@@ -240,10 +240,12 @@ class NetworkAccessManager(object):
 
         # emit exception in case of error
         if not self.http_call_result.ok:
-            if self.http_call_result.exception and not self.exception_class:
+            if self.http_call_result.exception or not self.exception_class:
                 raise self.http_call_result.exception
-            else:
+            elif self.exception_class:
                 raise self.exception_class(self.http_call_result.reason)
+            else:
+                raise RequestsException('Unknown reason')
 
         return self.http_call_result, self.http_call_result.content
 
@@ -314,18 +316,18 @@ class NetworkAccessManager(object):
 
         else:
             # Handle redirections
-            redirectionUrl = self.reply.attribute(QNetworkRequest.RedirectionTargetAttribute)
-            if redirectionUrl is not None and redirectionUrl != self.reply.url():
-                if redirectionUrl.isRelative():
-                    redirectionUrl = self.reply.url().resolved(redirectionUrl)
+            redirection_url = self.reply.attribute(QNetworkRequest.RedirectionTargetAttribute)
+            if redirection_url is not None and redirection_url != self.reply.url():
+                if redirection_url.isRelative():
+                    redirection_url = self.reply.url().resolved(redirection_url)
 
                 msg = "Redirected from '{}' to '{}'".format(
-                    self.reply.url().toString(), redirectionUrl.toString())
+                    self.reply.url().toString(), redirection_url.toString())
                 self.msg_log(msg)
 
                 self.reply.deleteLater()
                 self.reply = None
-                self.request(redirectionUrl.toString())
+                self.request(redirection_url.toString())
 
             # really end request
             else:
@@ -380,6 +382,6 @@ class NetworkAccessManager(object):
         """
         Handle request to cancel HTTP call
         """
-        if (self.reply and self.reply.isRunning()):
+        if self.reply and self.reply.isRunning():
             self.on_abort = True
             self.reply.abort()
