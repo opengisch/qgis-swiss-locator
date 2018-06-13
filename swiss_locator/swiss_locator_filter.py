@@ -81,6 +81,10 @@ class WMSLayer:
     pass
 
 
+class NoResult:
+    pass
+
+
 class SwissLocatorFilter(QgsLocatorFilter):
 
     USER_AGENT = b'Mozilla/5.0 QGIS Swiss MapGeoAdmin Locator Filter'
@@ -239,6 +243,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
             nam = NetworkAccessManager()
             feedback.canceled.connect(nam.abort)
 
+            result_found = False
+
             for search_type in ('locations', 'layers'):
                 url = 'https://api3.geo.admin.ch/rest/services/api/SearchServer'
                 params = {
@@ -259,11 +265,18 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
                 try:
                     (response, content) = nam.request(url, headers=headers, blocking=True)
-                    self.handle_response(response, content)
+                    result_found = self.handle_response(response, content) or result_found
                 except RequestsExceptionUserAbort:
                     pass
                 except RequestsException as err:
                     self.info(err)
+
+            if not result_found:
+                result = QgsLocatorResult()
+                result.filter = self
+                result.displayString = self.tr('No result found.')
+                result.userData = NoResult
+                self.resultFetched.emit(result)
 
         except Exception as e:
             self.info(e, Qgis.Critical)
@@ -272,7 +285,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.info('{} {} {}'.format(exc_type, filename, exc_traceback.tb_lineno), Qgis.Critical)
             self.info(traceback.print_exception(exc_type, exc_obj, exc_traceback), Qgis.Critical)
 
-    def handle_response(self, response, content):
+    def handle_response(self, response, content) -> bool:
         try:
             if response.status_code != 200:
                 self.info("Error with status code: {}".format(response.status_code))
@@ -280,6 +293,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
             data = json.loads(content.decode('utf-8'))
             # self.dbg_info(data)
+
+            result_found = False
 
             for loc in data['results']:
                 self.dbg_info("keys: {}".format(loc['attrs'].keys()))
@@ -294,6 +309,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     result.userData = WMSLayer
                     if Qgis.QGIS_VERSION_INT >= 30100:
                         result.group = self.tr('WMS Layers')
+                    result_found = True
                     self.resultFetched.emit(result)
 
                 else:  # locations
@@ -323,6 +339,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                                        'layer': group_layer,
                                        'feature_id': loc['attrs']['featureId'] if 'featureId' in loc['attrs'] else None,
                                        'html_label': loc['attrs']['label']}
+                    result_found = True
                     self.resultFetched.emit(result)
 
         except Exception as e:
@@ -334,7 +351,9 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
     def triggerResult(self, result: QgsLocatorResult):
         # this should be run in the main thread, i.e. mapCanvas should not be None
-        if result.userData == WMSLayer:
+        if result.userData == NoResult:
+            pass
+        elif result.userData == WMSLayer:
             urlWithParams = 'contextualWMSLegend=0' \
                             '&crs=EPSG:{crs}' \
                             '&dpiMode=7' \
