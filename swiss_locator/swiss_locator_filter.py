@@ -415,16 +415,16 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 url_detail = self.url_with_param(url_detail, params)
                 self.dbg_info(url_detail)
 
-            try:
-                (response, content) = nam.request(url_detail, headers=headers, blocking=True)
-                if response.status_code != 200:
-                    self.info("Error with status code: {}".format(response.status_code))
-                else:
-                    self.parse_feature_response(content.decode('utf-8'))
-            except RequestsExceptionUserAbort:
-                pass
-            except RequestsException as err:
-                self.info(err)
+                try:
+                    (response, content) = nam.request(url_detail, headers=headers, blocking=True)
+                    if response.status_code != 200:
+                        self.info("Error with status code: {}".format(response.status_code))
+                    else:
+                        self.parse_feature_response(content.decode('utf-8'))
+                except RequestsExceptionUserAbort:
+                    pass
+                except RequestsException as err:
+                    self.info(err)
 
             if self.settings.value('more_info'):
                 if layer and feature_id:
@@ -480,9 +480,9 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
     def info(self, msg="", level=Qgis.Info, emit_message: bool = False):
         if Qgis.QGIS_VERSION_INT >= 30100:
-            self.logMessage(msg, level)
+            self.logMessage(str(msg), level)
         else:
-            QgsMessageLog.logMessage('{} {}'.format(self.__class__.__name__, msg), 'QgsLocatorFilter', level)
+            QgsMessageLog.logMessage('{} {}'.format(self.__class__.__name__, str(msg)), 'QgsLocatorFilter', level)
         if emit_message:
             self.message_emitted.emit(msg, level)
 
