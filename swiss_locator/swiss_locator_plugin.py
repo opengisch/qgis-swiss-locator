@@ -45,6 +45,7 @@ class SwissLocatorPlugin:
 
         self.filter = SwissLocatorFilter(locale_lang, iface.mapCanvas())
         self.iface.registerLocatorFilter(self.filter)
+        self.filter.message_emitted.connect(self.iface.messageBar().pushMessage)
 
     def initGui(self):
         pass

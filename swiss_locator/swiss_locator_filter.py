@@ -29,7 +29,7 @@ import sys, traceback
 
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QColor
-from PyQt5.QtCore import QUrl, QUrlQuery, pyqtSlot
+from PyQt5.QtCore import QUrl, QUrlQuery, pyqtSlot, pyqtSignal
 from PyQt5.QtWidgets import QDialog
 from PyQt5.uic import loadUiType
 
@@ -88,6 +88,8 @@ class NoResult:
 class SwissLocatorFilter(QgsLocatorFilter):
 
     USER_AGENT = b'Mozilla/5.0 QGIS Swiss MapGeoAdmin Locator Filter'
+
+    message_emitted = pyqtSignal(str, Qgis.MessageLevel)
 
     def __init__(self,  locale_lang: str, map_canvas: QgsMapCanvas = None, crs: str = None):
         """"
@@ -365,7 +367,9 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 .format(crs=self.crs, layer=result.description)
             wms_layer = QgsRasterLayer(urlWithParams, result.displayString, 'wms')
             if not wms_layer.isValid():
-                self.info(self.tr('Cannot load WMS layer: {} ({})'.format(result.displayString, result.description)))
+                msg = self.tr('Cannot load WMS layer: {} ({})'.format(result.displayString, result.description))
+                level = Qgis.Warning
+                self.info(msg, level, True)
             QgsProject.instance().addMapLayer(wms_layer)
 
         else:
@@ -474,11 +478,13 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.feature_rubber_band.reset(QgsWkbTypes.PolygonGeometry)
             self.feature_rubber_band.addGeometry(geometry, None)
 
-    def info(self, msg="", level=Qgis.Info):
+    def info(self, msg="", level=Qgis.Info, emit_message: bool = False):
         if Qgis.QGIS_VERSION_INT >= 30100:
             self.logMessage(msg, level)
         else:
             QgsMessageLog.logMessage('{} {}'.format(self.__class__.__name__, msg), 'QgsLocatorFilter', level)
+        if emit_message:
+            self.message_emitted.emit(msg, level)
 
     def dbg_info(self, msg=""):
         if DEBUG:
