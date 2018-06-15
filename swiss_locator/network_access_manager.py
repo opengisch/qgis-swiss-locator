@@ -18,18 +18,11 @@
 *                                                                         *
 ***************************************************************************
 """
-from future import standard_library
-standard_library.install_aliases()
 from builtins import str
-from builtins import object
-
-__author__ = 'Alessandro Pasotti'
-__date__ = 'August 2016'
-
 import re
 import urllib.request, urllib.error, urllib.parse
 
-from PyQt5.QtCore import pyqtSlot, Qt, QUrl, QEventLoop, QTimer, QCoreApplication, QObject
+from PyQt5.QtCore import QObject, pyqtSignal, QUrl, QEventLoop
 from PyQt5.QtNetwork import QNetworkRequest, QNetworkReply
 
 from qgis.core import QgsNetworkAccessManager, QgsAuthManager, QgsMessageLog
@@ -86,7 +79,8 @@ class Map(dict):
 class Response(Map):
     pass
 
-class NetworkAccessManager(object):
+
+class NetworkAccessManager(QObject):
     """
     This class mimicks httplib2 by using QgsNetworkAccessManager for all
     network calls.
@@ -133,7 +127,10 @@ class NetworkAccessManager(object):
             'exception' - the exception returne dduring execution
     """
 
+    finished = pyqtSignal(Response)
+
     def __init__(self, authid=None, disable_ssl_certificate_validation=False, exception_class=None, debug=False):
+        QObject.__init__(self)
         self.disable_ssl_certificate_validation = disable_ssl_certificate_validation
         self.authid = authid
         self.reply = None
@@ -240,7 +237,7 @@ class NetworkAccessManager(object):
 
         # emit exception in case of error
         if not self.http_call_result.ok:
-            if self.http_call_result.exception or not self.exception_class:
+            if self.http_call_result.exception and not self.exception_class:
                 raise self.http_call_result.exception
             elif self.exception_class:
                 raise self.exception_class(self.http_call_result.reason)
@@ -364,6 +361,8 @@ class NetworkAccessManager(object):
             self.reply = None
         else:
             self.msg_log("Reply was already deleted ...")
+
+        self.finished.emit(self.http_call_result)
 
     #@pyqtSlot()
     def sslErrors(self, ssl_errors):

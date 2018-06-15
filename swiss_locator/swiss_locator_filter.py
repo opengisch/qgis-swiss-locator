@@ -29,7 +29,7 @@ import sys, traceback
 
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QColor
-from PyQt5.QtCore import QUrl, QUrlQuery, pyqtSlot, pyqtSignal
+from PyQt5.QtCore import QUrl, QUrlQuery, pyqtSlot, pyqtSignal, QEventLoop
 from PyQt5.QtWidgets import QDialog
 from PyQt5.uic import loadUiType
 
@@ -44,6 +44,7 @@ from .settings import Settings
 from .swiss_locator_plugin import DEBUG
 from .utils.html_stripper import strip_tags
 from .gui.maptip import MapTip
+from .map_geo_admin.layers import searchable_layers
 
 DialogUi, _ = loadUiType(os.path.join(os.path.dirname(__file__), 'ui/config.ui'))
 
@@ -93,7 +94,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
     def __init__(self,  locale_lang: str, map_canvas: QgsMapCanvas = None, crs: str = None):
         """"
-        :param locale_lang:
+        :param locale_lang: the language of the locale.
         :param map_canvas: given when on the main thread (which will display/trigger results), None otherwise
         """
         super().__init__()
@@ -105,6 +106,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
         self.map_tip = None
         self.current_timer = None
         self.crs = None
+        self.event_loop = None
+        self.result_found = False
 
         if crs:
             self.crs = crs
@@ -242,38 +245,69 @@ class SwissLocatorFilter(QgsLocatorFilter):
             if len(search) < 2:
                 return
 
-            nam = NetworkAccessManager()
-            feedback.canceled.connect(nam.abort)
+            self.result_found = False
 
-            result_found = False
+            # init the network access managers
+            self.nams = {}
+            for search_type in ('locations', 'featuresearch', 'layers'):
+                nam = NetworkAccessManager()
+                self.nams[search_type] = nam
+                feedback.canceled.connect(nam.abort)
 
-            for search_type in ('locations', 'layers'):
-                url = 'https://api3.geo.admin.ch/rest/services/api/SearchServer'
-                params = {
-                    'type': search_type,
-                    'searchText': str(search),
-                    'returnGeometry': 'true',
-                    'lang': self.lang,
-                    'sr': self.crs,
-                    #'limit': '10' if search_type == 'locations' else '30'
-                }
-                # bbox Must be provided if the searchText is not.
-                # A comma separated list of 4 coordinates representing
-                # the bounding box on which features should be filtered (SRID: 21781).
+            # init event loop
+            # wait for all requests to end
+            self.event_loop = QEventLoop()
 
-                headers = {b'User-Agent': self.USER_AGENT}
-                url = self.url_with_param(url, params)
-                self.dbg_info(url)
+            def reply_finished(response):
+                self.handle_response(response)
+                if search_type in self.nams:
+                    del self.nams[search_type]
+                if len(self.nams) == 0:
+                    self.event_loop.quit()
 
+            for search_type in ('locations', 'featuresearch', 'layers'):
                 try:
-                    (response, content) = nam.request(url, headers=headers, blocking=True)
-                    result_found = self.handle_response(response, content) or result_found
+                    url = 'https://api3.geo.admin.ch/rest/services/api/SearchServer'
+                    params = {
+                        'type': search_type,
+                        'searchText': str(search),
+                        'returnGeometry': 'true',
+                        'lang': self.lang,
+                        'sr': self.crs,
+                    }
+                    if search_type == 'featuresearch':
+                        try:
+                            layers = searchable_layers(self.lang)
+                            assert len(layers) > 0
+                            params['features'] = ','.join(layers.keys())
+                        except IOError:
+                            self.info('Layers data file not found. Please report an issue.', Qgis.Critical)
+                    # bbox Must be provided if the searchText is not.
+                    # A comma separated list of 4 coordinates representing
+                    # the bounding box on which features should be filtered (SRID: 21781).
+
+                    headers = {b'User-Agent': self.USER_AGENT}
+                    url = self.url_with_param(url, params)
+                    self.dbg_info(url)
+
+                    self.nams[search_type].finished.connect(reply_finished)
+                    self.nams[search_type].request(url, headers=headers, blocking=False)
+
                 except RequestsExceptionUserAbort:
                     pass
                 except RequestsException as err:
                     self.info(err)
 
-            if not result_found:
+            # Let the requests end and catch all exceptions (and clean up requests)
+            if len(self.nams) > 0:
+                try:
+                    self.event_loop.exec_(QEventLoop.ExcludeUserInputEvents)
+                except RequestsExceptionUserAbort:
+                    pass
+                except RequestsException as err:
+                    self.info(err)
+
+            if not self.result_found:
                 result = QgsLocatorResult()
                 result.filter = self
                 result.displayString = self.tr('No result found.')
@@ -287,16 +321,14 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.info('{} {} {}'.format(exc_type, filename, exc_traceback.tb_lineno), Qgis.Critical)
             self.info(traceback.print_exception(exc_type, exc_obj, exc_traceback), Qgis.Critical)
 
-    def handle_response(self, response, content) -> bool:
+    def handle_response(self, response) -> bool:
         try:
             if response.status_code != 200:
                 self.info("Error with status code: {}".format(response.status_code))
                 return
 
-            data = json.loads(content.decode('utf-8'))
+            data = json.loads(response.content.decode('utf-8'))
             # self.dbg_info(data)
-
-            result_found = False
 
             for loc in data['results']:
                 self.dbg_info("keys: {}".format(loc['attrs'].keys()))
@@ -311,8 +343,12 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     result.userData = WMSLayer
                     if Qgis.QGIS_VERSION_INT >= 30100:
                         result.group = self.tr('WMS Layers')
-                    result_found = True
+                    self.result_found = True
                     self.resultFetched.emit(result)
+
+                elif loc['attrs']['origin'] == 'feature':
+                    for key, val in loc['attrs'].items():
+                        self.dbg_info('{}: {}'.format(key, val))
 
                 else:  # locations
                     group_name, group_layer = self.group_info(loc['attrs']['origin'])
@@ -341,7 +377,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                                        'layer': group_layer,
                                        'feature_id': loc['attrs']['featureId'] if 'featureId' in loc['attrs'] else None,
                                        'html_label': loc['attrs']['label']}
-                    result_found = True
+                    self.result_found = True
                     self.resultFetched.emit(result)
 
         except Exception as e:
