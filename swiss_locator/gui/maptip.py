@@ -112,7 +112,7 @@ class MapTip(QDockWidget):
         self.closed.emit()
 
     def info(self, msg="", level=Qgis.Info):
-        QgsMessageLog.logMessage('{} {}'.format(self.__class__.__name__, msg), 'QgsLocatorFilter', level)
+        QgsMessageLog.logMessage('{} {}'.format(self.__class__.__name__, msg), 'Locator bar', level)
 
     def dbg_info(self, msg=""):
         if DEBUG:

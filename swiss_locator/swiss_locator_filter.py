@@ -434,9 +434,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         # this should be run in the main thread, i.e. mapCanvas should not be None
         
         # remove any map tip
-        if self.map_tip is not None:
-            del self.map_tip
-            self.map_tip = None
+        self.clear_results()
             
         if type(result.userData) == NoResult:
             pass
@@ -463,7 +461,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             point.transform(self.transform_4326)
             self.highlight(point)
             if self.settings.value('show_map_tip'):
-                self.show_map_tip(result.userData.layer, result.userData.feature_id, point)
+                self.show_map_tip(result.userData.layer, result.userData.feature_id, point, self)
         # Location
         else:
             point = QgsGeometry.fromPointXY(result.userData.point)
@@ -574,7 +572,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         if Qgis.QGIS_VERSION_INT >= 30100:
             self.logMessage(str(msg), level)
         else:
-            QgsMessageLog.logMessage('{} {}'.format(self.__class__.__name__, str(msg)), 'QgsLocatorFilter', level)
+            QgsMessageLog.logMessage('{} {}'.format(self.__class__.__name__, str(msg)), 'Locator bar', level)
         if emit_message:
             self.message_emitted.emit(msg, level)
 
