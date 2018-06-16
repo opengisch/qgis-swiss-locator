@@ -78,8 +78,24 @@ class InvalidBox(Exception):
     pass
 
 
-class WMSLayer:
+class WMSLayerResult:
     pass
+
+
+class LocationResult:
+    def __init__(self, point, bbox, layer, feature_id, html_label):
+        self.point = point
+        self.bbox = bbox
+        self.layer = layer
+        self.feature_id = feature_id
+        self.html_label = html_label
+
+
+class FeatureResult:
+    def __init__(self, point, layer, feature_id):
+        self.point = point
+        self.layer = layer
+        self.feature_id = feature_id
 
 
 class NoResult:
@@ -88,7 +104,7 @@ class NoResult:
 
 class SwissLocatorFilter(QgsLocatorFilter):
 
-    USER_AGENT = b'Mozilla/5.0 QGIS Swiss MapGeoAdmin Locator Filter'
+    HEADERS = {b'User-Agent': b'Mozilla/5.0 QGIS Swiss MapGeoAdmin Locator Filter'}
 
     message_emitted = pyqtSignal(str, Qgis.MessageLevel)
 
@@ -102,12 +118,14 @@ class SwissLocatorFilter(QgsLocatorFilter):
         self.feature_rubber_band = None
         self.map_canvas = None
         self.settings = Settings()
-        self.transform = None
+        self.transform_ch = None
+        self.transform_4326 = None
         self.map_tip = None
         self.current_timer = None
         self.crs = None
         self.event_loop = None
         self.result_found = False
+        self.access_managers = {}
 
         if crs:
             self.crs = crs
@@ -121,11 +139,12 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 self.lang = 'en'
         else:
             self.lang = lang
+        self.searchable_layers = searchable_layers(self.lang)
 
         if map_canvas is not None:
             # happens only in main thread
             self.map_canvas = map_canvas
-            self.map_canvas.destinationCrsChanged.connect(self.create_transform)
+            self.map_canvas.destinationCrsChanged.connect(self.create_transforms)
 
             self.rubber_band = QgsRubberBand(map_canvas, QgsWkbTypes.PointGeometry)
             self.rubber_band.setColor(QColor(255, 255, 50, 200))
@@ -141,9 +160,9 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.feature_rubber_band.setLineStyle(Qt.SolidLine)
             self.feature_rubber_band.setWidth(4)
 
-            self.create_transform()
+            self.create_transforms()
 
-    def create_transform(self):
+    def create_transforms(self):
         # this should happen in the main thread
         self.crs = self.settings.value('crs')
         if self.crs == 'project':
@@ -153,10 +172,13 @@ class SwissLocatorFilter(QgsLocatorFilter):
             if self.crs not in AVAILABLE_CRS:
                 self.crs = '2056'
         assert self.crs in AVAILABLE_CRS
-        src_crs = QgsCoordinateReferenceSystem('EPSG:{}'.format(self.crs))
-        assert src_crs.isValid()
+        src_crs_ch = QgsCoordinateReferenceSystem('EPSG:{}'.format(self.crs))
+        assert src_crs_ch.isValid()
         dst_crs = self.map_canvas.mapSettings().destinationCrs()
-        self.transform = QgsCoordinateTransform(src_crs, dst_crs, QgsProject.instance())
+        self.transform_ch = QgsCoordinateTransform(src_crs_ch, dst_crs, QgsProject.instance())
+
+        src_crs_4326 = QgsCoordinateReferenceSystem('EPSG:4326')
+        self.transform_4326 = QgsCoordinateTransform(src_crs_4326, dst_crs, QgsProject.instance())
 
     def group_info(self, group: str) -> (str, str):
         groups = {'zipcode': {'name': self.tr('ZIP code'),
@@ -247,12 +269,35 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
             self.result_found = False
 
-            # init the network access managers
-            self.nams = {}
+            # create the URLs to fetch
+            self.access_managers = {}
             for search_type in ('locations', 'featuresearch', 'layers'):
-                nam = NetworkAccessManager()
-                self.nams[search_type] = nam
-                feedback.canceled.connect(nam.abort)
+                url = 'https://api3.geo.admin.ch/rest/services/api/SearchServer'
+                params = {
+                    'type': search_type,
+                    'searchText': str(search),
+                    'returnGeometry': 'true',
+                    'lang': self.lang,
+                    'sr': self.crs,
+                    # bbox Must be provided if the searchText is not.
+                    # A comma separated list of 4 coordinates representing
+                    # the bounding box on which features should be filtered (SRID: 21781).
+                }
+                if search_type == 'featuresearch':
+                    try:
+                        layers = list(self.searchable_layers.keys())
+                        assert len(layers) > 0
+                        # split features search in several requests otherwise URL is too long
+                        step = 30
+                        for l in range(0, len(layers), step):
+                            last = min(l + step - 1, len(layers) - 1)
+                            params['features'] = ','.join(layers[l:last])
+                            self.access_managers[self.url_with_param(url, params)] = None
+                    except IOError:
+                        self.info('Layers data file not found. Please report an issue.', Qgis.Critical)
+
+                else:
+                    self.access_managers[self.url_with_param(url, params)] = None
 
             # init event loop
             # wait for all requests to end
@@ -260,52 +305,34 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
             def reply_finished(response):
                 self.handle_response(response)
-                if search_type in self.nams:
-                    del self.nams[search_type]
-                if len(self.nams) == 0:
+                if response.url in self.access_managers:
+                    del self.access_managers[response.url]
+                if len(self.access_managers) == 0:
                     self.event_loop.quit()
 
-            for search_type in ('locations', 'featuresearch', 'layers'):
+            # init the network access managers, create the URL
+            for url in self.access_managers:
                 try:
-                    url = 'https://api3.geo.admin.ch/rest/services/api/SearchServer'
-                    params = {
-                        'type': search_type,
-                        'searchText': str(search),
-                        'returnGeometry': 'true',
-                        'lang': self.lang,
-                        'sr': self.crs,
-                    }
-                    if search_type == 'featuresearch':
-                        try:
-                            layers = searchable_layers(self.lang)
-                            assert len(layers) > 0
-                            params['features'] = ','.join(layers.keys())
-                        except IOError:
-                            self.info('Layers data file not found. Please report an issue.', Qgis.Critical)
-                    # bbox Must be provided if the searchText is not.
-                    # A comma separated list of 4 coordinates representing
-                    # the bounding box on which features should be filtered (SRID: 21781).
-
-                    headers = {b'User-Agent': self.USER_AGENT}
-                    url = self.url_with_param(url, params)
                     self.dbg_info(url)
-
-                    self.nams[search_type].finished.connect(reply_finished)
-                    self.nams[search_type].request(url, headers=headers, blocking=False)
+                    nam = NetworkAccessManager()
+                    self.access_managers[url] = nam
+                    feedback.canceled.connect(nam.abort)
+                    nam.finished.connect(reply_finished)
+                    nam.request(url, headers=self.HEADERS, blocking=False)
 
                 except RequestsExceptionUserAbort:
                     pass
                 except RequestsException as err:
-                    self.info(err)
+                    self.info(str(err))
 
             # Let the requests end and catch all exceptions (and clean up requests)
-            if len(self.nams) > 0:
+            if len(self.access_managers) > 0:
                 try:
                     self.event_loop.exec_(QEventLoop.ExcludeUserInputEvents)
                 except RequestsExceptionUserAbort:
                     pass
                 except RequestsException as err:
-                    self.info(err)
+                    self.info(str(err))
 
             if not self.result_found:
                 result = QgsLocatorResult()
@@ -321,7 +348,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.info('{} {} {}'.format(exc_type, filename, exc_traceback.tb_lineno), Qgis.Critical)
             self.info(traceback.print_exception(exc_type, exc_obj, exc_traceback), Qgis.Critical)
 
-    def handle_response(self, response) -> bool:
+    def handle_response(self, response):
         try:
             if response.status_code != 200:
                 self.info("Error with status code: {}".format(response.status_code))
@@ -340,7 +367,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     result.filter = self
                     result.displayString = strip_tags(loc['attrs']['label'])
                     result.description = loc['attrs']['layer']
-                    result.userData = WMSLayer
+                    result.userData = WMSLayerResult
                     if Qgis.QGIS_VERSION_INT >= 30100:
                         result.group = self.tr('WMS Layers')
                     self.result_found = True
@@ -349,16 +376,28 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 elif loc['attrs']['origin'] == 'feature':
                     for key, val in loc['attrs'].items():
                         self.dbg_info('{}: {}'.format(key, val))
+                    result = QgsLocatorResult()
+                    result.filter = self
+                    layer = loc['attrs']['layer']
+                    point = QgsPointXY(loc['attrs']['lon'], loc['attrs']['lat'])
+                    if layer in self.searchable_layers:
+                        result.displayString = self.searchable_layers[layer]
+                    else:
+                        self.info(self.tr('Layer {} is not in the list of searchable layers.'
+                                          ' Please report issue.'.format(layer)), Qgis.Warning)
+                        result.displayString = layer
+                    result.userData = FeatureResult(point=point,
+                                                    layer=layer,
+                                                    feature_id=loc['attrs']['feature_id'])
+                    if Qgis.QGIS_VERSION_INT >= 30100:
+                        result.group = self.tr('Features')
+                    self.result_found = True
+                    self.resultFetched.emit(result)
 
                 else:  # locations
+                    for key, val in loc['attrs'].items():
+                        self.dbg_info('{}: {}'.format(key, val))
                     group_name, group_layer = self.group_info(loc['attrs']['origin'])
-                    self.dbg_info("label: {}".format(loc['attrs']['label']))
-                    self.dbg_info("detail: {}".format(loc['attrs']['detail']))
-                    self.dbg_info("priority: {} (rank: {})".format(self.rank2priority(loc['attrs']['rank']), loc['attrs']['rank']))
-                    self.dbg_info("category: {} ({})".format(group_name, loc['attrs']['origin']))
-                    self.dbg_info("bbox: {}".format(loc['attrs']['geom_st_box2d']))
-                    self.dbg_info("pos: {} {}".format(loc['attrs']['y'], loc['attrs']['x']))
-                    self.dbg_info("geom_quadindex: {}".format(loc['attrs']['geom_quadindex']))
                     if 'layerBodId' in loc['attrs']:
                         self.dbg_info("layer: {}".format(loc['attrs']['layerBodId']))
                     if 'featureId' in loc['attrs']:
@@ -372,16 +411,17 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     #     result.description = loc['attrs']['featureId']
                     if Qgis.QGIS_VERSION_INT >= 30100:
                         result.group = group_name
-                    result.userData = {'point': QgsPointXY(loc['attrs']['y'], loc['attrs']['x']),
-                                       'bbox': self.box2geometry(loc['attrs']['geom_st_box2d']),
-                                       'layer': group_layer,
-                                       'feature_id': loc['attrs']['featureId'] if 'featureId' in loc['attrs'] else None,
-                                       'html_label': loc['attrs']['label']}
+                    result.userData = LocationResult(point=QgsPointXY(loc['attrs']['y'], loc['attrs']['x']),
+                                                     bbox=self.box2geometry(loc['attrs']['geom_st_box2d']),
+                                                     layer=group_layer,
+                                                     feature_id=loc['attrs']['featureId'] if 'featureId' in loc['attrs']
+                                                     else None,
+                                                     html_label=loc['attrs']['label'])
                     self.result_found = True
                     self.resultFetched.emit(result)
 
         except Exception as e:
-            self.info(e, Qgis.Critical)
+            self.info(str(e), Qgis.Critical)
             exc_type, exc_obj, exc_traceback = sys.exc_info()
             filename = os.path.split(exc_traceback.tb_frame.f_code.co_filename)[1]
             self.info('{} {} {}'.format(exc_type, filename, exc_traceback.tb_lineno), Qgis.Critical)
@@ -389,111 +429,95 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
     def triggerResult(self, result: QgsLocatorResult):
         # this should be run in the main thread, i.e. mapCanvas should not be None
-        if result.userData == NoResult:
+        
+        # remove any map tip
+        if self.map_tip is not None:
+            del self.map_tip
+            self.map_tip = None
+            
+        if type(result.userData) == NoResult:
             pass
-        elif result.userData == WMSLayer:
-            urlWithParams = 'contextualWMSLegend=0' \
-                            '&crs=EPSG:{crs}' \
-                            '&dpiMode=7' \
-                            '&featureCount=10' \
-                            '&format=image/jpeg' \
-                            '&layers={layer}' \
-                            '&styles=' \
-                            '&url=http://wms.geo.admin.ch/?VERSION%3D2.0.0'\
+        # WMS
+        elif type(result.userData) == WMSLayerResult:
+            url_with_params = 'contextualWMSLegend=0' \
+                              '&crs=EPSG:{crs}' \
+                              '&dpiMode=7' \
+                              '&featureCount=10' \
+                              '&format=image/jpeg' \
+                              '&layers={layer}' \
+                              '&styles=' \
+                              '&url=http://wms.geo.admin.ch/?VERSION%3D2.0.0'\
                 .format(crs=self.crs, layer=result.description)
-            wms_layer = QgsRasterLayer(urlWithParams, result.displayString, 'wms')
+            wms_layer = QgsRasterLayer(url_with_params, result.displayString, 'wms')
             if not wms_layer.isValid():
                 msg = self.tr('Cannot load WMS layer: {} ({})'.format(result.displayString, result.description))
                 level = Qgis.Warning
                 self.info(msg, level, True)
             QgsProject.instance().addMapLayer(wms_layer)
-
+        # Feature
+        elif type(result.userData) == FeatureResult:
+            point = QgsGeometry.fromPointXY(result.userData.point)
+            point.transform(self.transform_4326)
+            self.highlight(point)
+            if self.settings.value('show_map_tip'):
+                self.show_map_tip(result.userData.layer, result.userData.feature_id, point)
+        # Location
         else:
-            point = QgsGeometry.fromPointXY(result.userData['point'])
-            bbox = QgsGeometry.fromRect(result.userData['bbox'])
-            layer = result.userData['layer']
-            feature_id = result.userData['feature_id']
+            point = QgsGeometry.fromPointXY(result.userData.point)
+            bbox = QgsGeometry.fromRect(result.userData.bbox)
+            layer = result.userData.layer
+            feature_id = result.userData.feature_id
             if not point or not bbox:
                 return
 
-            self.dbg_info('point: {}'.format(point.asWkt()))
-            self.dbg_info('bbox: {}'.format(bbox.asWkt()))
-            self.dbg_info('descr: {}'.format(result.description))
-            self.dbg_info('layer: {}'.format(layer))
-            self.dbg_info('feature_id: {}'.format(feature_id))
+            point.transform(self.transform_ch)
+            bbox.transform(self.transform_ch)
 
-            point.transform(self.transform)
-            bbox.transform(self.transform)
-
-            self.rubber_band.reset(QgsWkbTypes.PointGeometry)
-            self.rubber_band.addGeometry(point, None)
-
-            rect = bbox.boundingBox()
-            rect.scale(1.1)
-            self.map_canvas.setExtent(rect)
-            self.map_canvas.refresh()
-
-            if self.map_tip is not None:
-                del self.map_tip
-                self.map_tip = None
-
-            # Try to get more info
-            headers = {b'User-Agent': self.USER_AGENT}
-            nam = NetworkAccessManager()
+            self.highlight(point, bbox)
 
             if layer and feature_id:
-                url_detail = 'https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}' \
-                    .format(layer=layer, feature_id=feature_id)
-                params = {
-                    'lang': self.lang,
-                    'sr': self.crs
-                }
-                url_detail = self.url_with_param(url_detail, params)
-                self.dbg_info(url_detail)
+                self.fetch_feature(layer, feature_id)
 
-                try:
-                    (response, content) = nam.request(url_detail, headers=headers, blocking=True)
-                    if response.status_code != 200:
-                        self.info("Error with status code: {}".format(response.status_code))
-                    else:
-                        self.parse_feature_response(content.decode('utf-8'))
-                except RequestsExceptionUserAbort:
-                    pass
-                except RequestsException as err:
-                    self.info(err)
-
-            if self.settings.value('more_info'):
-                if layer and feature_id:
-                    url_html = 'https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}/htmlPopup'\
-                        .format(layer=layer, feature_id=feature_id)
-                    params = {
-                        'lang': self.lang,
-                        'sr': self.crs
-                    }
-                    url_html = self.url_with_param(url_html, params)
-                    self.dbg_info(url_html)
-
-                    try:
-                        (response, content) = nam.request(url_html, headers=headers, blocking=True)
-                        if response.status_code != 200:
-                            self.info("Error with status code: {}".format(response.status_code))
-                        else:
-                            self.dbg_info(content.decode('utf-8'))
-                            self.map_tip = MapTip(self.map_canvas, content.decode('utf-8'), point.asPoint())
-                            self.map_tip.closed.connect(self.clear_results)
-                    except RequestsExceptionUserAbort:
-                        pass
-                    except RequestsException as err:
-                        self.info(err)
-
-                if self.map_tip is None:
-                    self.map_tip = MapTip(self.map_canvas, result.userData['html_label'], point.asPoint())
-                    self.map_tip.closed.connect(self.clear_results)
+                if self.settings.value('show_map_tip'):
+                    self.show_map_tip(layer, feature_id, point)
             else:
                 self.current_timer = QTimer()
                 self.current_timer.timeout.connect(self.clear_results)
                 self.current_timer.setSingleShot(True)
                 self.current_timer.start(5000)
+                
+    def highlight(self, point, bbox=None):
+        if bbox is None:
+            bbox = point
+        self.rubber_band.reset(QgsWkbTypes.PointGeometry)
+        self.rubber_band.addGeometry(point, None)
+        rect = bbox.boundingBox()
+        rect.scale(1.1)
+        self.map_canvas.setExtent(rect)
+        self.map_canvas.refresh()
+        
+    def fetch_feature(self, layer, feature_id):
+        # Try to get more info
+        nam = NetworkAccessManager()
+        url_detail = 'https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}' \
+            .format(layer=layer, feature_id=feature_id)
+        params = {
+            'lang': self.lang,
+            'sr': self.crs
+        }
+        url_detail = self.url_with_param(url_detail, params)
+        self.dbg_info(url_detail)
+
+        try:
+            (response, content) = nam.request(url_detail, headers=self.HEADERS, blocking=True)
+            if response.status_code != 200:
+                self.info("Error with status code: {}".format(response.status_code))
+            else:
+                self.parse_feature_response(content.decode('utf-8'))
+        except RequestsExceptionUserAbort:
+            pass
+        except RequestsException as err:
+            self.info(str(err))
 
     def parse_feature_response(self, content):
         data = json.loads(content)
@@ -509,10 +533,39 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 for p in range(0, len(rings[r])):
                     rings[r][p] = QgsPointXY(rings[r][p][0], rings[r][p][1])
             geometry = QgsGeometry.fromPolygonXY(rings)
-            geometry.transform(self.transform)
+            geometry.transform(self.transform_ch)
 
             self.feature_rubber_band.reset(QgsWkbTypes.PolygonGeometry)
             self.feature_rubber_band.addGeometry(geometry, None)
+
+    def show_map_tip(self, layer, feature_id, point):
+        if layer and feature_id:
+            url_html = 'https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}/htmlPopup' \
+                .format(layer=layer, feature_id=feature_id)
+            params = {
+                'lang': self.lang,
+                'sr': self.crs
+            }
+            url_html = self.url_with_param(url_html, params)
+            self.dbg_info(url_html)
+
+            try:
+                nam = NetworkAccessManager()
+                (response, content) = nam.request(url_html, headers=self.HEADERS, blocking=True)
+                if response.status_code != 200:
+                    self.info("Error with status code: {}".format(response.status_code))
+                else:
+                    self.dbg_info(content.decode('utf-8'))
+                    self.map_tip = MapTip(self.map_canvas, content.decode('utf-8'), point.asPoint())
+                    self.map_tip.closed.connect(self.clear_results)
+            except RequestsExceptionUserAbort:
+                pass
+            except RequestsException as err:
+                self.info(str(err))
+
+        if self.map_tip is None:
+            self.map_tip = MapTip(self.map_canvas, result.userData.html_label, point.asPoint())
+            self.map_tip.closed.connect(self.clear_results)
 
     def info(self, msg="", level=Qgis.Info, emit_message: bool = False):
         if Qgis.QGIS_VERSION_INT >= 30100:

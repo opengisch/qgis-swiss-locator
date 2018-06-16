@@ -37,7 +37,7 @@
    <item row="3" column="0" colspan="3">
     <widget class="QCheckBox" name="more_info">
      <property name="text">
-      <string>Display more information in a dock when available</string>
+      <string>Show map tip on the map whenever possible</string>
      </property>
     </widget>
    </item>

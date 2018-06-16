@@ -147,6 +147,7 @@ class NetworkAccessManager(QObject):
             'headers': {},
             'reason': '',
             'exception': None,
+            'url': ''
         })
 
     def msg_log(self, msg):
@@ -162,6 +163,7 @@ class NetworkAccessManager(QObject):
         Make a network request by calling QgsNetworkAccessManager.
         redirections argument is ignored and is here only for httplib2 compatibility.
         """
+        self.http_call_result.url = url
         self.msg_log(u'http_call request: {0}'.format(url))
 
         self.blocking_mode = blocking
