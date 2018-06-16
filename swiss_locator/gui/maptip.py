@@ -27,7 +27,7 @@ from PyQt5.QtWebKitWidgets import QWebView, QWebPage
 from PyQt5.QtWidgets import QSizePolicy, QDockWidget
 from PyQt5.QtGui import QPalette, QDesktopServices, QCloseEvent
 from qgis.core import Qgis, QgsPointXY, QgsMessageLog
-from qgis.gui import QgsMapCanvas
+from qgis.gui import QgisInterface
 
 from ..swiss_locator_plugin import DEBUG
 
@@ -36,9 +36,9 @@ class MapTip(QDockWidget):
 
     closed = pyqtSignal()
 
-    def __init__(self, map_canvas: QgsMapCanvas, html: str, point: QgsPointXY):
+    def __init__(self, iface: QgisInterface, html: str, point: QgsPointXY):
         super().__init__()
-        self.map_canvas = map_canvas
+        self.map_canvas = iface.mapCanvas()
         self.point = point
         self.web_view = QWebView(self)
 
@@ -63,9 +63,6 @@ class MapTip(QDockWidget):
         # start with 0 size,
         # the content will automatically make it grow up to MaximumSize
         self.resize(300, 200)
-        pixel_position = self.map_canvas.mapSettings().mapToPixel().transform(self.point)
-        pixel_position = self.map_canvas.mapToGlobal(QPoint(pixel_position.x(), pixel_position.y()))
-        self.move(pixel_position.x() + 10, pixel_position.y() + 10)
 
         background_color = self.palette().base().color()
         background_color.setAlpha(235)
@@ -91,10 +88,6 @@ class MapTip(QDockWidget):
 
         self.web_view.setHtml(body_html)
 
-        self.setWindowOpacity(0.9)
-        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint ^ Qt.WindowMinimizeButtonHint)
-        self.show()
-
         scrollbar_width = self.web_view.page().mainFrame().scrollBarGeometry(Qt.Vertical).width()
         scrollbar_height = self.web_view.page().mainFrame().scrollBarGeometry(Qt.Horizontal).height()
         if scrollbar_width > 0 or scrollbar_height > 0:
@@ -104,6 +97,16 @@ class MapTip(QDockWidget):
             height = container.geometry().height() + 25 + scrollbar_height
 
             #self.resize(width, height)
+
+        iface.addDockWidget(Qt.NoDockWidgetArea, self)
+        self.setFloating(True)
+        self.setWindowOpacity(0.9)
+        self.move_to_point()
+
+    def move_to_point(self):
+        pixel_position = self.map_canvas.mapSettings().mapToPixel().transform(self.point)
+        pixel_position = self.map_canvas.mapToGlobal(QPoint(pixel_position.x(), pixel_position.y()))
+        self.move(pixel_position.x() + 10, pixel_position.y() + 10)
 
     def on_link_clicked(self, url):
         QDesktopServices.openUrl(url)

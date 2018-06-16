@@ -36,7 +36,7 @@ from PyQt5.uic import loadUiType
 from qgis.core import Qgis, QgsMessageLog, QgsLocatorFilter, QgsLocatorResult, QgsRectangle, \
     QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsGeometry, QgsWkbTypes, QgsPointXY, \
     QgsLocatorContext, QgsFeedback, QgsRasterLayer
-from qgis.gui import QgsRubberBand, QgsMapCanvas
+from qgis.gui import QgsRubberBand, QgisInterface
 
 from .qgissettingmanager.setting_dialog import SettingDialog, UpdateMode
 from .network_access_manager import NetworkAccessManager, RequestsException, RequestsExceptionUserAbort
@@ -109,10 +109,11 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
     message_emitted = pyqtSignal(str, Qgis.MessageLevel)
 
-    def __init__(self,  locale_lang: str, map_canvas: QgsMapCanvas = None, crs: str = None):
+    def __init__(self,  locale_lang: str, iface: QgisInterface = None, crs: str = None):
         """"
         :param locale_lang: the language of the locale.
-        :param map_canvas: given when on the main thread (which will display/trigger results), None otherwise
+        :param iface: QGIS interface, given when on the main thread (which will display/trigger results), None otherwise
+        :param crs: if iface is not given, it shall be provided, see clone()
         """
         super().__init__()
         self.rubber_band = None
@@ -142,12 +143,13 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.lang = lang
         self.searchable_layers = searchable_layers(self.lang)
 
-        if map_canvas is not None:
+        if iface is not None:
             # happens only in main thread
-            self.map_canvas = map_canvas
+            self.iface = iface
+            self.map_canvas = iface.mapCanvas()
             self.map_canvas.destinationCrsChanged.connect(self.create_transforms)
 
-            self.rubber_band = QgsRubberBand(map_canvas, QgsWkbTypes.PointGeometry)
+            self.rubber_band = QgsRubberBand(self.map_canvas, QgsWkbTypes.PointGeometry)
             self.rubber_band.setColor(QColor(255, 255, 50, 200))
             self.rubber_band.setIcon(self.rubber_band.ICON_CIRCLE)
             self.rubber_band.setIconSize(15)
@@ -162,6 +164,24 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.feature_rubber_band.setWidth(4)
 
             self.create_transforms()
+
+    def name(self):
+        return self.__class__.__name__
+
+    def clone(self):
+        return SwissLocatorFilter(self.locale_lang, crs=self.crs)
+
+    def displayName(self):
+        return self.tr('Swiss Geoadmin locations')
+
+    def prefix(self):
+        return 'swi'
+
+    def hasConfigWidget(self):
+        return True
+
+    def openConfigWidget(self, parent=None):
+        ConfigDialog(parent).exec_()
 
     def create_transforms(self):
         # this should happen in the main thread
@@ -221,24 +241,6 @@ class SwissLocatorFilter(QgsLocatorFilter):
         if len(coords) != 4:
             raise InvalidBox('Could not parse: {}'.format(box))
         return QgsRectangle(float(coords[0]), float(coords[1]), float(coords[2]), float(coords[3]))
-
-    def name(self):
-        return self.__class__.__name__
-
-    def clone(self):
-        return SwissLocatorFilter(self.locale_lang, crs=self.crs)
-
-    def displayName(self):
-        return self.tr('Swiss Geoadmin locations')
-
-    def prefix(self):
-        return 'swi'
-
-    def hasConfigWidget(self):
-        return True
-
-    def openConfigWidget(self, parent=None):
-        ConfigDialog(parent).exec_()
 
     @staticmethod
     def url_with_param(url, params) -> str:
@@ -558,7 +560,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     self.info("Error with status code: {}".format(response.status_code))
                 else:
                     self.dbg_info(content.decode('utf-8'))
-                    self.map_tip = MapTip(self.map_canvas, content.decode('utf-8'), point.asPoint())
+                    self.map_tip = MapTip(self.iface, content.decode('utf-8'), point.asPoint())
                     self.map_tip.closed.connect(self.clear_results)
             except RequestsExceptionUserAbort:
                 pass
@@ -566,7 +568,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 self.info(str(err))
 
         if self.map_tip is None and alternative_text is not None:
-            self.map_tip = MapTip(self.map_canvas, alternative_text, point.asPoint())
+            self.map_tip = MapTip(self.iface, alternative_text, point.asPoint())
             self.map_tip.closed.connect(self.clear_results)
 
     def info(self, msg="", level=Qgis.Info, emit_message: bool = False):

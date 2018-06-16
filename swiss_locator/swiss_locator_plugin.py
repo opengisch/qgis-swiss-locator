@@ -43,7 +43,7 @@ class SwissLocatorPlugin:
 
         locale_lang = QLocale.languageToString(QLocale(QSettings().value('locale/userLocale')).language())
 
-        self.filter = SwissLocatorFilter(locale_lang, iface.mapCanvas())
+        self.filter = SwissLocatorFilter(locale_lang, iface)
         self.iface.registerLocatorFilter(self.filter)
         self.filter.message_emitted.connect(self.iface.messageBar().pushMessage)
 
