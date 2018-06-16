@@ -381,16 +381,19 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     layer = loc['attrs']['layer']
                     point = QgsPointXY(loc['attrs']['lon'], loc['attrs']['lat'])
                     if layer in self.searchable_layers:
-                        result.displayString = self.searchable_layers[layer]
+                        layer_display = self.searchable_layers[layer]
                     else:
                         self.info(self.tr('Layer {} is not in the list of searchable layers.'
                                           ' Please report issue.'.format(layer)), Qgis.Warning)
-                        result.displayString = layer
+                        layer_display = layer
+                    if Qgis.QGIS_VERSION_INT >= 30100:
+                        result.group = layer_display
+                        result.displayString = loc['attrs']['detail']
+                    else:
+                        result.displayString = '{}, {}'.format(layer_display, loc['attrs']['detail'])
                     result.userData = FeatureResult(point=point,
                                                     layer=layer,
                                                     feature_id=loc['attrs']['feature_id'])
-                    if Qgis.QGIS_VERSION_INT >= 30100:
-                        result.group = self.tr('Features')
                     self.result_found = True
                     self.resultFetched.emit(result)
 
