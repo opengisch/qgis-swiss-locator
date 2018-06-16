@@ -26,7 +26,7 @@ DEBUG = True
 import os
 from PyQt5.QtCore import QCoreApplication, QLocale, QSettings, QTranslator
 from qgis.gui import QgisInterface
-from .swiss_locator_filter import SwissLocatorFilter
+from .swiss_locator_filter import SwissLocatorFilter, FilterType
 
 
 class SwissLocatorPlugin:
@@ -43,12 +43,15 @@ class SwissLocatorPlugin:
 
         locale_lang = QLocale.languageToString(QLocale(QSettings().value('locale/userLocale')).language())
 
-        self.filter = SwissLocatorFilter(locale_lang, iface)
-        self.iface.registerLocatorFilter(self.filter)
-        self.filter.message_emitted.connect(self.iface.messageBar().pushMessage)
+        self.locator_filters = {}
+        for filter_type in FilterType:
+            self.locator_filters[filter_type]= SwissLocatorFilter(filter_type, locale_lang, iface)
+            self.iface.registerLocatorFilter(self.locator_filters[filter_type])
+            self.locator_filters[filter_type].message_emitted.connect(self.iface.messageBar().pushMessage)
 
     def initGui(self):
         pass
 
     def unload(self):
-        self.iface.deregisterLocatorFilter(self.filter)
+        for locator_filter in self.filters.values():
+            self.iface.deregisterLocatorFilter(locator_filter)

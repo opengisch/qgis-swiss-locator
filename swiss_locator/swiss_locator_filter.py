@@ -26,6 +26,7 @@ import json
 import os
 import re
 import sys, traceback
+from enum import Enum
 
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QColor
@@ -54,8 +55,10 @@ AVAILABLE_LANGUAGES = {'German': 'de',
                        'English': 'en'}
 
 
-class InvalidBox(Exception):
-    pass
+class FilterType(Enum):
+    Location = 'locations'
+    WMS = 'layers'
+    Feature = 'featuresearch'
 
 
 class WMSLayerResult:
@@ -83,21 +86,28 @@ class NoResult:
     pass
 
 
+class InvalidBox(Exception):
+    pass
+
+
 class SwissLocatorFilter(QgsLocatorFilter):
 
     HEADERS = {b'User-Agent': b'Mozilla/5.0 QGIS Swiss MapGeoAdmin Locator Filter'}
 
     message_emitted = pyqtSignal(str, Qgis.MessageLevel)
 
-    def __init__(self, locale_lang: str, iface: QgisInterface = None, crs: str = None):
+    def __init__(self, filter_type: FilterType, locale_lang: str, iface: QgisInterface = None, crs: str = None):
         """"
+        :param filter_type: the type of filter
         :param locale_lang: the language of the locale.
         :param iface: QGIS interface, given when on the main thread (which will display/trigger results), None otherwise
         :param crs: if iface is not given, it shall be provided, see clone()
         """
         super().__init__()
+        self.type = filter_type
         self.rubber_band = None
         self.feature_rubber_band = None
+        self.iface = iface
         self.map_canvas = None
         self.settings = Settings()
         self.transform_ch = None
@@ -125,7 +135,6 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
         if iface is not None:
             # happens only in main thread
-            self.iface = iface
             self.map_canvas = iface.mapCanvas()
             self.map_canvas.destinationCrsChanged.connect(self.create_transforms)
 
@@ -146,16 +155,41 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.create_transforms()
 
     def name(self):
-        return self.__class__.__name__
+        return '{}_{}'.format(self.__class__.__name__, FilterType(self.type).name)
 
     def clone(self):
-        return SwissLocatorFilter(self.locale_lang, crs=self.crs)
+        self.clear_results()
+        return SwissLocatorFilter(self.type, self.locale_lang, crs=self.crs)
+
+    def priority(self):
+        if self.type is FilterType.Location:
+            return QgsLocatorFilter.High
+        elif self.type is FilterType.WMS:
+            return QgsLocatorFilter.Highest
+        elif self.type is FilterType.Feature:
+            return QgsLocatorFilter.Medium
+        else:
+            raise NameError('Filter type is not valid.')
 
     def displayName(self):
-        return self.tr('Swiss Geoadmin locations')
+        if self.type is FilterType.Location:
+            return self.tr('Swiss Geoadmin locations')
+        elif self.type is FilterType.WMS:
+            return self.tr('Swiss Geoadmin WMS layers')
+        elif self.type is FilterType.Feature:
+            return self.tr('Swiss Geoadmin features')
+        else:
+            raise NameError('Filter type is not valid.')
 
     def prefix(self):
-        return 'swi'
+        if self.type is FilterType.Location:
+            return 'chl'
+        elif self.type is FilterType.WMS:
+            return 'chw'
+        elif self.type is FilterType.Feature:
+            return 'chf'
+        else:
+            raise NameError('Filter type is not valid.')
 
     def hasConfigWidget(self):
         return True
@@ -252,70 +286,81 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
             self.result_found = False
 
-            # create the URLs to fetch
-            self.access_managers = {}
-            for search_type in ('locations', 'featuresearch', 'layers'):
-                url = 'https://api3.geo.admin.ch/rest/services/api/SearchServer'
-                params = {
-                    'type': search_type,
-                    'searchText': str(search),
-                    'returnGeometry': 'true',
-                    'lang': self.lang,
-                    'sr': self.crs,
-                    # bbox Must be provided if the searchText is not.
-                    # A comma separated list of 4 coordinates representing
-                    # the bounding box on which features should be filtered (SRID: 21781).
-                }
-                if search_type == 'featuresearch':
+            url = 'https://api3.geo.admin.ch/rest/services/api/SearchServer'
+            params = {
+                'type': self.type.value,
+                'searchText': str(search),
+                'returnGeometry': 'true',
+                'lang': self.lang,
+                'sr': self.crs,
+                # bbox Must be provided if the searchText is not.
+                # A comma separated list of 4 coordinates representing
+                # the bounding box on which features should be filtered (SRID: 21781).
+            }
+            # Locations, WMS layers
+            if self.type is not FilterType.Feature:
+                nam = NetworkAccessManager()
+                feedback.canceled.connect(nam.abort)
+                url = self.url_with_param(url, params)
+                self.dbg_info(url)
+                try:
+                    (response, content) = nam.request(url, headers=self.HEADERS, blocking=True)
+                    self.handle_response(response)
+                except RequestsExceptionUserAbort:
+                    pass
+                except RequestsException as err:
+                    self.info(err)
+
+            # Feature search
+            else:
+                # Feature search is split in several requests
+                # otherwise URL is too long
+                self.access_managers = {}
+                try:
+                    layers = list(self.searchable_layers.keys())
+                    assert len(layers) > 0
+                    step = 30
+                    for l in range(0, len(layers), step):
+                        last = min(l + step - 1, len(layers) - 1)
+                        params['features'] = ','.join(layers[l:last])
+                        self.access_managers[self.url_with_param(url, params)] = None
+                except IOError:
+                    self.info('Layers data file not found. Please report an issue.', Qgis.Critical)
+
+                # init event loop
+                # wait for all requests to end
+                self.event_loop = QEventLoop()
+
+                def reply_finished(response):
+                    self.handle_response(response)
+                    if response.url in self.access_managers:
+                        del self.access_managers[response.url]
+                    if len(self.access_managers) == 0:
+                        self.event_loop.quit()
+
+                # init the network access managers, create the URL
+                for url in self.access_managers:
                     try:
-                        layers = list(self.searchable_layers.keys())
-                        assert len(layers) > 0
-                        # split features search in several requests otherwise URL is too long
-                        step = 30
-                        for l in range(0, len(layers), step):
-                            last = min(l + step - 1, len(layers) - 1)
-                            params['features'] = ','.join(layers[l:last])
-                            self.access_managers[self.url_with_param(url, params)] = None
-                    except IOError:
-                        self.info('Layers data file not found. Please report an issue.', Qgis.Critical)
+                        self.dbg_info(url)
+                        nam = NetworkAccessManager()
+                        self.access_managers[url] = nam
+                        feedback.canceled.connect(nam.abort)
+                        nam.finished.connect(reply_finished)
+                        nam.request(url, headers=self.HEADERS, blocking=False)
 
-                else:
-                    self.access_managers[self.url_with_param(url, params)] = None
+                    except RequestsExceptionUserAbort:
+                        pass
+                    except RequestsException as err:
+                        self.info(str(err))
 
-            # init event loop
-            # wait for all requests to end
-            self.event_loop = QEventLoop()
-
-            def reply_finished(response):
-                self.handle_response(response)
-                if response.url in self.access_managers:
-                    del self.access_managers[response.url]
-                if len(self.access_managers) == 0:
-                    self.event_loop.quit()
-
-            # init the network access managers, create the URL
-            for url in self.access_managers:
-                try:
-                    self.dbg_info(url)
-                    nam = NetworkAccessManager()
-                    self.access_managers[url] = nam
-                    feedback.canceled.connect(nam.abort)
-                    nam.finished.connect(reply_finished)
-                    nam.request(url, headers=self.HEADERS, blocking=False)
-
-                except RequestsExceptionUserAbort:
-                    pass
-                except RequestsException as err:
-                    self.info(str(err))
-
-            # Let the requests end and catch all exceptions (and clean up requests)
-            if len(self.access_managers) > 0:
-                try:
-                    self.event_loop.exec_(QEventLoop.ExcludeUserInputEvents)
-                except RequestsExceptionUserAbort:
-                    pass
-                except RequestsException as err:
-                    self.info(str(err))
+                # Let the requests end and catch all exceptions (and clean up requests)
+                if len(self.access_managers) > 0:
+                    try:
+                        self.event_loop.exec_(QEventLoop.ExcludeUserInputEvents)
+                    except RequestsExceptionUserAbort:
+                        pass
+                    except RequestsException as err:
+                        self.info(str(err))
 
             if not self.result_found:
                 result = QgsLocatorResult()
@@ -351,8 +396,6 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     result.displayString = strip_tags(loc['attrs']['label'])
                     result.description = loc['attrs']['layer']
                     result.userData = WMSLayerResult(layer=loc['attrs']['layer'])
-                    if Qgis.QGIS_VERSION_INT >= 30100:
-                        result.group = self.tr('WMS Layers')
                     self.result_found = True
                     self.resultFetched.emit(result)
 
@@ -555,7 +598,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         if Qgis.QGIS_VERSION_INT >= 30100:
             self.logMessage(str(msg), level)
         else:
-            QgsMessageLog.logMessage('{} {}'.format(self.__class__.__name__, str(msg)), 'Locator bar', level)
+            QgsMessageLog.logMessage('{} {}'.format(self.name(), str(msg)), 'Locator bar', level)
         if emit_message:
             self.message_emitted.emit(msg, level)
 
