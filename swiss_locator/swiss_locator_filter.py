@@ -79,7 +79,8 @@ class InvalidBox(Exception):
 
 
 class WMSLayerResult:
-    pass
+    def __init__(self, layer):
+        self.layer = layer
 
 
 class LocationResult:
@@ -367,7 +368,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     result.filter = self
                     result.displayString = strip_tags(loc['attrs']['label'])
                     result.description = loc['attrs']['layer']
-                    result.userData = WMSLayerResult
+                    result.userData = WMSLayerResult(layer=loc['attrs']['layer'])
                     if Qgis.QGIS_VERSION_INT >= 30100:
                         result.group = self.tr('WMS Layers')
                     self.result_found = True
@@ -448,7 +449,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                               '&layers={layer}' \
                               '&styles=' \
                               '&url=http://wms.geo.admin.ch/?VERSION%3D2.0.0'\
-                .format(crs=self.crs, layer=result.description)
+                .format(crs=self.crs, layer=result.userData.layer)
             wms_layer = QgsRasterLayer(url_with_params, result.displayString, 'wms')
             if not wms_layer.isValid():
                 msg = self.tr('Cannot load WMS layer: {} ({})'.format(result.displayString, result.description))
@@ -480,7 +481,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 self.fetch_feature(layer, feature_id)
 
                 if self.settings.value('show_map_tip'):
-                    self.show_map_tip(layer, feature_id, point)
+                    self.show_map_tip(layer, feature_id, point, alternative_text=result.userData.html_label)
             else:
                 self.current_timer = QTimer()
                 self.current_timer.timeout.connect(self.clear_results)
@@ -539,7 +540,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.feature_rubber_band.reset(QgsWkbTypes.PolygonGeometry)
             self.feature_rubber_band.addGeometry(geometry, None)
 
-    def show_map_tip(self, layer, feature_id, point):
+    def show_map_tip(self, layer, feature_id, point, alternative_text=None):
         if layer and feature_id:
             url_html = 'https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}/htmlPopup' \
                 .format(layer=layer, feature_id=feature_id)
@@ -564,8 +565,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
             except RequestsException as err:
                 self.info(str(err))
 
-        if self.map_tip is None:
-            self.map_tip = MapTip(self.map_canvas, result.userData.html_label, point.asPoint())
+        if self.map_tip is None and alternative_text is not None:
+            self.map_tip = MapTip(self.map_canvas, alternative_text, point.asPoint())
             self.map_tip.closed.connect(self.clear_results)
 
     def info(self, msg="", level=Qgis.Info, emit_message: bool = False):
