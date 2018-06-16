@@ -462,7 +462,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             point.transform(self.transform_4326)
             self.highlight(point)
             if self.settings.value('show_map_tip'):
-                self.show_map_tip(result.userData.layer, result.userData.feature_id, point, self)
+                self.show_map_tip(result.userData.layer, result.userData.feature_id, point)
         # Location
         else:
             point = QgsGeometry.fromPointXY(result.userData.point)
