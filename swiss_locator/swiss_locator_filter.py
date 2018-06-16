@@ -30,23 +30,19 @@ import sys, traceback
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QColor
 from PyQt5.QtCore import QUrl, QUrlQuery, pyqtSlot, pyqtSignal, QEventLoop
-from PyQt5.QtWidgets import QDialog
-from PyQt5.uic import loadUiType
 
 from qgis.core import Qgis, QgsMessageLog, QgsLocatorFilter, QgsLocatorResult, QgsRectangle, \
     QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsGeometry, QgsWkbTypes, QgsPointXY, \
     QgsLocatorContext, QgsFeedback, QgsRasterLayer
 from qgis.gui import QgsRubberBand, QgisInterface
 
-from .qgissettingmanager.setting_dialog import SettingDialog, UpdateMode
-from .network_access_manager import NetworkAccessManager, RequestsException, RequestsExceptionUserAbort
-from .settings import Settings
+from .core.network_access_manager import NetworkAccessManager, RequestsException, RequestsExceptionUserAbort
+from .core.settings import Settings
+from .gui.config_dialog import ConfigDialog
+from .gui.maptip import MapTip
 from .swiss_locator_plugin import DEBUG
 from .utils.html_stripper import strip_tags
-from .gui.maptip import MapTip
 from .map_geo_admin.layers import searchable_layers
-
-DialogUi, _ = loadUiType(os.path.join(os.path.dirname(__file__), 'ui/config.ui'))
 
 
 AVAILABLE_CRS = ('2056', '21781')
@@ -56,22 +52,6 @@ AVAILABLE_LANGUAGES = {'German': 'de',
                        'Italian': 'it',
                        'Romansh': 'rm',
                        'English': 'en'}
-
-
-class ConfigDialog(QDialog, DialogUi, SettingDialog):
-    def __init__(self, parent=None):
-        settings = Settings()
-        QDialog.__init__(self, parent)
-        SettingDialog.__init__(self, setting_manager=settings, mode=UpdateMode.DialogAccept)
-        self.setupUi(self)
-        self.lang.addItem(self.tr('use the application locale, defaults to English'), '')
-        for key, val in AVAILABLE_LANGUAGES.items():
-            self.lang.addItem(key, val)
-        self.crs.addItem(self.tr('Use map CRS if possible, defaults to CH1903+'), 'project')
-        self.crs.addItem('CH 1903+ (EPSG:2056)', '2056')
-        self.crs.addItem('CH 1903 (EPSG:21781)', '21781')
-        self.settings = settings
-        self.init_widgets()
 
 
 class InvalidBox(Exception):
@@ -109,7 +89,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
     message_emitted = pyqtSignal(str, Qgis.MessageLevel)
 
-    def __init__(self,  locale_lang: str, iface: QgisInterface = None, crs: str = None):
+    def __init__(self, locale_lang: str, iface: QgisInterface = None, crs: str = None):
         """"
         :param locale_lang: the language of the locale.
         :param iface: QGIS interface, given when on the main thread (which will display/trigger results), None otherwise

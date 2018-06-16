@@ -24,7 +24,7 @@
 #
 # ---------------------------------------------------------------------
 
-from .qgissettingmanager import SettingManager, Scope, Bool, String, Integer
+from swiss_locator.qgissettingmanager import SettingManager, Scope, Bool, String, Integer
 
 pluginName = "swiss_locator_plugin"
 
