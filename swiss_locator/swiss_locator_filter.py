@@ -160,7 +160,6 @@ class SwissLocatorFilter(QgsLocatorFilter):
         return '{}_{}'.format(self.__class__.__name__, FilterType(self.type).name)
 
     def clone(self):
-        self.clear_results()
         return SwissLocatorFilter(self.type, self.locale_lang, crs=self.crs)
 
     def priority(self):
@@ -192,6 +191,17 @@ class SwissLocatorFilter(QgsLocatorFilter):
             return 'chf'
         else:
             raise NameError('Filter type is not valid.')
+
+    def clearPreviousResults(self):
+        self.rubber_band.reset(QgsWkbTypes.PointGeometry)
+        self.feature_rubber_band.reset(QgsWkbTypes.PolygonGeometry)
+        if self.map_tip is not None:
+            del self.map_tip
+            self.map_tip = None
+        if self.current_timer is not None:
+            self.current_timer.stop()
+            self.current_timer.deleteLater()
+            self.current_timer = None
 
     def hasConfigWidget(self):
         return True
@@ -266,18 +276,6 @@ class SwissLocatorFilter(QgsLocatorFilter):
             q.addQueryItem(key, value)
         url.setQuery(q)
         return url.url()
-
-    @pyqtSlot()
-    def clear_results(self):
-        self.rubber_band.reset(QgsWkbTypes.PointGeometry)
-        self.feature_rubber_band.reset(QgsWkbTypes.PolygonGeometry)
-        if self.map_tip is not None:
-            del self.map_tip
-            self.map_tip = None
-        if self.current_timer is not None:
-            self.current_timer.stop()
-            self.current_timer.deleteLater()
-            self.current_timer = None
 
     def fetchResults(self, search: str, context: QgsLocatorContext, feedback: QgsFeedback):
         try:
@@ -462,7 +460,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         # this should be run in the main thread, i.e. mapCanvas should not be None
         
         # remove any map tip
-        self.clear_results()
+        self.clearPreviousResults()
             
         if type(result.userData) == NoResult:
             pass
@@ -511,7 +509,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     self.show_map_tip(layer, feature_id, point)
             else:
                 self.current_timer = QTimer()
-                self.current_timer.timeout.connect(self.clear_results)
+                self.current_timer.timeout.connect(self.clearPreviousResults)
                 self.current_timer.setSingleShot(True)
                 self.current_timer.start(5000)
                 
@@ -584,7 +582,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
         self.dbg_info(response.content.decode('utf-8'))
         self.map_tip = MapTip(self.iface, response.content.decode('utf-8'), point.asPoint())
-        self.map_tip.closed.connect(self.clear_results)
+        self.map_tip.closed.connect(self.clearPreviousResults)
 
     def info(self, msg="", level=Qgis.Info, emit_message: bool = False):
         if Qgis.QGIS_VERSION_INT >= 30100:

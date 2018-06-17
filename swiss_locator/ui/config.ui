@@ -35,13 +35,13 @@
     </widget>
    </item>
    <item row="3" column="0" colspan="3">
-    <widget class="QCheckBox" name="more_info">
+    <widget class="QCheckBox" name="show_map_tip">
      <property name="text">
       <string>Show map tip on the map whenever possible</string>
      </property>
     </widget>
    </item>
-   <item row="7" column="2">
+   <item row="5" column="2">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -51,7 +51,7 @@
      </property>
     </widget>
    </item>
-   <item row="6" column="2">
+   <item row="4" column="2">
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -63,20 +63,6 @@
       </size>
      </property>
     </spacer>
-   </item>
-   <item row="4" column="0" colspan="3">
-    <widget class="QCheckBox" name="search_wms">
-     <property name="text">
-      <string>Search in WMS layers</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="0" colspan="3">
-    <widget class="QCheckBox" name="search_features">
-     <property name="text">
-      <string>Search in features</string>
-     </property>
-    </widget>
    </item>
   </layout>
  </widget>
