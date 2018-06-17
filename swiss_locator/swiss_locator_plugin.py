@@ -2,13 +2,9 @@
 """
 /***************************************************************************
 
-                                 QgisLocator
+ QGIS Swiss Locator Plugin
+ Copyright (C) 2018 Denis Rouzaud
 
-                             -------------------
-        begin                : 2018-05-03
-        copyright            : (C) 2018 by Denis Rouzaud
-        email                : denis@opengis.ch
-        git sha              : $Format:%H$
  ***************************************************************************/
 
 /***************************************************************************
@@ -40,7 +36,7 @@ class SwissLocatorPlugin:
         qgis_locale = QLocale(QSettings().value('locale/userLocale'))
         locale_path = os.path.join(os.path.dirname(__file__), 'i18n')
         self.translator = QTranslator()
-        self.translator.load(qgis_locale, 'geomapfish_locator', '_', locale_path)
+        self.translator.load(qgis_locale, 'swiss_locator', '_', locale_path)
         QCoreApplication.installTranslator(self.translator)
 
         locale_lang = QLocale.languageToString(QLocale(QSettings().value('locale/userLocale')).language())

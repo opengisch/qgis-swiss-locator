@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------
 #
-# QGIS Geomapfish Locator Plugin
+# QGIS Swiss Locator Plugin
 # Copyright (C) 2018 Denis Rouzaud
 #
 # -----------------------------------------------------------
