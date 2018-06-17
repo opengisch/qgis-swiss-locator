@@ -118,6 +118,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
         self.event_loop = None
         self.result_found = False
         self.access_managers = {}
+        self.nam_map_tip = None
+        self.nam_fetch_feature = None
 
         if crs:
             self.crs = crs
@@ -506,7 +508,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 self.fetch_feature(layer, feature_id)
 
                 if self.settings.value('show_map_tip'):
-                    self.show_map_tip(layer, feature_id, point, alternative_text=result.userData.html_label)
+                    self.show_map_tip(layer, feature_id, point)
             else:
                 self.current_timer = QTimer()
                 self.current_timer.timeout.connect(self.clear_results)
@@ -525,7 +527,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         
     def fetch_feature(self, layer, feature_id):
         # Try to get more info
-        nam = NetworkAccessManager()
+        self.nam_fetch_feature = NetworkAccessManager()
         url_detail = 'https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}' \
             .format(layer=layer, feature_id=feature_id)
         params = {
@@ -534,20 +536,15 @@ class SwissLocatorFilter(QgsLocatorFilter):
         }
         url_detail = self.url_with_param(url_detail, params)
         self.dbg_info(url_detail)
+        self.nam_fetch_feature.finished.connect(self.parse_feature_response)
+        self.nam_fetch_feature.request(url_detail, headers=self.HEADERS, blocking=False)
 
-        try:
-            (response, content) = nam.request(url_detail, headers=self.HEADERS, blocking=True)
-            if response.status_code != 200:
-                self.info("Error with status code: {}".format(response.status_code))
-            else:
-                self.parse_feature_response(content.decode('utf-8'))
-        except RequestsExceptionUserAbort:
-            pass
-        except RequestsException as err:
-            self.info(str(err))
+    def parse_feature_response(self, response):
+        if response.status_code != 200:
+            self.info("Error with status code: {}".format(response.status_code))
+            return
 
-    def parse_feature_response(self, content):
-        data = json.loads(content)
+        data = json.loads(response.content.decode('utf-8'))
         self.dbg_info(data)
 
         if 'feature' not in data or 'geometry' not in data['feature']:
@@ -565,7 +562,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.feature_rubber_band.reset(QgsWkbTypes.PolygonGeometry)
             self.feature_rubber_band.addGeometry(geometry, None)
 
-    def show_map_tip(self, layer, feature_id, point, alternative_text=None):
+    def show_map_tip(self, layer, feature_id, point):
         if layer and feature_id:
             url_html = 'https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}/htmlPopup' \
                 .format(layer=layer, feature_id=feature_id)
@@ -576,23 +573,18 @@ class SwissLocatorFilter(QgsLocatorFilter):
             url_html = self.url_with_param(url_html, params)
             self.dbg_info(url_html)
 
-            try:
-                nam = NetworkAccessManager()
-                (response, content) = nam.request(url_html, headers=self.HEADERS, blocking=True)
-                if response.status_code != 200:
-                    self.info("Error with status code: {}".format(response.status_code))
-                else:
-                    self.dbg_info(content.decode('utf-8'))
-                    self.map_tip = MapTip(self.iface, content.decode('utf-8'), point.asPoint())
-                    self.map_tip.closed.connect(self.clear_results)
-            except RequestsExceptionUserAbort:
-                pass
-            except RequestsException as err:
-                self.info(str(err))
+            self.nam_map_tip = NetworkAccessManager()
+            self.nam_map_tip.finished.connect(lambda response: self.parse_map_tip_response(response, point))
+            self.nam_map_tip.request(url_html, headers=self.HEADERS, blocking=False)
 
-        if self.map_tip is None and alternative_text is not None:
-            self.map_tip = MapTip(self.iface, alternative_text, point.asPoint())
-            self.map_tip.closed.connect(self.clear_results)
+    def parse_map_tip_response(self, response, point):
+        if response.status_code != 200:
+            self.info("Error with status code: {}".format(response.status_code))
+            return
+
+        self.dbg_info(response.content.decode('utf-8'))
+        self.map_tip = MapTip(self.iface, response.content.decode('utf-8'), point.asPoint())
+        self.map_tip.closed.connect(self.clear_results)
 
     def info(self, msg="", level=Qgis.Info, emit_message: bool = False):
         if Qgis.QGIS_VERSION_INT >= 30100:
