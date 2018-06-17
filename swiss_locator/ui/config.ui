@@ -17,7 +17,7 @@
    <item row="2" column="0">
     <widget class="QLabel" name="label_4">
      <property name="text">
-      <string>CRS</string>
+      <string>Coordinates system</string>
      </property>
     </widget>
    </item>
@@ -30,7 +30,7 @@
    <item row="0" column="0">
     <widget class="QLabel" name="label_5">
      <property name="text">
-      <string>Lang</string>
+      <string>Language</string>
      </property>
     </widget>
    </item>
