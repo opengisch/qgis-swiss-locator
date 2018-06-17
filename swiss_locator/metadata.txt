@@ -3,6 +3,7 @@
 name=Swiss Locator
 qgisMinimumVersion=3.0
 description=A locator filter for Swiss Geoadmin
+about=Search for locations, WMS layers of features in the whole Map Geo Admin catalog
 version=dev
 author=Denis Rouzaud
 email=denis@opengis.ch
