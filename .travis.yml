@@ -27,6 +27,9 @@ before_install:
 install:
   - pip install -r requirements.txt
 
+script:
+  - pyrcc5 -o swiss_locator/resources_rc.py swiss_locator/resources.qrc
+
 
 jobs:
   include:

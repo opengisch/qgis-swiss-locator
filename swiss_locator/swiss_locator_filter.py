@@ -29,21 +29,23 @@ import sys, traceback
 from enum import Enum
 
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QColor, QIcon
 from PyQt5.QtCore import QUrl, QUrlQuery, pyqtSlot, pyqtSignal, QEventLoop
 
-from qgis.core import Qgis, QgsMessageLog, QgsLocatorFilter, QgsLocatorResult, QgsRectangle, \
+from qgis.core import Qgis, QgsMessageLog, QgsLocatorFilter, QgsLocatorResult, QgsRectangle, QgsApplication, \
     QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsGeometry, QgsWkbTypes, QgsPointXY, \
     QgsLocatorContext, QgsFeedback, QgsRasterLayer
 from qgis.gui import QgsRubberBand, QgisInterface
 
-from .core.network_access_manager import NetworkAccessManager, RequestsException, RequestsExceptionUserAbort
-from .core.settings import Settings
-from .gui.config_dialog import ConfigDialog
-from .gui.maptip import MapTip
-from .swiss_locator_plugin import DEBUG
-from .utils.html_stripper import strip_tags
-from .map_geo_admin.layers import searchable_layers
+from swiss_locator.core.network_access_manager import NetworkAccessManager, RequestsException, RequestsExceptionUserAbort
+from swiss_locator.core.settings import Settings
+from swiss_locator.gui.config_dialog import ConfigDialog
+from swiss_locator.gui.maptip import MapTip
+from swiss_locator.swiss_locator_plugin import DEBUG
+from swiss_locator.utils.html_stripper import strip_tags
+from swiss_locator.map_geo_admin.layers import searchable_layers
+
+import swiss_locator.resources_rc  # NOQA
 
 
 AVAILABLE_CRS = ('2056', '21781')
@@ -396,6 +398,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     result.displayString = strip_tags(loc['attrs']['label'])
                     result.description = loc['attrs']['layer']
                     result.userData = WMSLayerResult(layer=loc['attrs']['layer'])
+                    result.icon = QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
                     self.result_found = True
                     self.resultFetched.emit(result)
 
@@ -420,6 +423,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     result.userData = FeatureResult(point=point,
                                                     layer=layer,
                                                     feature_id=loc['attrs']['feature_id'])
+                    result.icon = QIcon(":/plugins/swiss_locator/icons/swiss_locator.png")
                     self.result_found = True
                     self.resultFetched.emit(result)
 
@@ -446,6 +450,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                                                      feature_id=loc['attrs']['featureId'] if 'featureId' in loc['attrs']
                                                      else None,
                                                      html_label=loc['attrs']['label'])
+                    result.icon = QIcon(":/plugins/swiss_locator/icons/swiss_locator.png")
                     self.result_found = True
                     self.resultFetched.emit(result)
 
