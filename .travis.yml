@@ -1,0 +1,47 @@
+language: python
+
+python:
+  - 3.5
+
+addons:
+  apt:
+    packages:
+      - pyqt5-dev-tools
+
+git:
+  submodules: false
+
+before_install:
+  - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
+  - git submodule update --init --recursive
+
+install:
+  - pip install -r requirements.txt
+
+
+jobs:
+  include:
+    - stage: deploy
+      if: tag IS present
+      script: plugin_ci/release/release.sh
+
+    - stage: deploy
+      if: branch = master
+      script: plugin_ci/translate/update-translations.sh
+
+env:
+  global:
+    # OSGEO credentials to release the plugin
+    # Generate with the following command for proper special characters support
+    # travis encrypt OSGEO_PASSWORD=\''Your super secret password!'\'
+    - OSGEO_USERNAME=3nids
+    - secure: "FGDDbMkw5FaPKnLd3F01QvRWQ3MXBcwwSVSTFY0LsTi1tjptcoAiCCDguL6+PS+1scTMgHO7QbLN9AVfToRkCliaBJFPI8xnviOOtR3KUAIdD/h7WzzD5sB1IYEJmZ3aexV53dE8VGdC5NDTCM1iujEuJq8SNSmZTmmaiT8yKzUE/Ds0oWJYF5gsqUoKv0YTpJ/wUdMa9jYOs7fiXOFn+5yuvS2bUIm/RCzAYQZseee1HXIgyV04OZzCWAOOfBnKJbfa9XDtu2AoEXIGNn+zjkSaroIAJ+XNTTSbywFnISux2Vc9j5+YYop2att69p904hySQLar+DTExexCtwKWmts9dBQNrnqGo0VfWQT1iyjwufsGbCKpTBT+ZEDHXn1hr9XdLKYMqvVGgPe+jF7YFJxlewBt6byktKyOFLsfLhUKpB+SPpzdyYioFsKs6+iUkOZTshFb3NCvpqgSJh7b3Ej3xTwFh/oCQD4s6HdG4o02i7BCLo2nP2r2XyECxkeOKvLDQBrCPSmeoeLqwLSwNJ+k9mg+AUR8DZy+j0+jV+z5CUPvs8CP/3Al/5ckXucj1C5bmI77KxE+tF0UrYGCY2j4n4SiyYEjqh4ff1rUKlxCTjU1rCRbOkjvGg6Qtu0+FAHpfwUg8gM0qAb6W9svjaNuYVcx2mr/x+xT8chPywc="
+    # TRANSIFEX_API_TOKEN, generated on Transifex website
+    # travis encrypt TX_TOKEN="......"
+    - secure: "mNXtVxVr3nUjpoL/92+QgT69MyefJozpXYPLMrMddwCrfC04gcfYFTh0z2auk5RdM4aFXrf0paSRZQg952196k3SGqX9PBc21YTSDFQp4uvoiEeH2SvqXa2j4mgi21LqMTwk1PYUxYFnkc8xdB3zPFpu8T8jQ42qrPEleF0nCm+FJsSR+sjNwEELkdUkiC3ekFAReMCnlCXfYyP9T5RU3P9lxj8ceLGkJ1eHtt7zsa8EOysUXs88GFlWcvRSH04wm95p7ZY+y5vXq3fE4jzixP+XgK9HxAPcU2Rvpjgk5pcjTDlfnwNDmCONWax1XGvUur19QkTjECcI1DqHkMoW9/l8nluKzL9dufM658605Q4ctSVDqdUSF3EU9G9UQLV0wAiKqwpzg7T3GuELqDKvCuVSF95MrD3c5rmSMOv6T2ZMHF3rSr0GiUOOH+ZSZjWs/IOC541KEB4cPUTVJ+4GLjs+RzZxM1CXU9VVyn2LmSPP9RXjZACRQsZvC3XL6Cxq5CCcl8SE/4amyVw5YjVN0jJFObsYNtgqR9cDPfDmWVNMTssdjZVA15VSEUD7KTB+4mEyArFod92w/FCwzlMp1QuBMXL1NzURUz1JE9a2KKWr+T6bzSNoeyN5/n07yMYf4tPfcApAcZukHyntPeKfrASZcQmsmlcvY/XMRgjCHjU="
+
+    # GH_TOKEN for creating releases
+    # https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line
+    # authrize only "repo_deployment"
+    # travis encrypt GH_TOKEN="......"
+    -  secure: "Db3pFsYtG0BVFwkSQ36mVrFLlcjSPa4p05u0ts/+kmhLOfRlS6EIX22cr4sWJuEV3RmszhNfqT/Hy+dl1S89/94N6yiq2ZnTr708fQRcwfjgXEzgnWZLDpHQc4QH62XV7U4uPw1aGs2yThmGnNAkHhwZiBUMx3/noYqn1VJrp7GnitXncY2zT+Ccmw20o4OJYbFR9agzivE9InGOju0ZRX8JmnQbVP0POjKb60FKbnhTkKiWajDGOVKY65dqLGUaPr892yvFZtLpowZwNzN7XGB9+SGPBcp6zxzSA9hj67hkBuAWJzqkV0Fme7p/r8hyT8XdGKtiVVK+P8zLbB6xlY4ub3eovDrQkpvZh+uuA9neJZi/Ry8VumiwaV8LsnLWKNndP2a50HVUZcIE7BMUzmA6P+nHNYdNrXHUdya4q9YuH9Ips/B/JtIy9L649lmySQHHsPp4ZJlLRGvctREykKMJN1qIawr9QOACE2MP1MK+3IN0XofdeHbi/8Nx2PJRC2ZDjPIos+g+xF924+Lv8g4QOxAH/LJQPyPpg6dd9GhjI87cO3fVsHvB7HcESjLqtm61pd5u3FM4DyhJYsZGVNHq2G4ep/Su+KFuaDw9ELjK/jiiogly1MWcsBz9NawAW7uiQEYfKZon4ZkSiCmaJGxv/wHDuK77E+M2bUbzOXA="
