@@ -47,7 +47,7 @@ class SwissLocatorPlugin:
 
         self.locator_filters = {}
         for filter_type in FilterType:
-            self.locator_filters[filter_type]= SwissLocatorFilter(filter_type, locale_lang, iface)
+            self.locator_filters[filter_type] = SwissLocatorFilter(filter_type, locale_lang, iface)
             self.iface.registerLocatorFilter(self.locator_filters[filter_type])
             self.locator_filters[filter_type].message_emitted.connect(self.show_message)
 
@@ -55,7 +55,7 @@ class SwissLocatorPlugin:
         pass
 
     def unload(self):
-        for locator_filter in self.filters.values():
+        for locator_filter in self.locator_filters.values():
             self.iface.deregisterLocatorFilter(locator_filter)
 
     def show_message(self, title: str, msg: str, level: Qgis.MessageLevel, widget: QWidget = None):
