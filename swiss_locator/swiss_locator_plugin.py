@@ -25,7 +25,9 @@ DEBUG = True
 
 import os
 from PyQt5.QtCore import QCoreApplication, QLocale, QSettings, QTranslator
-from qgis.gui import QgisInterface
+from PyQt5.QtWidgets import QWidget
+from qgis.core import Qgis
+from qgis.gui import QgisInterface, QgsMessageBarItem
 from .swiss_locator_filter import SwissLocatorFilter, FilterType
 
 
@@ -47,7 +49,7 @@ class SwissLocatorPlugin:
         for filter_type in FilterType:
             self.locator_filters[filter_type]= SwissLocatorFilter(filter_type, locale_lang, iface)
             self.iface.registerLocatorFilter(self.locator_filters[filter_type])
-            self.locator_filters[filter_type].message_emitted.connect(self.iface.messageBar().pushMessage)
+            self.locator_filters[filter_type].message_emitted.connect(self.show_message)
 
     def initGui(self):
         pass
@@ -55,3 +57,11 @@ class SwissLocatorPlugin:
     def unload(self):
         for locator_filter in self.filters.values():
             self.iface.deregisterLocatorFilter(locator_filter)
+
+    def show_message(self, title: str, msg: str, level: Qgis.MessageLevel, widget: QWidget = None):
+        if widget:
+            self.widget = widget
+            self.item = QgsMessageBarItem(title, msg, self.widget, level, 7)
+            self.iface.messageBar().pushItem(self.item)
+        else:
+            self.iface.messageBar().pushMessage(title, msg, level)

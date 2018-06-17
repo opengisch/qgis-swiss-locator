@@ -1,6 +1,6 @@
 
 [general]
-name=SwissLocator
+name=Swiss Locator
 qgisMinimumVersion=3.0
 description=A locator filter for Swiss Geoadmin
 version=dev

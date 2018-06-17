@@ -30,7 +30,8 @@ from enum import Enum
 
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QColor, QIcon
-from PyQt5.QtCore import QUrl, QUrlQuery, pyqtSlot, pyqtSignal, QEventLoop
+from PyQt5.QtWidgets import QLabel, QWidget
+from PyQt5.QtCore import QUrl, QUrlQuery, pyqtSignal, QEventLoop
 
 from qgis.core import Qgis, QgsMessageLog, QgsLocatorFilter, QgsLocatorResult, QgsRectangle, QgsApplication, \
     QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsGeometry, QgsWkbTypes, QgsPointXY, \
@@ -64,7 +65,8 @@ class FilterType(Enum):
 
 
 class WMSLayerResult:
-    def __init__(self, layer):
+    def __init__(self, layer, title):
+        self.title = title
         self.layer = layer
 
 
@@ -96,7 +98,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
     HEADERS = {b'User-Agent': b'Mozilla/5.0 QGIS Swiss MapGeoAdmin Locator Filter'}
 
-    message_emitted = pyqtSignal(str, Qgis.MessageLevel)
+    message_emitted = pyqtSignal(str, str, Qgis.MessageLevel, QWidget)
 
     def __init__(self, filter_type: FilterType, locale_lang: str, iface: QgisInterface = None, crs: str = None):
         """"
@@ -395,9 +397,9 @@ class SwissLocatorFilter(QgsLocatorFilter):
                         self.dbg_info('{}: {}'.format(key, val))
                     result = QgsLocatorResult()
                     result.filter = self
-                    result.displayString = strip_tags(loc['attrs']['label'])
+                    result.displayString = loc['attrs']['title']
                     result.description = loc['attrs']['layer']
-                    result.userData = WMSLayerResult(layer=loc['attrs']['layer'])
+                    result.userData = WMSLayerResult(layer=loc['attrs']['layer'], title=loc['attrs']['title'])
                     result.icon = QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
                     self.result_found = True
                     self.resultFetched.emit(result)
@@ -481,11 +483,28 @@ class SwissLocatorFilter(QgsLocatorFilter):
                               '&url=http://wms.geo.admin.ch/?VERSION%3D2.0.0'\
                 .format(crs=self.crs, layer=result.userData.layer)
             wms_layer = QgsRasterLayer(url_with_params, result.displayString, 'wms')
+            label = QLabel()
+            label.setTextFormat(Qt.RichText)
+            label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+            label.setOpenExternalLinks(True)
             if not wms_layer.isValid():
-                msg = self.tr('Cannot load WMS layer: {} ({})'.format(result.displayString, result.description))
+                msg = self.tr('Cannot load WMS layer: {} ({})'.format(result.userData.title, result.userData.layer))
                 level = Qgis.Warning
-                self.info(msg, level, True)
-            QgsProject.instance().addMapLayer(wms_layer)
+                label.setText('<a href="https://map.geo.admin.ch/'
+                              '?lang=fr&bgLayer=ch.swisstopo.pixelkarte-farbe&layers={}">'
+                              'Open layer in map.geo.admin.ch</a>'.format(result.userData.layer))
+                self.info(msg, level)
+            else:
+                msg = self.tr('WMS layer added to the map: {} ({})'.format(result.userData.title, result.userData.layer))
+                level = Qgis.Info
+                label.setText('<a href="https://map.geo.admin.ch/'
+                              '?lang=fr&bgLayer=ch.swisstopo.pixelkarte-farbe&layers={}">'
+                              'Open layer in map.geo.admin.ch</a>'.format(result.userData.layer))
+
+                QgsProject.instance().addMapLayer(wms_layer)
+
+            self.message_emitted.emit(self.displayName(), msg, level, label)
+
         # Feature
         elif type(result.userData) == FeatureResult:
             point = QgsGeometry.fromPointXY(result.userData.point)
