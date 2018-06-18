@@ -334,24 +334,20 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 def reply_finished(response):
                     self.handle_response(response)
                     if response.url in self.access_managers:
-                        del self.access_managers[response.url]
-                    if len(self.access_managers) == 0:
+                        self.access_managers[response.url] = None
+                    for nam in self.access_managers.values():
+                        if nam is not None:
+                            return
                         self.event_loop.quit()
 
                 # init the network access managers, create the URL
                 for url in self.access_managers:
-                    try:
-                        self.dbg_info(url)
-                        nam = NetworkAccessManager()
-                        self.access_managers[url] = nam
-                        feedback.canceled.connect(nam.abort)
-                        nam.finished.connect(reply_finished)
-                        nam.request(url, headers=self.HEADERS, blocking=False)
-
-                    except RequestsExceptionUserAbort:
-                        pass
-                    except RequestsException as err:
-                        self.info(str(err))
+                    self.dbg_info(url)
+                    nam = NetworkAccessManager()
+                    self.access_managers[url] = nam
+                    nam.finished.connect(reply_finished)
+                    nam.request(url, headers=self.HEADERS, blocking=False)
+                    feedback.canceled.connect(nam.abort)
 
                 # Let the requests end and catch all exceptions (and clean up requests)
                 if len(self.access_managers) > 0:
