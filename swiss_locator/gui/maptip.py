@@ -55,8 +55,8 @@ class MapTip(QDockWidget):
         self.setWidget(self.web_view)
 
         # assure the map tip is never larger than half the map canvas
-        max_width = int(self.map_canvas.geometry().width() / 1.1)
-        max_height = int(self.map_canvas.geometry().height() / 1.1)
+        max_width = int(self.map_canvas.geometry().width() / 1.8)
+        max_height = int(self.map_canvas.geometry().height() / 1.8)
         self.dbg_info('max size {} {}'.format(max_height, max_width))
         self.setMaximumSize(max_width, max_height)
 
@@ -98,7 +98,8 @@ class MapTip(QDockWidget):
 
             #self.resize(width, height)
 
-        iface.addDockWidget(Qt.NoDockWidgetArea, self)
+        iface.addDockWidget(Qt.RightDockWidgetArea, self)
+        self.setFeatures(QDockWidget.AllDockWidgetFeatures)
         self.setFloating(True)
         self.setWindowOpacity(0.9)
         self.move_to_point()
