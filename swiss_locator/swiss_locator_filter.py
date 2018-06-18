@@ -92,7 +92,7 @@ class InvalidBox(Exception):
 
 class SwissLocatorFilter(QgsLocatorFilter):
 
-    HEADERS = {b'User-Agent': b'Mozilla/5.0 QGIS Swiss MapGeoAdmin Locator Filter'}
+    HEADERS = {b'User-Agent': b'Mozilla/5.0 QGIS Swiss Geoportal Locator Filter'}
 
     message_emitted = pyqtSignal(str, str, Qgis.MessageLevel, QWidget)
 
@@ -174,11 +174,11 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
     def displayName(self):
         if self.type is FilterType.Location:
-            return self.tr('Swiss Geoadmin locations')
+            return self.tr('Swiss Geoportal locations')
         elif self.type is FilterType.WMS:
-            return self.tr('Swiss Geoadmin WMS layers')
+            return self.tr('Swiss Geoportal WMS layers')
         elif self.type is FilterType.Feature:
-            return self.tr('Swiss Geoadmin features')
+            return self.tr('Swiss Geoportal features')
         else:
             raise NameError('Filter type is not valid.')
 
@@ -249,7 +249,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
     @staticmethod
     def rank2priority(rank) -> float:
         """
-        Translate the rank from GeoAdmin to the priority of the result
+        Translate the rank from geoportal to the priority of the result
         see https://api3.geo.admin.ch/services/sdiservices.html#search
         :param rank: an integer from 1 to 7
         :return: the priority as a float from 0 to 1, 1 being a perfect match
