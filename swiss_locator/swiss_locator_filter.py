@@ -278,6 +278,9 @@ class SwissLocatorFilter(QgsLocatorFilter):
             if len(search) < 2:
                 return
 
+            if len(search) < 4 and self.type is FilterType.Feature:
+                return
+
             self.result_found = False
 
             url = 'https://api3.geo.admin.ch/rest/services/api/SearchServer'
