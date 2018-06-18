@@ -466,7 +466,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                               '&crs=EPSG:{crs}' \
                               '&dpiMode=7' \
                               '&featureCount=10' \
-                              '&format=image/jpeg' \
+                              '&format=image/png' \
                               '&layers={layer}' \
                               '&styles=' \
                               '&url=http://wms.geo.admin.ch/?VERSION%3D2.0.0'\
