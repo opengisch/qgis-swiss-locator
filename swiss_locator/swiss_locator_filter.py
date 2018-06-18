@@ -337,6 +337,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
                             return
                         self.event_loop.quit()
 
+                feedback.canceled.connect(self.event_loop.quit)
+
                 # init the network access managers, create the URL
                 for url in self.access_managers:
                     self.dbg_info(url)
@@ -372,7 +374,9 @@ class SwissLocatorFilter(QgsLocatorFilter):
     def handle_response(self, response):
         try:
             if response.status_code != 200:
-                self.info("Error with status code: {}".format(response.status_code))
+                if not isinstance(response.exception, RequestsExceptionUserAbort):
+                    self.info("Error in main response with status code: {} from {}"
+                              .format(response.status_code, response.url))
                 return
 
             data = json.loads(response.content.decode('utf-8'))
@@ -552,7 +556,9 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
     def parse_feature_response(self, response):
         if response.status_code != 200:
-            self.info("Error with status code: {}".format(response.status_code))
+            if not isinstance(response.exception, RequestsExceptionUserAbort):
+                self.info("Error in feature response with status code: {} from {}"
+                          .format(response.status_code, response.url))
             return
 
         data = json.loads(response.content.decode('utf-8'))
@@ -590,7 +596,9 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
     def parse_map_tip_response(self, response, point):
         if response.status_code != 200:
-            self.info("Error with status code: {}".format(response.status_code))
+            if not isinstance(response.exception, RequestsExceptionUserAbort):
+                self.info("Error in map tip response with status code: {} from {}"
+                          .format(response.status_code, response.url))
             return
 
         self.dbg_info(response.content.decode('utf-8'))
