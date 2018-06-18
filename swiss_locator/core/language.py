@@ -24,24 +24,26 @@
 #
 # ---------------------------------------------------------------------
 
-from swiss_locator.qgissettingmanager import SettingManager, Scope, Bool, String, Stringlist
-
-pluginName = "swiss_locator_plugin"
-
-
-class Settings(SettingManager):
-    def __init__(self):
-        SettingManager.__init__(self, pluginName)
-
-        # lang of the service
-        # possible values are de, fr, it , rm, en
-        # if left empty or NULL, try to use locale and defaults to en
-        self.add_setting(String("lang", Scope.Global, ''))
-        self.add_setting(String("crs", Scope.Global, 'project', value_list=('2056', '21781', 'project')))
-        self.add_setting(Bool("show_map_tip", Scope.Global, True))
-
-        self.add_setting(Bool("feature_search_restrict", Scope.Global, False))
-        self.add_setting(Stringlist("feature_search_layers_list", Scope.Global, None))
+from PyQt5.QtCore import QLocale, QSettings
+from .settings import Settings
 
 
+def get_language() -> str:
+    """
+    Returns the language to be used.
+    Reads from the settings, if it's None, try to use the locale one and defaults to English
+    :return: 2 chars long string representing the language to be used
+    """
+    # get lang from settings
+    lang = Settings().value('lang')
+    if not lang:
+        # if None, try to use the locale one
+        from ..swiss_locator_filter import AVAILABLE_LANGUAGES
+        locale_lang = QLocale.languageToString(QLocale(QSettings().value('locale/userLocale')).language())
+        if locale_lang in AVAILABLE_LANGUAGES:
+            lang = AVAILABLE_LANGUAGES[locale_lang]
+        else:
+            # defaults to English
+            lang = 'en'
 
+    return lang

@@ -36,6 +36,7 @@ from qgis.gui import QgsRubberBand, QgisInterface
 
 from swiss_locator.core.network_access_manager import NetworkAccessManager, RequestsException, RequestsExceptionUserAbort
 from swiss_locator.core.settings import Settings
+from swiss_locator.core.language import get_language
 from swiss_locator.gui.config_dialog import ConfigDialog
 from swiss_locator.gui.maptip import MapTip
 from swiss_locator.swiss_locator_plugin import DEBUG
@@ -96,7 +97,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
     message_emitted = pyqtSignal(str, str, Qgis.MessageLevel, QWidget)
 
-    def __init__(self, filter_type: FilterType, locale_lang: str, iface: QgisInterface = None, crs: str = None):
+    def __init__(self, filter_type: FilterType, iface: QgisInterface = None, crs: str = None):
         """"
         :param filter_type: the type of filter
         :param locale_lang: the language of the locale.
@@ -124,16 +125,9 @@ class SwissLocatorFilter(QgsLocatorFilter):
         if crs:
             self.crs = crs
 
-        self.locale_lang = locale_lang
-        lang = self.settings.value('lang')
-        if not lang:
-            if locale_lang in AVAILABLE_LANGUAGES:
-                self.lang = AVAILABLE_LANGUAGES[locale_lang]
-            else:
-                self.lang = 'en'
-        else:
-            self.lang = lang
-        self.searchable_layers = searchable_layers(self.lang)
+        self.lang = get_language()
+
+        self.searchable_layers = searchable_layers(self.lang, restrict=True)
 
         if iface is not None:
             # happens only in main thread
@@ -160,7 +154,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         return '{}_{}'.format(self.__class__.__name__, FilterType(self.type).name)
 
     def clone(self):
-        return SwissLocatorFilter(self.type, self.locale_lang, crs=self.crs)
+        return SwissLocatorFilter(self.type, crs=self.crs)
 
     def priority(self):
         if self.type is FilterType.Location:

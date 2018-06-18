@@ -25,6 +25,7 @@
 import os
 import json
 import swiss_locator.swiss_locator_filter
+from swiss_locator.core.settings import Settings
 
 
 def data_file(lang: str):
@@ -32,13 +33,18 @@ def data_file(lang: str):
     return os.path.join(cur_dir, 'layers_{}.data'.format(lang))
 
 
-def searchable_layers(lang: str) -> (dict, str):
+def searchable_layers(lang: str, restrict: bool=False) -> dict:
     """
     Returns the searchable layers
     :param lang: 2 characters lang.
+    :param restrict: if True, restrict from the list from settings if restriction is enabled
     :return: a dict of searchable layers (key: layer id, value: description in given language)
     """
     assert lang in swiss_locator.swiss_locator_filter.AVAILABLE_LANGUAGES.values()
+
+    settings = Settings()
+    restrict_enabled_by_user = settings.value('feature_search_restrict')
+    restrict_layer_list = settings.value('feature_search_layers_list')
 
     layers = {}
 
@@ -49,6 +55,8 @@ def searchable_layers(lang: str) -> (dict, str):
     translations_api = data['translations']
 
     for layer in data['searchableLayers']:
+        if restrict and restrict_enabled_by_user and layer not in restrict_layer_list:
+            continue
         layers[layer] = translations_api[layer]
 
     return layers

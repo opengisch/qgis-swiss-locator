@@ -39,11 +39,9 @@ class SwissLocatorPlugin:
         self.translator.load(qgis_locale, 'swiss_locator', '_', locale_path)
         QCoreApplication.installTranslator(self.translator)
 
-        locale_lang = QLocale.languageToString(QLocale(QSettings().value('locale/userLocale')).language())
-
         self.locator_filters = {}
         for filter_type in FilterType:
-            self.locator_filters[filter_type] = SwissLocatorFilter(filter_type, locale_lang, iface)
+            self.locator_filters[filter_type] = SwissLocatorFilter(filter_type, iface)
             self.iface.registerLocatorFilter(self.locator_filters[filter_type])
             self.locator_filters[filter_type].message_emitted.connect(self.show_message)
 
