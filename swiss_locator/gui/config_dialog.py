@@ -22,7 +22,7 @@
 """
 
 import os
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtWidgets import QDialog, QTableWidgetItem, QAbstractItemView
 from PyQt5.uic import loadUiType
 
@@ -49,7 +49,9 @@ class ConfigDialog(QDialog, DialogUi, SettingDialog):
         self.crs.addItem('CH 1903+ (EPSG:2056)', '2056')
         self.crs.addItem('CH 1903 (EPSG:21781)', '21781')
 
+        self.search_line_edit.textChanged.connect(self.filter_rows)
         self.feature_search_restrict.toggled.connect(self.feature_search_layers_list.setEnabled)
+        self.feature_search_restrict.toggled.connect(self.search_line_edit.setEnabled)
         self.feature_search_restrict.toggled.connect(self.select_all_button.setEnabled)
         self.feature_search_restrict.toggled.connect(self.unselect_all_button.setEnabled)
         self.select_all_button.pressed.connect(self.select_all)
@@ -59,6 +61,7 @@ class ConfigDialog(QDialog, DialogUi, SettingDialog):
         layers = searchable_layers(lang)
         self.feature_search_layers_list.setRowCount(len(layers))
         self.feature_search_layers_list.setColumnCount(2)
+        self.feature_search_layers_list.setHorizontalHeaderLabels((self.tr('Layer'), self.tr('Description')))
         self.feature_search_layers_list.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.feature_search_layers_list.setSelectionMode(QAbstractItemView.SingleSelection)
         r = 0
@@ -69,6 +72,7 @@ class ConfigDialog(QDialog, DialogUi, SettingDialog):
             self.feature_search_layers_list.setItem(r, 0, item)
             self.feature_search_layers_list.setItem(r, 1, QTableWidgetItem(description))
             r += 1
+        self.feature_search_layers_list.horizontalHeader().setStretchLastSection(True)
 
         self.settings = settings
         self.init_widgets()
@@ -77,3 +81,19 @@ class ConfigDialog(QDialog, DialogUi, SettingDialog):
         for r in range(self.feature_search_layers_list.rowCount()):
             item = self.feature_search_layers_list.item(r, 0)
             item.setCheckState(Qt.Checked if select else Qt.Unchecked)
+
+    @pyqtSlot(str)
+    def filter_rows(self, text: str):
+        if text:
+            items = self.feature_search_layers_list.findItems(text, Qt.MatchContains)
+            print(text)
+            print(len(items))
+            shown_rows = []
+            for item in items:
+                shown_rows.append(item.row())
+            shown_rows = list(set(shown_rows))
+            for r in range(self.feature_search_layers_list.rowCount()):
+                self.feature_search_layers_list.setRowHidden(r, r not in shown_rows)
+        else:
+            for r in range(self.feature_search_layers_list.rowCount()):
+                self.feature_search_layers_list.setRowHidden(r, False)

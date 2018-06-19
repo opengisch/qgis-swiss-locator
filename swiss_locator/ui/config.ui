@@ -91,16 +91,6 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="1">
-        <widget class="QPushButton" name="unselect_all_button">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>unselect all</string>
-         </property>
-        </widget>
-       </item>
        <item row="1" column="2">
         <spacer name="horizontalSpacer">
          <property name="orientation">
@@ -114,14 +104,37 @@
          </property>
         </spacer>
        </item>
-       <item row="2" column="0" colspan="3">
+       <item row="1" column="1">
+        <widget class="QPushButton" name="unselect_all_button">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>unselect all</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3">
+        <widget class="QgsFilterLineEdit" name="search_line_edit">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="showSearchIcon">
+          <bool>true</bool>
+         </property>
+         <property name="qgisRelation" stdset="0">
+          <string notr="true"/>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0" colspan="4">
         <widget class="QTableWidget" name="feature_search_layers_list">
          <property name="enabled">
           <bool>false</bool>
          </property>
         </widget>
        </item>
-       <item row="0" column="0" colspan="3">
+       <item row="0" column="0" colspan="4">
         <widget class="QCheckBox" name="feature_search_restrict">
          <property name="text">
           <string>Restrict feature search to specific layers</string>
@@ -134,6 +147,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QgsFilterLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>qgsfilterlineedit.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>
@@ -143,8 +163,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
+     <x>254</x>
+     <y>419</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -159,8 +179,8 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
+     <x>322</x>
+     <y>419</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>
