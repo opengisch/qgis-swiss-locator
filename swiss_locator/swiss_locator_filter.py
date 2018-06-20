@@ -290,6 +290,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 'returnGeometry': 'true',
                 'lang': self.lang,
                 'sr': self.crs,
+
                 # bbox Must be provided if the searchText is not.
                 # A comma separated list of 4 coordinates representing
                 # the bounding box on which features should be filtered (SRID: 21781).

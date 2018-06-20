@@ -24,7 +24,7 @@
 import os
 from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtWidgets import QDialog, QTableWidgetItem, QAbstractItemView
-from PyQt5.uic import loadUiType
+from qgis.PyQt.uic import loadUiType
 
 from ..qgissettingmanager.setting_dialog import SettingDialog, UpdateMode
 from ..core.settings import Settings
