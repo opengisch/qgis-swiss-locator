@@ -1,7 +1,7 @@
 
 [general]
 name=Swiss Locator
-qgisMinimumVersion=3.0
+qgisMinimumVersion=3.2
 description=A locator filter for Swiss Geoportal (geo.admin.ch)
 about=Search for locations, WMS layers of features in the whole Swiss Geoportal catalog
 version=dev

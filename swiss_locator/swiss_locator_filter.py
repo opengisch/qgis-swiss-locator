@@ -29,7 +29,7 @@ from PyQt5.QtGui import QColor, QIcon
 from PyQt5.QtWidgets import QLabel, QWidget
 from PyQt5.QtCore import QUrl, QUrlQuery, pyqtSignal, QEventLoop
 
-from qgis.core import Qgis, QgsMessageLog, QgsLocatorFilter, QgsLocatorResult, QgsRectangle, QgsApplication, \
+from qgis.core import Qgis, QgsLocatorFilter, QgsLocatorResult, QgsRectangle, QgsApplication, \
     QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsGeometry, QgsWkbTypes, QgsPointXY, \
     QgsLocatorContext, QgsFeedback, QgsRasterLayer
 from qgis.gui import QgsRubberBand, QgisInterface
@@ -157,14 +157,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         return SwissLocatorFilter(self.type, crs=self.crs)
 
     def priority(self):
-        if self.type is FilterType.Location:
-            return QgsLocatorFilter.High
-        elif self.type is FilterType.WMS:
-            return QgsLocatorFilter.Highest
-        elif self.type is FilterType.Feature:
-            return QgsLocatorFilter.Medium
-        else:
-            raise NameError('Filter type is not valid.')
+        return self.settings.value('{type}_priority'.format(type=self.type.value))
 
     def displayName(self):
         if self.type is FilterType.Location:
@@ -290,7 +283,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 'returnGeometry': 'true',
                 'lang': self.lang,
                 'sr': self.crs,
-
+                'limit': str(self.settings.value('{type}_limit'.format(type=self.type.value)))
                 # bbox Must be provided if the searchText is not.
                 # A comma separated list of 4 coordinates representing
                 # the bounding box on which features should be filtered (SRID: 21781).
@@ -411,11 +404,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
                         self.info(self.tr('Layer {} is not in the list of searchable layers.'
                                           ' Please report issue.'.format(layer)), Qgis.Warning)
                         layer_display = layer
-                    if Qgis.QGIS_VERSION_INT >= 30100:
-                        result.group = layer_display
-                        result.displayString = loc['attrs']['detail']
-                    else:
-                        result.displayString = '{}, {}'.format(layer_display, loc['attrs']['detail'])
+                    result.group = layer_display
+                    result.displayString = loc['attrs']['detail']
                     result.userData = FeatureResult(point=point,
                                                     layer=layer,
                                                     feature_id=loc['attrs']['feature_id'])
@@ -438,8 +428,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     # result.description = loc['attrs']['detail']
                     # if 'featureId' in loc['attrs']:
                     #     result.description = loc['attrs']['featureId']
-                    if Qgis.QGIS_VERSION_INT >= 30100:
-                        result.group = group_name
+                    result.group = group_name
                     result.userData = LocationResult(point=QgsPointXY(loc['attrs']['y'], loc['attrs']['x']),
                                                      bbox=self.box2geometry(loc['attrs']['geom_st_box2d']),
                                                      layer=group_layer,
@@ -607,10 +596,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         self.map_tip.closed.connect(self.clearPreviousResults)
 
     def info(self, msg="", level=Qgis.Info, emit_message: bool = False):
-        if Qgis.QGIS_VERSION_INT >= 30100:
-            self.logMessage(str(msg), level)
-        else:
-            QgsMessageLog.logMessage('{} {}'.format(self.name(), str(msg)), 'Locator bar', level)
+        self.logMessage(str(msg), level)
         if emit_message:
             self.message_emitted.emit(msg, level)
 

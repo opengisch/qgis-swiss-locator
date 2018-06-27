@@ -23,8 +23,9 @@
 
 import os
 from PyQt5.QtCore import Qt, pyqtSlot
-from PyQt5.QtWidgets import QDialog, QTableWidgetItem, QAbstractItemView
+from PyQt5.QtWidgets import QDialog, QTableWidgetItem, QAbstractItemView, QComboBox
 from qgis.PyQt.uic import loadUiType
+from qgis.core import QgsLocatorFilter
 
 from ..qgissettingmanager.setting_dialog import SettingDialog, UpdateMode
 from ..core.settings import Settings
@@ -42,18 +43,22 @@ class ConfigDialog(QDialog, DialogUi, SettingDialog):
         self.setupUi(self)
 
         self.lang.addItem(self.tr('use the application locale, defaults to English'), '')
-        from ..swiss_locator_filter import AVAILABLE_LANGUAGES
+        from ..swiss_locator_filter import AVAILABLE_LANGUAGES, FilterType
         for key, val in AVAILABLE_LANGUAGES.items():
             self.lang.addItem(key, val)
+        for filter_type in FilterType:
+            cb = self.findChild(QComboBox, '{}_priority'.format(filter_type.value))
+            cb.addItem(self.tr('Highest'), QgsLocatorFilter.Highest)
+            cb.addItem(self.tr('High'), QgsLocatorFilter.High)
+            cb.addItem(self.tr('Medium'), QgsLocatorFilter.Medium)
+            cb.addItem(self.tr('Low'), QgsLocatorFilter.Low)
+            cb.addItem(self.tr('Lowest'), QgsLocatorFilter.Lowest)
+
         self.crs.addItem(self.tr('Use map CRS if possible, defaults to CH1903+'), 'project')
         self.crs.addItem('CH 1903+ (EPSG:2056)', '2056')
         self.crs.addItem('CH 1903 (EPSG:21781)', '21781')
 
         self.search_line_edit.textChanged.connect(self.filter_rows)
-        self.feature_search_restrict.toggled.connect(self.feature_search_layers_list.setEnabled)
-        self.feature_search_restrict.toggled.connect(self.search_line_edit.setEnabled)
-        self.feature_search_restrict.toggled.connect(self.select_all_button.setEnabled)
-        self.feature_search_restrict.toggled.connect(self.unselect_all_button.setEnabled)
         self.select_all_button.pressed.connect(self.select_all)
         self.unselect_all_button.pressed.connect(lambda: self.select_all(False))
 

@@ -24,7 +24,9 @@
 #
 # ---------------------------------------------------------------------
 
-from swiss_locator.qgissettingmanager import SettingManager, Scope, Bool, String, Stringlist
+
+from qgis.core import QgsLocatorFilter
+from swiss_locator.qgissettingmanager import SettingManager, Scope, Bool, String, Stringlist, Integer, Enum
 
 pluginName = "swiss_locator_plugin"
 
@@ -39,6 +41,13 @@ class Settings(SettingManager):
         self.add_setting(String("lang", Scope.Global, ''))
         self.add_setting(String("crs", Scope.Global, 'project', value_list=('2056', '21781', 'project')))
         self.add_setting(Bool("show_map_tip", Scope.Global, True))
+
+        self.add_setting(Enum('locations_priority', Scope.Global, QgsLocatorFilter.Highest))
+        self.add_setting(Integer('locations_limit', Scope.Global, 8))
+        self.add_setting(Enum('featuresearch_priority', Scope.Global, QgsLocatorFilter.Medium))
+        self.add_setting(Integer('featuresearch_limit', Scope.Global, 8))
+        self.add_setting(Enum('layers_priority', Scope.Global, QgsLocatorFilter.High))
+        self.add_setting(Integer('layers_limit', Scope.Global, 5))
 
         self.add_setting(Bool("feature_search_restrict", Scope.Global, False))
         self.add_setting(Stringlist("feature_search_layers_list", Scope.Global, None))
