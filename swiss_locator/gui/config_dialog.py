@@ -78,6 +78,7 @@ class ConfigDialog(QDialog, DialogUi, SettingDialog):
             self.feature_search_layers_list.setItem(r, 1, QTableWidgetItem(description))
             r += 1
         self.feature_search_layers_list.horizontalHeader().setStretchLastSection(True)
+        self.feature_search_layers_list.resizeColumnsToContents()
 
         self.settings = settings
         self.init_widgets()
