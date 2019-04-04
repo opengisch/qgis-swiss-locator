@@ -36,7 +36,11 @@ def main():
         counts[lang] = {}
 
         url = 'https://api3.geo.admin.ch/rest/services/api/faqlist?lang={}'.format(lang)
-        contents = urllib.request.urlopen(url).read().decode('utf-8')
+        contents = urllib.request.urlopen(url).read().decode('utf-8')\
+            .replace('","', '",\n"')\
+            .replace('":["', '":[\n"')\
+            .replace('"]}', '"\n]}')
+
         with open('layers_{}.data'.format(lang), 'w') as f:
             f.write(contents)
 
