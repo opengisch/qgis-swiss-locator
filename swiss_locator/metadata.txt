@@ -9,7 +9,7 @@ author=Denis Rouzaud
 email=denis@opengis.ch
 
 # Tags are comma separated with spaces allowed
-tags=swiss,suisse,schweiz locator, geoadmin, geoportal
+tags=swiss, suisse, schweiz, locator, geoadmin, geoportal
 
 tracker=https://github.com/opengisch/qgis_swiss_locator
 homepage=https://github.com/opengisch/qgis_swiss_locator
