@@ -26,7 +26,7 @@ from enum import Enum
 
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QColor, QIcon
-from PyQt5.QtWidgets import QLabel, QWidget
+from PyQt5.QtWidgets import QLabel, QWidget, QTabWidget
 from PyQt5.QtCore import QUrl, QUrlQuery, pyqtSignal, QEventLoop
 
 from qgis.core import Qgis, QgsLocatorFilter, QgsLocatorResult, QgsRectangle, QgsApplication, \
@@ -194,7 +194,11 @@ class SwissLocatorFilter(QgsLocatorFilter):
         return True
 
     def openConfigWidget(self, parent=None):
-        ConfigDialog(parent).exec_()
+        dlg = ConfigDialog(parent)
+        wid = dlg.findChild(QTabWidget, "tabWidget", Qt.FindDirectChildrenOnly)
+        tab = wid.findChild(QWidget, self.type.value)
+        wid.setCurrentWidget(tab)
+        dlg.exec_()
 
     def create_transforms(self):
         # this should happen in the main thread
