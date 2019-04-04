@@ -34,11 +34,11 @@ script:
 jobs:
   include:
     - stage: deploy
-      if: tag IS present
+      if: branch = master AND tag IS present
       script: plugin_ci/release/release.sh
 
     - stage: deploy
-      if: branch = master
+      if: branch = master AND type != pull_request
       script: plugin_ci/translate/update-translations.sh
 
 env:
