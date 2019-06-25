@@ -11,9 +11,9 @@ email=denis@opengis.ch
 # Tags are comma separated with spaces allowed
 tags=swiss, suisse, schweiz, locator, geoadmin, geoportal
 
-tracker=https://github.com/opengisch/qgis_swiss_locator
-homepage=https://github.com/opengisch/qgis_swiss_locator
-repository=https://github.com/opengisch/qgis_swiss_locator
+tracker=https://github.com/opengisch/qgis-swiss-locator
+homepage=https://github.com/opengisch/qgis-swiss-locator
+repository=https://github.com/opengisch/qgis-swiss-locator
 
 category=Web
 
