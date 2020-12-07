@@ -66,6 +66,18 @@ class WMSLayerResult:
         self.title = title
         self.layer = layer
 
+    @staticmethod
+    def from_dict(dict_data: dict):
+        return WMSLayerResult(dict_data['layer'], dict_data['title'])
+        
+    def as_definition(self):
+        definition = {
+            'type': 'WMSLayerResult',
+            'title': self.title,
+            'layer': self.layer,
+        }
+        return json.dumps(definition)
+
 
 class LocationResult:
     def __init__(self, point, bbox, layer, feature_id, html_label):
@@ -75,6 +87,22 @@ class LocationResult:
         self.feature_id = feature_id
         self.html_label = html_label
 
+    @staticmethod
+    def from_dict(dict_data: dict):
+        return LocationResult(QgsGeometry.fromWkt(dict_data['point']).asPoint(), QgsRectangle.fromWkt(dict_data['bbox']), dict_data['layer'], dict_data['feature_id'],
+                              dict_data['html_label'])
+    
+    def as_definition(self):
+        definition = {
+            'type': 'LocationResult',
+            'point': self.point.asWkt(),
+            'bbox': self.bbox.asWktPolygon(),
+            'layer': self.layer,
+            'feature_id': self.feature_id,
+            'html_label': self.html_label,
+        }
+        return json.dumps(definition)
+
 
 class FeatureResult:
     def __init__(self, point, layer, feature_id):
@@ -82,9 +110,44 @@ class FeatureResult:
         self.layer = layer
         self.feature_id = feature_id
 
+    @staticmethod
+    def from_dict(dict_data: dict):
+        return FeatureResult(QgsGeometry.fromWkt(dict_data['point']).asPoint(), dict_data['layer'], dict_data['feature_id'])
+
+    def as_definition(self):
+        definition = {
+            'type': 'FeatureResult',
+            'point': self.point.asWkt(),
+            'layer': self.layer,
+            'feature_id': self.feature_id,
+        }
+        return json.dumps(definition)
+
 
 class NoResult:
-    pass
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def as_definition():
+        definition = {'type': 'NoResult'}
+        return json.dumps(definition)
+
+
+def result_from_data(result: QgsLocatorResult):
+    # see https://github.com/qgis/QGIS/pull/40452
+    if hasattr(result, 'getUserData'):
+        definition = result.getUserData()
+    else:
+        definition = result.userData
+    dict_data = json.loads(definition)
+    if dict_data['type'] == 'WMSLayerResult':
+        return WMSLayerResult.from_dict(dict_data)
+    if dict_data['type'] == 'LocationResult':
+        return LocationResult.from_dict(dict_data)
+    if dict_data['type'] == 'FeatureResult':
+        return FeatureResult.from_dict(dict_data)
+    return NoResult()
 
 
 class InvalidBox(Exception):
@@ -359,7 +422,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 result = QgsLocatorResult()
                 result.filter = self
                 result.displayString = self.tr('No result found.')
-                result.userData = NoResult
+                result.userData = NoResult().as_definition()
                 self.resultFetched.emit(result)
 
         except Exception as e:
@@ -390,7 +453,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     result.filter = self
                     result.displayString = loc['attrs']['title']
                     result.description = loc['attrs']['layer']
-                    result.userData = WMSLayerResult(layer=loc['attrs']['layer'], title=loc['attrs']['title'])
+                    result.userData = WMSLayerResult(layer=loc['attrs']['layer'], title=loc['attrs']['title']).as_definition()
                     result.icon = QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
                     self.result_found = True
                     self.resultFetched.emit(result)
@@ -412,7 +475,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     result.displayString = loc['attrs']['detail']
                     result.userData = FeatureResult(point=point,
                                                     layer=layer,
-                                                    feature_id=loc['attrs']['feature_id'])
+                                                    feature_id=loc['attrs']['feature_id']).as_definition()
                     result.icon = QIcon(":/plugins/swiss_locator/icons/swiss_locator.png")
                     self.result_found = True
                     self.resultFetched.emit(result)
@@ -438,7 +501,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                                                      layer=group_layer,
                                                      feature_id=loc['attrs']['featureId'] if 'featureId' in loc['attrs']
                                                      else None,
-                                                     html_label=loc['attrs']['label'])
+                                                     html_label=loc['attrs']['label']).as_definition()
                     result.icon = QIcon(":/plugins/swiss_locator/icons/swiss_locator.png")
                     self.result_found = True
                     self.resultFetched.emit(result)
@@ -455,84 +518,81 @@ class SwissLocatorFilter(QgsLocatorFilter):
         
         # remove any map tip
         self.clearPreviousResults()
-            
+
+        user_data = NoResult
         try:
-            if type(self.get_user_data(result)) == NoResult:
-                pass
-            # WMS
-            elif type(self.get_user_data(result)) == WMSLayerResult:
-                url_with_params = 'contextualWMSLegend=0' \
-                                  '&crs=EPSG:{crs}' \
-                                  '&dpiMode=7' \
-                                  '&featureCount=10' \
-                                  '&format=image/png' \
-                                  '&layers={layer}' \
-                                  '&styles=' \
-                                  '&url=http://wms.geo.admin.ch/?VERSION%3D2.0.0'\
-                    .format(crs=self.crs, layer=self.get_user_data(result).layer)
-                wms_layer = QgsRasterLayer(url_with_params, result.displayString, 'wms')
-                label = QLabel()
-                label.setTextFormat(Qt.RichText)
-                label.setTextInteractionFlags(Qt.TextBrowserInteraction)
-                label.setOpenExternalLinks(True)
-                if not wms_layer.isValid():
-                    msg = self.tr('Cannot load WMS layer: {} ({})'.format(self.get_user_data(result).title, self.get_user_data(result).layer))
-                    level = Qgis.Warning
-                    label.setText('<a href="https://map.geo.admin.ch/'
-                                  '?lang=fr&bgLayer=ch.swisstopo.pixelkarte-farbe&layers={}">'
-                                  'Open layer in map.geo.admin.ch</a>'.format(self.get_user_data(result).layer))
-                    self.info(msg, level)
-                else:
-                    msg = self.tr('WMS layer added to the map: {} ({})'.format(self.get_user_data(result).title, self.get_user_data(result).layer))
-                    level = Qgis.Info
-                    label.setText('<a href="https://map.geo.admin.ch/'
-                                  '?lang=fr&bgLayer=ch.swisstopo.pixelkarte-farbe&layers={}">'
-                                  'Open layer in map.geo.admin.ch</a>'.format(self.get_user_data(result).layer))
-
-                    QgsProject.instance().addMapLayer(wms_layer)
-
-                self.message_emitted.emit(self.displayName(), msg, level, label)
-
-            # Feature
-            elif type(self.get_user_data(result)) == FeatureResult:
-                point = QgsGeometry.fromPointXY(self.get_user_data(result).point)
-                point.transform(self.transform_4326)
-                self.highlight(point)
-                if self.settings.value('show_map_tip'):
-                    self.show_map_tip(self.get_user_data(result).layer, self.get_user_data(result).feature_id, point)
-            # Location
-            else:
-                point = QgsGeometry.fromPointXY(self.get_user_data(result).point)
-                bbox = QgsGeometry.fromRect(self.get_user_data(result).bbox)
-                layer = self.get_user_data(result).layer
-                feature_id = self.get_user_data(result).feature_id
-                if not point or not bbox:
-                    return
-
-                point.transform(self.transform_ch)
-                bbox.transform(self.transform_ch)
-
-                self.highlight(point, bbox)
-
-                if layer and feature_id:
-                    self.fetch_feature(layer, feature_id)
-
-                    if self.settings.value('show_map_tip'):
-                        self.show_map_tip(layer, feature_id, point)
-                else:
-                    self.current_timer = QTimer()
-                    self.current_timer.timeout.connect(self.clearPreviousResults)
-                    self.current_timer.setSingleShot(True)
-                    self.current_timer.start(5000)
+            swiss_result = result_from_data(result)
         except SystemError:
             self.message_emitted.emit(self.displayName(), self.tr('QGIS Swiss Locator encountered an error. Please <b>update to QGIS 3.16.2</b> or newer.'), Qgis.Warning, None)
-                
-    def get_user_data(self, result):
-        # see https://github.com/qgis/QGIS/pull/40452
-        if hasattr(result, 'getUserData'):
-            return result.getUserData()
+
+        if type(swiss_result) == NoResult:
+            return
+
+        # WMS
+        if type(swiss_result) == WMSLayerResult:
+            url_with_params = 'contextualWMSLegend=0' \
+                              '&crs=EPSG:{crs}' \
+                              '&dpiMode=7' \
+                              '&featureCount=10' \
+                              '&format=image/png' \
+                              '&layers={layer}' \
+                              '&styles=' \
+                              '&url=http://wms.geo.admin.ch/?VERSION%3D2.0.0'\
+                .format(crs=self.crs, layer=swiss_result.layer)
+            wms_layer = QgsRasterLayer(url_with_params, result.displayString, 'wms')
+            label = QLabel()
+            label.setTextFormat(Qt.RichText)
+            label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+            label.setOpenExternalLinks(True)
+            if not wms_layer.isValid():
+                msg = self.tr('Cannot load WMS layer: {} ({})'.format(swiss_result.title, swiss_result.layer))
+                level = Qgis.Warning
+                label.setText('<a href="https://map.geo.admin.ch/'
+                              '?lang=fr&bgLayer=ch.swisstopo.pixelkarte-farbe&layers={}">'
+                              'Open layer in map.geo.admin.ch</a>'.format(swiss_result.layer))
+                self.info(msg, level)
+            else:
+                msg = self.tr('WMS layer added to the map: {} ({})'.format(swiss_result.title, swiss_result.layer))
+                level = Qgis.Info
+                label.setText('<a href="https://map.geo.admin.ch/'
+                              '?lang=fr&bgLayer=ch.swisstopo.pixelkarte-farbe&layers={}">'
+                              'Open layer in map.geo.admin.ch</a>'.format(swiss_result.layer))
+
+                QgsProject.instance().addMapLayer(wms_layer)
+
+            self.message_emitted.emit(self.displayName(), msg, level, label)
+
+        # Feature
+        elif type(swiss_result) == FeatureResult:
+            point = QgsGeometry.fromPointXY(swiss_result.point)
+            point.transform(self.transform_4326)
+            self.highlight(point)
+            if self.settings.value('show_map_tip'):
+                self.show_map_tip(swiss_result.layer, swiss_result.feature_id, point)
+        # Location
         else:
-            return result.userData
+            point = QgsGeometry.fromPointXY(swiss_result.point)
+            bbox = QgsGeometry.fromRect(swiss_result.bbox)
+            layer = swiss_result.layer
+            feature_id = swiss_result.feature_id
+            if not point or not bbox:
+                return
+
+            point.transform(self.transform_ch)
+            bbox.transform(self.transform_ch)
+
+            self.highlight(point, bbox)
+
+            if layer and feature_id:
+                self.fetch_feature(layer, feature_id)
+
+                if self.settings.value('show_map_tip'):
+                    self.show_map_tip(layer, feature_id, point)
+            else:
+                self.current_timer = QTimer()
+                self.current_timer.timeout.connect(self.clearPreviousResults)
+                self.current_timer.setSingleShot(True)
+                self.current_timer.start(5000)
 
     def highlight(self, point, bbox=None):
         if bbox is None:
