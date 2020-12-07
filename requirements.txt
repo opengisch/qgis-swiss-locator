@@ -1,2 +1,0 @@
-transifex-client
-future
