@@ -1,6 +1,3 @@
 [submodule "swiss_locator/qgissettingmanager"]
 	path = swiss_locator/qgissettingmanager
 	url = git@github.com:3nids/qgissettingmanager.git
-[submodule "plugin_ci"]
-	path = plugin_ci
-	url = git@github.com:opengisch/plugin_ci.git
