@@ -608,10 +608,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
         self.map_tip = MapTip(self.iface, response.content.decode('utf-8'), point.asPoint())
         self.map_tip.closed.connect(self.clearPreviousResults)
 
-    def info(self, msg="", level=Qgis.Info, emit_message: bool = False):
+    def info(self, msg="", level=Qgis.Info):
         self.logMessage(str(msg), level)
-        if emit_message:
-            self.message_emitted.emit(msg, level)
 
     def dbg_info(self, msg=""):
         if DEBUG:
