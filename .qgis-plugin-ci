@@ -1,0 +1,9 @@
+plugin_path: swiss_locator
+github_organization_slug: opengisch
+project_slug: qgis-swiss-locator
+
+transifex_coordinator: geoninja
+translation_languages:
+  - fr
+  - it
+  - de
