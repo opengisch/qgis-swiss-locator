@@ -528,6 +528,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.message_emitted.emit(self.displayName(), self.tr('QGIS Swiss Locator encountered an error. Please <b>update to QGIS 3.16.2</b> or newer.'), Qgis.Warning, None)
                 
     def get_user_data(self, result):
+        # see https://github.com/qgis/QGIS/pull/40452
         if hasattr(result, 'getUserData'):
             return result.getUserData()
         else:
