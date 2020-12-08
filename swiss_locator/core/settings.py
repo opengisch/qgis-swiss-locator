@@ -39,7 +39,7 @@ class Settings(SettingManager):
         # possible values are de, fr, it , rm, en
         # if left empty or NULL, try to use locale and defaults to en
         self.add_setting(String("lang", Scope.Global, ''))
-        self.add_setting(String("crs", Scope.Global, 'project', value_list=('2056', '21781', 'project')))
+        self.add_setting(String("crs", Scope.Global, 'project', allowed_values=('2056', '21781', 'project')))
         self.add_setting(Bool("show_map_tip", Scope.Global, True))
 
         self.add_setting(Enum('locations_priority', Scope.Global, QgsLocatorFilter.Highest))
