@@ -31,7 +31,7 @@ from PyQt5.QtCore import QUrl, QUrlQuery, pyqtSignal, QEventLoop
 
 from qgis.core import Qgis, QgsLocatorFilter, QgsLocatorResult, QgsRectangle, QgsApplication, \
     QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsGeometry, QgsWkbTypes, QgsPointXY, \
-    QgsLocatorContext, QgsFeedback, QgsRasterLayer
+    QgsLocatorContext, QgsFeedback, QgsRasterLayer, QgsSettings
 from qgis.gui import QgsRubberBand, QgisInterface
 
 from swiss_locator.core.network_access_manager import NetworkAccessManager, RequestsException, RequestsExceptionUserAbort
@@ -45,6 +45,7 @@ from swiss_locator.map_geo_admin.layers import searchable_layers
 
 import swiss_locator.resources_rc  # NOQA
 
+from urllib.parse import urlparse, parse_qs
 
 AVAILABLE_CRS = ('2056', '21781')
 AVAILABLE_LANGUAGES = {'German': 'de',
@@ -62,22 +63,42 @@ class FilterType(Enum):
 
 
 class WMSLayerResult:
-    def __init__(self, layer, title):
+    def __init__(self, layer, title, url):
         self.title = title
         self.layer = layer
+        self.url = url
 
     @staticmethod
     def from_dict(dict_data: dict):
-        return WMSLayerResult(dict_data['layer'], dict_data['title'])
+        return WMSLayerResult(dict_data['layer'], dict_data['title'], dict_data['url'])
         
     def as_definition(self):
         definition = {
             'type': 'WMSLayerResult',
             'title': self.title,
             'layer': self.layer,
+            'url': self.url,
         }
         return json.dumps(definition)
 
+
+class WMSCapabilitiesResult:
+    def __init__(self, title, url):
+        self.title = title
+        self.url = url
+
+    @staticmethod
+    def from_dict(dict_data: dict):
+        return WMSCapabilitiesResult(dict_data['title'], dict_data['url'])
+        
+    def as_definition(self):
+        definition = {
+            'type': 'WMSCapabilitiesResult',
+            'title': self.title,
+            'url': self.url,
+        }
+        return json.dumps(definition)
+        
 
 class LocationResult:
     def __init__(self, point, bbox, layer, feature_id, html_label):
@@ -143,6 +164,8 @@ def result_from_data(result: QgsLocatorResult):
     dict_data = json.loads(definition)
     if dict_data['type'] == 'WMSLayerResult':
         return WMSLayerResult.from_dict(dict_data)
+    if dict_data['type'] == 'WMSCapabilitiesResult':
+        return WMSCapabilitiesResult.from_dict(dict_data)
     if dict_data['type'] == 'LocationResult':
         return LocationResult.from_dict(dict_data)
     if dict_data['type'] == 'FeatureResult':
@@ -226,7 +249,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         if self.type is FilterType.Location:
             return self.tr('Swiss Geoportal locations')
         elif self.type is FilterType.WMS:
-            return self.tr('Swiss Geoportal WMS layers')
+            return self.tr('Swiss Geoportal / opendata.swiss WMS layers')
         elif self.type is FilterType.Feature:
             return self.tr('Swiss Geoportal features')
         else:
@@ -343,6 +366,9 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
             self.result_found = False
 
+            #opendata.swiss search sample request:
+            # https://opendata.swiss/api/3/action/package_search?q=WMS+%C3%BCbersichtsplan
+
             url = 'https://api3.geo.admin.ch/rest/services/api/SearchServer'
             params = {
                 'type': self.type.value,
@@ -364,6 +390,20 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 try:
                     (response, content) = nam.request(url, headers=self.HEADERS, blocking=True)
                     self.handle_response(response)
+                except RequestsExceptionUserAbort:
+                    pass
+                except RequestsException as err:
+                    self.info(err)
+
+                url2 = 'https://opendata.swiss/api/3/action/package_search?'
+                params2 = {
+                    'q': 'q=WMS+%C3'+str(search)
+                }
+                url2 = self.url_with_param(url2, params2)
+                self.dbg_info(url2)
+                try:
+                    (response, content) = nam.request(url2, headers=self.HEADERS, blocking=True)
+                    self.handle_responseODS(response)
                 except RequestsExceptionUserAbort:
                     pass
                 except RequestsException as err:
@@ -453,7 +493,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     result.filter = self
                     result.displayString = loc['attrs']['title']
                     result.description = loc['attrs']['layer']
-                    result.userData = WMSLayerResult(layer=loc['attrs']['layer'], title=loc['attrs']['title']).as_definition()
+                    result.userData = WMSLayerResult(layer=loc['attrs']['layer'], title=loc['attrs']['title'], url='http://wms.geo.admin.ch/?VERSION%3D2.0.0').as_definition()
                     result.icon = QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
                     self.result_found = True
                     self.resultFetched.emit(result)
@@ -513,6 +553,56 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.info('{} {} {}'.format(exc_type, filename, exc_traceback.tb_lineno), Qgis.Critical)
             self.info(traceback.print_exception(exc_type, exc_obj, exc_traceback), Qgis.Critical)
 
+    def handle_responseODS(self, response):
+        try:
+            if response.status_code != 200:
+                if not isinstance(response.exception, RequestsExceptionUserAbort):
+                    self.info("Error in main response with status code: {} from {}"
+                              .format(response.status_code, response.url))
+                return
+
+            data = json.loads(response.content.decode('utf-8'))
+            # self.dbg_info(data)
+
+            for loc in data['result']['results']:
+                #self.dbg_info("keys: {}".format(loc['results'].keys()))
+                
+                for res in loc['resources']:
+                    if res['format'] == 'WMS' and 'wms' in res['url'].lower():
+                        result = QgsLocatorResult()
+                        result.filter = self
+                        result.displayString = loc['display_name']['de']  #todo: support translation
+                        result.description = res['url']
+                        if res['title']['de'] == 'GetMap':
+                            url=res['url']
+                            u = urlparse(url)
+                            o = parse_qs(u.query)
+                            l = o['LAYERS']
+                            result.userData = WMSLayerResult(layer=l[0], title=loc['display_name']['de'], url=u.scheme + '://' + u.netloc + '/' + u.path + '?').as_definition()
+                            result.icon = QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
+                            self.result_found = True
+                            self.resultFetched.emit(result)
+    
+                            #todo: add else if no GetMap-URL is found
+    
+                    if res['format'] == 'SERVICE' and 'wms' in res['url'].lower():
+                        result = QgsLocatorResult()
+                        result.filter = self
+                        result.displayString = loc['display_name']['de']  #todo: support translation
+                        result.description = res['url']
+                        url=res['url']   
+                        result.userData = WMSCapabilitiesResult(title=loc['display_name']['de'], url=url).as_definition()
+                        result.icon = QgsApplication.getThemeIcon("/mActionAdd.svg")
+                        self.result_found = True
+                        self.resultFetched.emit(result)
+
+        except Exception as e:
+            self.info(str(e), Qgis.Critical)
+            exc_type, exc_obj, exc_traceback = sys.exc_info()
+            filename = os.path.split(exc_traceback.tb_frame.f_code.co_filename)[1]
+            self.info('{} {} {}'.format(exc_type, filename, exc_traceback.tb_lineno), Qgis.Critical)
+            self.info(traceback.print_exception(exc_type, exc_obj, exc_traceback), Qgis.Critical)
+
     def triggerResult(self, result: QgsLocatorResult):
         # this should be run in the main thread, i.e. mapCanvas should not be None
         
@@ -537,8 +627,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
                               '&format=image/png' \
                               '&layers={layer}' \
                               '&styles=' \
-                              '&url=http://wms.geo.admin.ch/?VERSION%3D2.0.0'\
-                .format(crs=self.crs, layer=swiss_result.layer)
+                              '&url={url}' \
+                .format(crs=self.crs, layer=swiss_result.layer, url=swiss_result.url)
             wms_layer = QgsRasterLayer(url_with_params, result.displayString, 'wms')
             label = QLabel()
             label.setTextFormat(Qt.RichText)
@@ -559,6 +649,19 @@ class SwissLocatorFilter(QgsLocatorFilter):
                               'Open layer in map.geo.admin.ch</a>'.format(swiss_result.layer))
 
                 QgsProject.instance().addMapLayer(wms_layer)
+
+            self.message_emitted.emit(self.displayName(), msg, level, label)
+
+        elif type(swiss_result) == WMSCapabilitiesResult:
+            label = QLabel()
+            label.setTextFormat(Qt.RichText)
+            label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+            label.setOpenExternalLinks(True)
+            msg = self.tr('WMS service {} added as datasource'.format(swiss_result.title))
+            level = Qgis.Info
+            label.setText('label'.format())
+            
+            self.addWMSDataSource(swiss_result.title, swiss_result.url)
 
             self.message_emitted.emit(self.displayName(), msg, level, label)
 
@@ -680,3 +783,28 @@ class SwissLocatorFilter(QgsLocatorFilter):
     def break_camelcase(identifier):
         matches = re.finditer('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)', identifier)
         return ' '.join([m.group(0) for m in matches])
+
+    @staticmethod
+    def addWMSDataSource(name, url):
+        from PyQt5.QtCore import QSettings
+        from qgis.core import QgsDataSourceUri
+
+        settings = QSettings()
+
+        settings.beginGroup(u"/Qgis/connections-wms/")
+        settings.beginGroup(name)
+        datasource_uri = QgsDataSourceUri()
+        settings.setValue("url", url)
+        settings.setValue("ignoreGetMapURI", datasource_uri.param('IgnoreGetMapUrl') == "1")
+        settings.setValue("ignoreAxisOrientation", datasource_uri.param('IgnoreAxisOrientation') == "1")
+        settings.setValue("invertAxisOrientation", datasource_uri.param('InvertAxisOrientation') == "1")
+        settings.setValue("smoothPixmapTransform", datasource_uri.param('SmoothPixmapTransform') == "1")
+        settings.setValue("ignoreGetFeatureInfoURI", datasource_uri.param('IgnoreGetFeatureInfoUrl') == "1")
+        settings.setValue("referer", datasource_uri.param('referer'))
+        settings.endGroup()
+        settings.endGroup()
+
+        settings.beginGroup(u"/Qgis/WMS")
+        settings.beginGroup(name)
+        settings.setValue("username", datasource_uri.param('username'))
+        settings.setValue("password", datasource_uri.param('password'))
