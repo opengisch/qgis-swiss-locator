@@ -382,30 +382,22 @@ class SwissLocatorFilter(QgsLocatorFilter):
             if self.type is not FilterType.Feature:
                 nam = NetworkAccessManager()
                 feedback.canceled.connect(nam.abort)
-                url = self.url_with_param(url, params)
-                self.dbg_info(url)
-                try:
-                    (response, content) = nam.request(url, headers=self.HEADERS, blocking=True)
-                    self.handle_response(response)
-                except RequestsExceptionUserAbort:
-                    pass
-                except RequestsException as err:
-                    self.info(err)
 
-                # Search opendata.swiss
-                url = 'https://opendata.swiss/api/3/action/package_search?'
-                params = {
-                    'q': 'q=WMS+%C3'+str(search)
-                }
-                url = self.url_with_param(url, params)
-                self.dbg_info(url)
-                try:
-                    (response, content) = nam.request(url, headers=self.HEADERS, blocking=True)
-                    self.handle_responseODS(response)
-                except RequestsExceptionUserAbort:
-                    pass
-                except RequestsException as err:
-                    self.info(err)
+                searchUrls = [
+                    (url, params),
+                    ('https://opendata.swiss/api/3/action/package_search?', {'q': 'q=WMS+%C3'+str(search)})
+                ]
+
+                for (url, params) in searchUrls:
+                    url = self.url_with_param(url, params)
+                    self.dbg_info(url)
+                    try:
+                        (response, content) = nam.request(url, headers=self.HEADERS, blocking=True)
+                        self.handle_response(response)
+                    except RequestsExceptionUserAbort:
+                        pass
+                    except RequestsException as err:
+                        self.info(err)
 
             # Feature search
             else:
@@ -481,116 +473,99 @@ class SwissLocatorFilter(QgsLocatorFilter):
             data = json.loads(response.content.decode('utf-8'))
             # self.dbg_info(data)
 
-            for loc in data['results']:
-                self.dbg_info("keys: {}".format(loc['attrs'].keys()))
-                if loc['attrs']['origin'] == 'layer':
-                    # available keys: ﻿['origin', 'lang', 'layer', 'staging', 'title', 'topics', 'detail', 'label', 'id']
-                    for key, val in loc['attrs'].items():
-                        self.dbg_info('{}: {}'.format(key, val))
-                    result = QgsLocatorResult()
-                    result.filter = self
-                    result.displayString = loc['attrs']['title']
-                    result.description = loc['attrs']['layer']
-                    result.userData = WMSLayerResult(layer=loc['attrs']['layer'], title=loc['attrs']['title'], url='http://wms.geo.admin.ch/?VERSION%3D2.0.0').as_definition()
-                    result.icon = QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
-                    self.result_found = True
-                    self.resultFetched.emit(result)
+            if self.is_opendata_swiss_response(data):
+                for loc in data['result']['results']:
+                    for res in loc['resources']:
+                        url = res['url']
+                        if 'wms' in url.lower():
+                            if res['format'] == 'WMS':
+                                result = QgsLocatorResult()
+                                result.filter = self
+                                result.displayString = loc['display_name']['de']  #todo: support translation
+                                result.description = url
 
-                elif loc['attrs']['origin'] == 'feature':
-                    for key, val in loc['attrs'].items():
-                        self.dbg_info('{}: {}'.format(key, val))
-                    result = QgsLocatorResult()
-                    result.filter = self
-                    layer = loc['attrs']['layer']
-                    point = QgsPointXY(loc['attrs']['lon'], loc['attrs']['lat'])
-                    if layer in self.searchable_layers:
-                        layer_display = self.searchable_layers[layer]
-                    else:
-                        self.info(self.tr('Layer {} is not in the list of searchable layers.'
-                                          ' Please report issue.'.format(layer)), Qgis.Warning)
-                        layer_display = layer
-                    result.group = layer_display
-                    result.displayString = loc['attrs']['detail']
-                    result.userData = FeatureResult(point=point,
-                                                    layer=layer,
-                                                    feature_id=loc['attrs']['feature_id']).as_definition()
-                    result.icon = QIcon(":/plugins/swiss_locator/icons/swiss_locator.png")
-                    self.result_found = True
-                    self.resultFetched.emit(result)
+                                if res['title']['de'] == 'GetMap':
+                                    u = urlparse(url)
+                                    layers = parse_qs(u.query)['LAYERS']
+                                    result.userData = WMSLayerResult(layer=layers[0], title=loc['display_name']['de'], url=u.scheme + '://' + u.netloc + '/' + u.path + '?').as_definition()
+                                    result.icon = QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
+                                    self.result_found = True
+                                    self.resultFetched.emit(result)
+                                #todo: add else if no GetMap-URL is found
 
-                else:  # locations
-                    for key, val in loc['attrs'].items():
-                        self.dbg_info('{}: {}'.format(key, val))
-                    group_name, group_layer = self.group_info(loc['attrs']['origin'])
-                    if 'layerBodId' in loc['attrs']:
-                        self.dbg_info("layer: {}".format(loc['attrs']['layerBodId']))
-                    if 'featureId' in loc['attrs']:
-                        self.dbg_info("feature: {}".format(loc['attrs']['featureId']))
-
-                    result = QgsLocatorResult()
-                    result.filter = self
-                    result.displayString = strip_tags(loc['attrs']['label'])
-                    # result.description = loc['attrs']['detail']
-                    # if 'featureId' in loc['attrs']:
-                    #     result.description = loc['attrs']['featureId']
-                    result.group = group_name
-                    result.userData = LocationResult(point=QgsPointXY(loc['attrs']['y'], loc['attrs']['x']),
-                                                     bbox=self.box2geometry(loc['attrs']['geom_st_box2d']),
-                                                     layer=group_layer,
-                                                     feature_id=loc['attrs']['featureId'] if 'featureId' in loc['attrs']
-                                                     else None,
-                                                     html_label=loc['attrs']['label']).as_definition()
-                    result.icon = QIcon(":/plugins/swiss_locator/icons/swiss_locator.png")
-                    self.result_found = True
-                    self.resultFetched.emit(result)
-
-        except Exception as e:
-            self.info(str(e), Qgis.Critical)
-            exc_type, exc_obj, exc_traceback = sys.exc_info()
-            filename = os.path.split(exc_traceback.tb_frame.f_code.co_filename)[1]
-            self.info('{} {} {}'.format(exc_type, filename, exc_traceback.tb_lineno), Qgis.Critical)
-            self.info(traceback.print_exception(exc_type, exc_obj, exc_traceback), Qgis.Critical)
-
-    def handle_responseODS(self, response):
-        try:
-            if response.status_code != 200:
-                if not isinstance(response.exception, RequestsExceptionUserAbort):
-                    self.info("Error in main response with status code: {} from {}"
-                              .format(response.status_code, response.url))
-                return
-
-            data = json.loads(response.content.decode('utf-8'))
-            # self.dbg_info(data)
-
-            for loc in data['result']['results']:
-                
-                for res in loc['resources']:
-                    url = res['url']
-                    if 'wms' in url.lower():
-                        if res['format'] == 'WMS':
-                            result = QgsLocatorResult()
-                            result.filter = self
-                            result.displayString = loc['display_name']['de']  #todo: support translation
-                            result.description = url
-
-                            if res['title']['de'] == 'GetMap':
-                                u = urlparse(url)
-                                layers = parse_qs(u.query)['LAYERS']
-                                result.userData = WMSLayerResult(layer=layers[0], title=loc['display_name']['de'], url=u.scheme + '://' + u.netloc + '/' + u.path + '?').as_definition()
-                                result.icon = QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
+                            elif res['format'] == 'SERVICE':
+                                result = QgsLocatorResult()
+                                result.filter = self
+                                result.displayString = loc['display_name']['de']  #todo: support translation
+                                result.description = url
+                                result.userData = WMSCapabilitiesResult(title=loc['display_name']['de'], url=url).as_definition()
+                                result.icon = QgsApplication.getThemeIcon("/mActionAdd.svg")
                                 self.result_found = True
                                 self.resultFetched.emit(result)
-                            #todo: add else if no GetMap-URL is found
 
-                        elif res['format'] == 'SERVICE':
-                            result = QgsLocatorResult()
-                            result.filter = self
-                            result.displayString = loc['display_name']['de']  #todo: support translation
-                            result.description = url
-                            result.userData = WMSCapabilitiesResult(title=loc['display_name']['de'], url=url).as_definition()
-                            result.icon = QgsApplication.getThemeIcon("/mActionAdd.svg")
-                            self.result_found = True
-                            self.resultFetched.emit(result)
+            else:
+                for loc in data['results']:
+                    self.dbg_info("keys: {}".format(loc['attrs'].keys()))
+                    if loc['attrs']['origin'] == 'layer':
+                        # available keys: ﻿['origin', 'lang', 'layer', 'staging', 'title', 'topics', 'detail', 'label', 'id']
+                        for key, val in loc['attrs'].items():
+                            self.dbg_info('{}: {}'.format(key, val))
+                        result = QgsLocatorResult()
+                        result.filter = self
+                        result.displayString = loc['attrs']['title']
+                        result.description = loc['attrs']['layer']
+                        result.userData = WMSLayerResult(layer=loc['attrs']['layer'], title=loc['attrs']['title'], url='http://wms.geo.admin.ch/?VERSION%3D2.0.0').as_definition()
+                        result.icon = QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
+                        self.result_found = True
+                        self.resultFetched.emit(result)
+
+                    elif loc['attrs']['origin'] == 'feature':
+                        for key, val in loc['attrs'].items():
+                            self.dbg_info('{}: {}'.format(key, val))
+                        result = QgsLocatorResult()
+                        result.filter = self
+                        layer = loc['attrs']['layer']
+                        point = QgsPointXY(loc['attrs']['lon'], loc['attrs']['lat'])
+                        if layer in self.searchable_layers:
+                            layer_display = self.searchable_layers[layer]
+                        else:
+                            self.info(self.tr('Layer {} is not in the list of searchable layers.'
+                                            ' Please report issue.'.format(layer)), Qgis.Warning)
+                            layer_display = layer
+                        result.group = layer_display
+                        result.displayString = loc['attrs']['detail']
+                        result.userData = FeatureResult(point=point,
+                                                        layer=layer,
+                                                        feature_id=loc['attrs']['feature_id']).as_definition()
+                        result.icon = QIcon(":/plugins/swiss_locator/icons/swiss_locator.png")
+                        self.result_found = True
+                        self.resultFetched.emit(result)
+
+                    else:  # locations
+                        for key, val in loc['attrs'].items():
+                            self.dbg_info('{}: {}'.format(key, val))
+                        group_name, group_layer = self.group_info(loc['attrs']['origin'])
+                        if 'layerBodId' in loc['attrs']:
+                            self.dbg_info("layer: {}".format(loc['attrs']['layerBodId']))
+                        if 'featureId' in loc['attrs']:
+                            self.dbg_info("feature: {}".format(loc['attrs']['featureId']))
+
+                        result = QgsLocatorResult()
+                        result.filter = self
+                        result.displayString = strip_tags(loc['attrs']['label'])
+                        # result.description = loc['attrs']['detail']
+                        # if 'featureId' in loc['attrs']:
+                        #     result.description = loc['attrs']['featureId']
+                        result.group = group_name
+                        result.userData = LocationResult(point=QgsPointXY(loc['attrs']['y'], loc['attrs']['x']),
+                                                        bbox=self.box2geometry(loc['attrs']['geom_st_box2d']),
+                                                        layer=group_layer,
+                                                        feature_id=loc['attrs']['featureId'] if 'featureId' in loc['attrs']
+                                                        else None,
+                                                        html_label=loc['attrs']['label']).as_definition()
+                        result.icon = QIcon(":/plugins/swiss_locator/icons/swiss_locator.png")
+                        self.result_found = True
+                        self.resultFetched.emit(result)
 
         except Exception as e:
             self.info(str(e), Qgis.Critical)
@@ -804,3 +779,6 @@ class SwissLocatorFilter(QgsLocatorFilter):
         settings.beginGroup(name)
         settings.setValue("username", datasource_uri.param('username'))
         settings.setValue("password", datasource_uri.param('password'))
+
+    def is_opendata_swiss_response(self, json):
+        return 'opendata.swiss' in json.get("help", [])
