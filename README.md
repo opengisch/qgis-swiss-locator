@@ -39,7 +39,7 @@ Type the text to search in the locator bar.
 If the result is a **WMS layer**, double-clicking on it will try to add it to the map. 
 It might not be possible since some layers are only visible in the geoportal.
 In any case, a link will be shown to display the layer in the geoportal.
-In the case a opendata.swiss service contains more layers, a datasource to the WMS will be established.
+If an opendata.swiss service contains more layers, a datasource to the WMS will be established.
 
 If the result is a **location** or **feature**, 
 double-clicking on it will move the map canvas to the result and highlight its position.
