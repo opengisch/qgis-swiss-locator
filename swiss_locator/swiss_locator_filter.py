@@ -31,7 +31,7 @@ from PyQt5.QtCore import QUrl, QUrlQuery, pyqtSignal, QEventLoop
 
 from qgis.core import Qgis, QgsLocatorFilter, QgsLocatorResult, QgsRectangle, QgsApplication, \
     QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsGeometry, QgsWkbTypes, QgsPointXY, \
-    QgsLocatorContext, QgsFeedback, QgsRasterLayer, QgsSettings
+    QgsLocatorContext, QgsFeedback, QgsRasterLayer, QgsSettings, QgsMessageLog
 from qgis.gui import QgsRubberBand, QgisInterface
 
 from swiss_locator.core.network_access_manager import NetworkAccessManager, RequestsException, RequestsExceptionUserAbort
@@ -366,9 +366,6 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
             self.result_found = False
 
-            #opendata.swiss search sample request:
-            # https://opendata.swiss/api/3/action/package_search?q=WMS+%C3%BCbersichtsplan
-
             url = 'https://api3.geo.admin.ch/rest/services/api/SearchServer'
             params = {
                 'type': self.type.value,
@@ -395,14 +392,15 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 except RequestsException as err:
                     self.info(err)
 
-                url2 = 'https://opendata.swiss/api/3/action/package_search?'
-                params2 = {
+                # Search opendata.swiss
+                url = 'https://opendata.swiss/api/3/action/package_search?'
+                params = {
                     'q': 'q=WMS+%C3'+str(search)
                 }
-                url2 = self.url_with_param(url2, params2)
-                self.dbg_info(url2)
+                url = self.url_with_param(url, params)
+                self.dbg_info(url)
                 try:
-                    (response, content) = nam.request(url2, headers=self.HEADERS, blocking=True)
+                    (response, content) = nam.request(url, headers=self.HEADERS, blocking=True)
                     self.handle_responseODS(response)
                 except RequestsExceptionUserAbort:
                     pass
@@ -565,36 +563,34 @@ class SwissLocatorFilter(QgsLocatorFilter):
             # self.dbg_info(data)
 
             for loc in data['result']['results']:
-                #self.dbg_info("keys: {}".format(loc['results'].keys()))
                 
                 for res in loc['resources']:
-                    if res['format'] == 'WMS' and 'wms' in res['url'].lower():
-                        result = QgsLocatorResult()
-                        result.filter = self
-                        result.displayString = loc['display_name']['de']  #todo: support translation
-                        result.description = res['url']
-                        if res['title']['de'] == 'GetMap':
-                            url=res['url']
-                            u = urlparse(url)
-                            o = parse_qs(u.query)
-                            l = o['LAYERS']
-                            result.userData = WMSLayerResult(layer=l[0], title=loc['display_name']['de'], url=u.scheme + '://' + u.netloc + '/' + u.path + '?').as_definition()
-                            result.icon = QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
+                    url = res['url']
+                    if 'wms' in url.lower():
+                        if res['format'] == 'WMS':
+                            result = QgsLocatorResult()
+                            result.filter = self
+                            result.displayString = loc['display_name']['de']  #todo: support translation
+                            result.description = url
+
+                            if res['title']['de'] == 'GetMap':
+                                u = urlparse(url)
+                                layers = parse_qs(u.query)['LAYERS']
+                                result.userData = WMSLayerResult(layer=layers[0], title=loc['display_name']['de'], url=u.scheme + '://' + u.netloc + '/' + u.path + '?').as_definition()
+                                result.icon = QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
+                                self.result_found = True
+                                self.resultFetched.emit(result)
+                            #todo: add else if no GetMap-URL is found
+
+                        elif res['format'] == 'SERVICE':
+                            result = QgsLocatorResult()
+                            result.filter = self
+                            result.displayString = loc['display_name']['de']  #todo: support translation
+                            result.description = url
+                            result.userData = WMSCapabilitiesResult(title=loc['display_name']['de'], url=url).as_definition()
+                            result.icon = QgsApplication.getThemeIcon("/mActionAdd.svg")
                             self.result_found = True
                             self.resultFetched.emit(result)
-    
-                            #todo: add else if no GetMap-URL is found
-    
-                    if res['format'] == 'SERVICE' and 'wms' in res['url'].lower():
-                        result = QgsLocatorResult()
-                        result.filter = self
-                        result.displayString = loc['display_name']['de']  #todo: support translation
-                        result.description = res['url']
-                        url=res['url']   
-                        result.userData = WMSCapabilitiesResult(title=loc['display_name']['de'], url=url).as_definition()
-                        result.icon = QgsApplication.getThemeIcon("/mActionAdd.svg")
-                        self.result_found = True
-                        self.resultFetched.emit(result)
 
         except Exception as e:
             self.info(str(e), Qgis.Critical)
