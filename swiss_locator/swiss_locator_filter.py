@@ -475,19 +475,24 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
             if self.is_opendata_swiss_response(data):
                 for loc in data['result']['results']:
+                    display_name = loc['display_name'].get(self.lang, "")
+                    if not display_name:
+                        # Fallback to german
+                        display_name = loc['display_name']['de']
+
                     for res in loc['resources']:
                         url = res['url']
                         if 'wms' in url.lower():
                             if res['format'] == 'WMS':
                                 result = QgsLocatorResult()
                                 result.filter = self
-                                result.displayString = loc['display_name']['de']  #todo: support translation
+                                result.displayString = display_name
                                 result.description = url
 
                                 if res['title']['de'] == 'GetMap':
                                     u = urlparse(url)
                                     layers = parse_qs(u.query)['LAYERS']
-                                    result.userData = WMSLayerResult(layer=layers[0], title=loc['display_name']['de'], url=u.scheme + '://' + u.netloc + '/' + u.path + '?').as_definition()
+                                    result.userData = WMSLayerResult(layer=layers[0], title=display_name, url=u.scheme + '://' + u.netloc + '/' + u.path + '?').as_definition()
                                     result.icon = QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
                                     self.result_found = True
                                     self.resultFetched.emit(result)
@@ -496,9 +501,9 @@ class SwissLocatorFilter(QgsLocatorFilter):
                             elif res['format'] == 'SERVICE':
                                 result = QgsLocatorResult()
                                 result.filter = self
-                                result.displayString = loc['display_name']['de']  #todo: support translation
+                                result.displayString = display_name
                                 result.description = url
-                                result.userData = WMSCapabilitiesResult(title=loc['display_name']['de'], url=url).as_definition()
+                                result.userData = WMSCapabilitiesResult(title=display_name, url=url).as_definition()
                                 result.icon = QgsApplication.getThemeIcon("/mActionAdd.svg")
                                 self.result_found = True
                                 self.resultFetched.emit(result)
