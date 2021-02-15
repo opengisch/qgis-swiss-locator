@@ -765,11 +765,11 @@ class SwissLocatorFilter(QgsLocatorFilter):
         from PyQt5.QtCore import QSettings
         from qgis.core import QgsDataSourceUri
 
+        datasource_uri = QgsDataSourceUri()
         settings = QSettings()
 
         settings.beginGroup(u"/Qgis/connections-wms/")
         settings.beginGroup(name)
-        datasource_uri = QgsDataSourceUri()
         settings.setValue("url", url)
         settings.setValue("ignoreGetMapURI", datasource_uri.param('IgnoreGetMapUrl') == "1")
         settings.setValue("ignoreAxisOrientation", datasource_uri.param('IgnoreAxisOrientation') == "1")
@@ -784,6 +784,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
         settings.beginGroup(name)
         settings.setValue("username", datasource_uri.param('username'))
         settings.setValue("password", datasource_uri.param('password'))
+        settings.endGroup()
+        settings.endGroup()
 
     def is_opendata_swiss_response(self, json):
         return 'opendata.swiss' in json.get("help", [])
