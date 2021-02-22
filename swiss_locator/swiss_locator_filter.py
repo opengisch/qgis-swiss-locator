@@ -487,6 +487,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                             if res['media_type'] == 'WMS':
                                 result = QgsLocatorResult()
                                 result.filter = self
+                                result.group = 'opendata.swiss WMS layers'
                                 result.displayString = display_name
                                 result.description = url
 
@@ -502,22 +503,25 @@ class SwissLocatorFilter(QgsLocatorFilter):
                             elif 'request=getcapabilities' in url.lower():
                                 result = QgsLocatorResult()
                                 result.filter = self
+                                result.group = 'opendata.swiss WMS datasources'
                                 result.displayString = display_name
                                 result.description = url
                                 result.userData = WMSCapabilitiesResult(title=display_name, url=url).as_definition()
-                                result.icon = QgsApplication.getThemeIcon("/mActionAdd.svg")
+                                result.icon = QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
                                 self.result_found = True
                                 self.resultFetched.emit(result)
 
             else:
                 for loc in data['results']:
                     self.dbg_info("keys: {}".format(loc['attrs'].keys()))
+
+                    result = QgsLocatorResult()
+                    result.filter = self
+                    result.group = 'Swiss Geoportal WMS layers'
                     if loc['attrs']['origin'] == 'layer':
                         # available keys: ﻿['origin', 'lang', 'layer', 'staging', 'title', 'topics', 'detail', 'label', 'id']
                         for key, val in loc['attrs'].items():
                             self.dbg_info('{}: {}'.format(key, val))
-                        result = QgsLocatorResult()
-                        result.filter = self
                         result.displayString = loc['attrs']['title']
                         result.description = loc['attrs']['layer']
                         result.userData = WMSLayerResult(layer=loc['attrs']['layer'], title=loc['attrs']['title'], url='http://wms.geo.admin.ch/?VERSION%3D2.0.0').as_definition()
@@ -528,8 +532,6 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     elif loc['attrs']['origin'] == 'feature':
                         for key, val in loc['attrs'].items():
                             self.dbg_info('{}: {}'.format(key, val))
-                        result = QgsLocatorResult()
-                        result.filter = self
                         layer = loc['attrs']['layer']
                         point = QgsPointXY(loc['attrs']['lon'], loc['attrs']['lat'])
                         if layer in self.searchable_layers:
@@ -556,8 +558,6 @@ class SwissLocatorFilter(QgsLocatorFilter):
                         if 'featureId' in loc['attrs']:
                             self.dbg_info("feature: {}".format(loc['attrs']['featureId']))
 
-                        result = QgsLocatorResult()
-                        result.filter = self
                         result.displayString = strip_tags(loc['attrs']['label'])
                         # result.description = loc['attrs']['detail']
                         # if 'featureId' in loc['attrs']:
