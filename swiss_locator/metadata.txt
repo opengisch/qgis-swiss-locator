@@ -18,7 +18,7 @@ repository=https://github.com/opengisch/qgis-swiss-locator
 category=Web
 
 # experimental flag
-experimental=True
+experimental=False
 
 # change icon...
 icon=icons/swiss_locator.png
