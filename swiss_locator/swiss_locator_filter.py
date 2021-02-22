@@ -31,7 +31,7 @@ from PyQt5.QtCore import QUrl, QUrlQuery, pyqtSignal, QEventLoop
 
 from qgis.core import Qgis, QgsLocatorFilter, QgsLocatorResult, QgsRectangle, QgsApplication, \
     QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsGeometry, QgsWkbTypes, QgsPointXY, \
-    QgsLocatorContext, QgsFeedback, QgsRasterLayer, QgsSettings, QgsMessageLog
+    QgsLocatorContext, QgsFeedback, QgsRasterLayer
 from qgis.gui import QgsRubberBand, QgisInterface
 
 from swiss_locator.core.network_access_manager import NetworkAccessManager, RequestsException, RequestsExceptionUserAbort
