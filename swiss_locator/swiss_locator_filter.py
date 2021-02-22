@@ -384,9 +384,11 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 feedback.canceled.connect(nam.abort)
 
                 searchUrls = [
-                    (url, params),
-                    ('https://opendata.swiss/api/3/action/package_search?', {'q': 'q=WMS+%C3'+str(search)})
+                    (url, params)
                 ]
+
+                if self.settings.value('layers_include_opendataswiss') and self.type is FilterType.WMS:
+                    searchUrls.append(('https://opendata.swiss/api/3/action/package_search?', {'q': 'q=WMS+%C3'+str(search)}))
 
                 for (url, params) in searchUrls:
                     url = self.url_with_param(url, params)

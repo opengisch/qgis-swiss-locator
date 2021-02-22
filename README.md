@@ -25,6 +25,7 @@ Configuration is achieved in the main application settings under the `locator` t
 * enable or disable searches (locations, layers, features)
 * customize prefixes, define if they are default filters (used without prefix)
 * access to the configuration of the plugin
+* include or exclude opendata.swiss data from layer searches
 
 In the configuration of the plugin, further customization can be achieved:
 * language definition (English, German, French, Italian, Rumantsch)
