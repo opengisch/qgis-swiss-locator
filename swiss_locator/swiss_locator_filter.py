@@ -475,15 +475,16 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
             if self.is_opendata_swiss_response(data):
                 for loc in data['result']['results']:
-                    display_name = loc['display_name'].get(self.lang, "")
+                    display_name = loc['title'].get(self.lang, "")
                     if not display_name:
                         # Fallback to german
-                        display_name = loc['display_name']['de']
+                        display_name = loc['title']['de']
 
                     for res in loc['resources']:
+
                         url = res['url']
                         if 'wms' in url.lower():
-                            if res['format'] == 'WMS':
+                            if res['media_type'] == 'WMS':
                                 result = QgsLocatorResult()
                                 result.filter = self
                                 result.displayString = display_name
@@ -498,7 +499,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                                     self.resultFetched.emit(result)
                                 #todo: add else if no GetMap-URL is found
 
-                            elif res['format'] == 'SERVICE':
+                            elif 'request=getcapabilities' in url.lower():
                                 result = QgsLocatorResult()
                                 result.filter = self
                                 result.displayString = display_name
