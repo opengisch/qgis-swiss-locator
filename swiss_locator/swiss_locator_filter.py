@@ -618,19 +618,19 @@ class SwissLocatorFilter(QgsLocatorFilter):
             label.setTextFormat(Qt.RichText)
             label.setTextInteractionFlags(Qt.TextBrowserInteraction)
             label.setOpenExternalLinks(True)
+
+            if 'geo.admin.ch' in swiss_result.url.lower():
+                label.setText('<a href="https://map.geo.admin.ch/'
+                                '?lang=fr&bgLayer=ch.swisstopo.pixelkarte-farbe&layers={}">'
+                                'Open layer in map.geo.admin.ch</a>'.format(swiss_result.layer))
+
             if not wms_layer.isValid():
                 msg = self.tr('Cannot load WMS layer: {} ({})'.format(swiss_result.title, swiss_result.layer))
                 level = Qgis.Warning
-                label.setText('<a href="https://map.geo.admin.ch/'
-                              '?lang=fr&bgLayer=ch.swisstopo.pixelkarte-farbe&layers={}">'
-                              'Open layer in map.geo.admin.ch</a>'.format(swiss_result.layer))
                 self.info(msg, level)
             else:
                 msg = self.tr('WMS layer added to the map: {} ({})'.format(swiss_result.title, swiss_result.layer))
                 level = Qgis.Info
-                label.setText('<a href="https://map.geo.admin.ch/'
-                              '?lang=fr&bgLayer=ch.swisstopo.pixelkarte-farbe&layers={}">'
-                              'Open layer in map.geo.admin.ch</a>'.format(swiss_result.layer))
 
                 QgsProject.instance().addMapLayer(wms_layer)
 
