@@ -621,8 +621,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
             if 'geo.admin.ch' in swiss_result.url.lower():
                 label.setText('<a href="https://map.geo.admin.ch/'
-                                '?lang=fr&bgLayer=ch.swisstopo.pixelkarte-farbe&layers={}">'
-                                'Open layer in map.geo.admin.ch</a>'.format(swiss_result.layer))
+                                '?lang={}&bgLayer=ch.swisstopo.pixelkarte-farbe&layers={}">'
+                                'Open layer in map.geo.admin.ch</a>'.format(self.lang, swiss_result.layer))
 
             if not wms_layer.isValid():
                 msg = self.tr('Cannot load WMS layer: {} ({})'.format(swiss_result.title, swiss_result.layer))
