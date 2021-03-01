@@ -26,7 +26,7 @@ jobs:
           python-version: 3.8
 
       - name: Update layers
-        runs: |
+        run: |
           cd swiss_locator/map_geo_admin
           ./download_layer_data.py
 
