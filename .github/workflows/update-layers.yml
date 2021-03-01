@@ -10,7 +10,7 @@ on:
       - master
     paths:
       - .github/workflows/update-layers.yml
-  dispatch:
+  workflow_dispatch:
 
 jobs:
   update-layers:
