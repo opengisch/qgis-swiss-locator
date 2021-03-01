@@ -31,9 +31,9 @@ jobs:
           ./download_layer_data.py
 
       - name: Create Pull Request
-          uses: peter-evans/create-pull-request@v3
-          with:
-            commit-message: update map.geo.admin.ch layers
-            title: Automated updates to map.geo.admin.ch layers
-            body:
-            branch: update-layers
+        uses: peter-evans/create-pull-request@v3
+        with:
+          commit-message: update map.geo.admin.ch layers
+          title: Automated updates to map.geo.admin.ch layers
+          body:
+          branch: update-layers
