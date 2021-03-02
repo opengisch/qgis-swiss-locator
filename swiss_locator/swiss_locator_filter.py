@@ -376,7 +376,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     self.dbg_info(url)
                     try:
                         (response, content) = nam.request(url, headers=self.HEADERS, blocking=True)
-                        self.handle_response(response, search)
+                        self.handle_response(response, search, feedback)
                     except RequestsExceptionUserAbort:
                         pass
                     except RequestsException as err:
@@ -445,7 +445,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.info('{} {} {}'.format(exc_type, filename, exc_traceback.tb_lineno), Qgis.Critical)
             self.info(traceback.print_exception(exc_type, exc_obj, exc_traceback), Qgis.Critical)
 
-    def handle_response(self, response, search: str):
+    def handle_response(self, response, search: str, feedback: QgsFeedback):
         try:
             if response.status_code != 200:
                 if not isinstance(response.exception, RequestsExceptionUserAbort):
@@ -490,33 +490,42 @@ class SwissLocatorFilter(QgsLocatorFilter):
                             elif 'request=getcapabilities' in url.lower() and url_components.netloc not in visited_capabilities:
                                 visited_capabilities.append(url_components.netloc)
 
-                                try:
-                                    # Retrieve Capabilities xml
-                                    nam = NetworkAccessManager()
-                                    (response, content) = nam.request(url, headers=self.HEADERS, blocking=True)
+                                def parse_capabilities_result(response):
                                     capabilities = ET.fromstring(response.content)
+
+                                    # Get xml namespace
+                                    match = re.match(r'\{.*\}', capabilities.tag)
+                                    namespace = match.group(0) if match else ''
+
+                                    # Search for layers containing the search term in the name or title
+                                    for layer in capabilities.findall('.//{}Layer'.format(namespace)):
+                                        layername = self.find_text(layer, '{}Name'.format(namespace))
+                                        layertitle = self.find_text(layer, '{}Title'.format(namespace))
+                                        if layername and (search in layername.lower() or search in layertitle.lower()):
+                                            if not layertitle:
+                                                layertitle = layername
+
+                                            result.displayString = layertitle
+                                            result.description = '{}?LAYERS={}'.format(url.replace('GetCapabilities', 'GetMap'), layername)
+                                            result.userData = WMSLayerResult(layer=layername, title=layertitle, url=wms_url).as_definition()
+                                            self.result_found = True
+                                            self.resultFetched.emit(result)
+
+                                    self.event_loop.quit()
+
+                                # Retrieve Capabilities xml
+                                self.event_loop = QEventLoop()
+                                nam = NetworkAccessManager()
+                                nam.finished.connect(parse_capabilities_result)
+                                nam.request(url, headers=self.HEADERS, blocking=False)
+                                feedback.canceled.connect(self.event_loop.quit)
+
+                                try:
+                                    self.event_loop.exec_(QEventLoop.ExcludeUserInputEvents)
                                 except RequestsExceptionUserAbort:
                                     pass
                                 except RequestsException as err:
                                     self.info(err)
-
-                                # Get xml namespace
-                                match = re.match(r'\{.*\}', capabilities.tag)
-                                namespace = match.group(0) if match else ''
-
-                                # Search for layers containing the search term in the name or title
-                                for layer in capabilities.findall('.//{}Layer'.format(namespace)):
-                                    layername = self.find_text(layer, '{}Name'.format(namespace))
-                                    layertitle = self.find_text(layer, '{}Title'.format(namespace))
-                                    if layername and (search in layername.lower() or search in layertitle.lower()):
-                                        if not layertitle:
-                                            layertitle = layername
-
-                                        result.displayString = layertitle
-                                        result.description = '{}?LAYERS={}'.format(url.replace('GetCapabilities', 'GetMap'), layername)
-                                        result.userData = WMSLayerResult(layer=layername, title=layertitle, url=wms_url).as_definition()
-                                        self.result_found = True
-                                        self.resultFetched.emit(result)
 
             else:
                 for loc in data['results']:
