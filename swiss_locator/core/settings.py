@@ -52,5 +52,5 @@ class Settings(SettingManager):
         self.add_setting(Bool("feature_search_restrict", Scope.Global, False))
         self.add_setting(Stringlist("feature_search_layers_list", Scope.Global, None))
 
-
+        self.add_setting(Bool("layers_include_opendataswiss", Scope.Global, True))
 

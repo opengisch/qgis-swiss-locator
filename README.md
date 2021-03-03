@@ -13,7 +13,7 @@ Similarly to the online geoportal [https://map.geo.admin.ch](https://map.geo.adm
    * ZIP codes
    * addresses
    * cadastral parcels
-* WMS layers, which can easily be added to the map
+* WMS layers from Federal Geoportal (map.geo.admin.ch) or opendata.swiss, which can easily be added to the map
 * features (search through features descriptions)
 
 
@@ -25,6 +25,7 @@ Configuration is achieved in the main application settings under the `locator` t
 * enable or disable searches (locations, layers, features)
 * customize prefixes, define if they are default filters (used without prefix)
 * access to the configuration of the plugin
+* include or exclude opendata.swiss data from layer searches
 
 In the configuration of the plugin, further customization can be achieved:
 * language definition (English, German, French, Italian, Rumantsch)
@@ -37,8 +38,8 @@ In the configuration of the plugin, further customization can be achieved:
 Type the text to search in the locator bar.
 
 If the result is a **WMS layer**, double-clicking on it will try to add it to the map. 
-It might not be possible since some layers are only visible in the geoportal.
-In any case, a link will be shown to display the layer in the geoportal.
+It might not be possible since some layers are only visible in the geoportal (map.geo.admin.ch).
+In this case, a link will be shown to display the layer in the geoportal.
 
 If the result is a **location** or **feature**, 
 double-clicking on it will move the map canvas to the result and highlight its position.
