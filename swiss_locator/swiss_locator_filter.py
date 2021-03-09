@@ -347,8 +347,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
             self.result_found = False
 
-            url = 'https://api3.geo.admin.ch/rest/services/api/SearchServer'
-            params = {
+            swisstopo_base_url = 'https://api3.geo.admin.ch/rest/services/api/SearchServer'
+            swisstopo_base_params = {
                 'type': self.type.value,
                 'searchText': str(search),
                 'returnGeometry': 'true',
@@ -364,18 +364,16 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 nam = NetworkAccessManager()
                 feedback.canceled.connect(nam.abort)
 
-                searchUrls = [
-                    (url, params)
-                ]
+                search_urls = [(swisstopo_base_url, swisstopo_base_params)]
 
                 if self.settings.value('layers_include_opendataswiss') and self.type is FilterType.WMS:
-                    searchUrls.append(('https://opendata.swiss/api/3/action/package_search?', {'q': 'q=WMS+%C3'+str(search)}))
+                    search_urls.append(('https://opendata.swiss/api/3/action/package_search?', {'q': 'q=WMS+%C3'+str(search)}))
 
-                for (url, params) in searchUrls:
-                    url = self.url_with_param(url, params)
-                    self.dbg_info(url)
+                for (swisstopo_base_url, swisstopo_base_params) in search_urls:
+                    swisstopo_base_url = self.url_with_param(swisstopo_base_url, swisstopo_base_params)
+                    self.dbg_info(swisstopo_base_url)
                     try:
-                        (response, content) = nam.request(url, headers=self.HEADERS, blocking=True)
+                        (response, content) = nam.request(swisstopo_base_url, headers=self.HEADERS, blocking=True)
                         self.handle_response(response, search, feedback)
                     except RequestsExceptionUserAbort:
                         pass
@@ -393,8 +391,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     step = 30
                     for l in range(0, len(layers), step):
                         last = min(l + step - 1, len(layers) - 1)
-                        params['features'] = ','.join(layers[l:last])
-                        self.access_managers[self.url_with_param(url, params)] = None
+                        swisstopo_base_params['features'] = ','.join(layers[l:last])
+                        self.access_managers[self.url_with_param(swisstopo_base_url, swisstopo_base_params)] = None
                 except IOError:
                     self.info('Layers data file not found. Please report an issue.', Qgis.Critical)
 
@@ -414,12 +412,12 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 feedback.canceled.connect(self.event_loop.quit)
 
                 # init the network access managers, create the URL
-                for url in self.access_managers:
-                    self.dbg_info(url)
+                for swisstopo_base_url in self.access_managers:
+                    self.dbg_info(swisstopo_base_url)
                     nam = NetworkAccessManager()
-                    self.access_managers[url] = nam
+                    self.access_managers[swisstopo_base_url] = nam
                     nam.finished.connect(reply_finished)
-                    nam.request(url, headers=self.HEADERS, blocking=False)
+                    nam.request(swisstopo_base_url, headers=self.HEADERS, blocking=False)
                     feedback.canceled.connect(nam.abort)
 
                 # Let the requests end and catch all exceptions (and clean up requests)
