@@ -401,7 +401,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 self.event_loop = QEventLoop()
 
                 def reply_finished(response):
-                    self.handle_response(response, search)
+                    self.handle_response(response, search, feedback)
                     if response.url in self.access_managers:
                         self.access_managers[response.url] = None
                     for nam in self.access_managers.values():
