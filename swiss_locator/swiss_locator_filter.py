@@ -47,7 +47,7 @@ import swiss_locator.resources_rc  # NOQA
 
 from urllib.parse import urlparse, parse_qs
 
-import lxml.etree as ET
+import xml.etree.ElementTree as ET
 
 AVAILABLE_CRS = ('2056', '21781')
 AVAILABLE_LANGUAGES = {'German': 'de',
