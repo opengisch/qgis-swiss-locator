@@ -653,14 +653,17 @@ class SwissLocatorFilter(QgsLocatorFilter):
         # Location
         else:
             point = QgsGeometry.fromPointXY(swiss_result.point)
-            bbox = QgsGeometry.fromRect(swiss_result.bbox)
+            if swiss_result.bbox == QgsRectangle(0,0,0,0):
+                bbox = None
+            else:
+                bbox = QgsGeometry.fromRect(swiss_result.bbox)
+                bbox.transform(self.transform_ch)
             layer = swiss_result.layer
             feature_id = swiss_result.feature_id
-            if not point or not bbox:
+            if not point:
                 return
 
             point.transform(self.transform_ch)
-            bbox.transform(self.transform_ch)
 
             self.highlight(point, bbox)
 
