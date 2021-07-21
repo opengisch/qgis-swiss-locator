@@ -653,7 +653,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         # Location
         else:
             point = QgsGeometry.fromPointXY(swiss_result.point)
-            if swiss_result.bbox == QgsRectangle(0,0,0,0):
+            if swiss_result.bbox.isNull():
                 bbox = None
             else:
                 bbox = QgsGeometry.fromRect(swiss_result.bbox)
