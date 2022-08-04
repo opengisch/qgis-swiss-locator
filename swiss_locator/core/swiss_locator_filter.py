@@ -265,7 +265,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
             self.result_found = False
 
-            swisstopo_base_url = 'https://api3.geo.admin.ch/rest/services/api/SearchServer'
+            url = 'https://api3.geo.admin.ch/rest/services/api/SearchServer'
             swisstopo_base_params = {
                 'type': self.type.value,
                 'searchText': str(search),
@@ -282,7 +282,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 nam = NetworkAccessManager()
                 feedback.canceled.connect(nam.abort)
 
-                search_urls = [(swisstopo_base_url, swisstopo_base_params)]
+                search_urls = [(url, swisstopo_base_params)]
 
                 if self.settings.value('layers_include_opendataswiss') and self.type is FilterType.WMS:
                     search_urls.append(('https://opendata.swiss/api/3/action/package_search?', {'q': 'q=WMS+%C3'+str(search)}))
@@ -310,7 +310,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     for l in range(0, len(layers), step):
                         last = min(l + step - 1, len(layers) - 1)
                         swisstopo_base_params['features'] = ','.join(layers[l:last])
-                        self.access_managers[self.url_with_param(swisstopo_base_url, swisstopo_base_params)] = None
+                        self.access_managers[self.url_with_param(url, swisstopo_base_params)] = None
                 except IOError:
                     self.info('Layers data file not found. Please report an issue.', Qgis.Critical)
 
@@ -330,12 +330,12 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 feedback.canceled.connect(self.event_loop.quit)
 
                 # init the network access managers, create the URL
-                for swisstopo_base_url in self.access_managers:
-                    self.dbg_info(swisstopo_base_url)
+                for url in self.access_managers:
+                    self.dbg_info(url)
                     nam = NetworkAccessManager()
-                    self.access_managers[swisstopo_base_url] = nam
+                    self.access_managers[url] = nam
                     nam.finished.connect(reply_finished)
-                    nam.request(swisstopo_base_url, headers=self.HEADERS, blocking=False)
+                    nam.request(url, headers=self.HEADERS, blocking=False)
                     feedback.canceled.connect(nam.abort)
 
                 # Let the requests end and catch all exceptions (and clean up requests)
