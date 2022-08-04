@@ -377,6 +377,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
                 for loc in data['result']['results']:
                     display_name = loc['title'].get(self.lang, "")
+                    self.info(display_name)
                     if not display_name:
                         # Fallback to german
                         display_name = loc['title']['de']
@@ -392,6 +393,11 @@ class SwissLocatorFilter(QgsLocatorFilter):
                         result.group = 'opendata.swiss'
                         result.icon = QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
 
+                        if re.match(r'https?:\/\/wmt?s.geo.admin.ch', url):
+                            # skip swisstopo since it's handled in other filter
+                            self.dbg_info('skip swisstopo get capabilities since it''s handled in other filter')
+                            continue
+
                         if 'wms' in url.lower():
                             if res['media_type'] == 'WMS':
                                 result.displayString = display_name
@@ -404,6 +410,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                                     self.resultFetched.emit(result)
 
                             elif 'request=getcapabilities' in url.lower() and url_components.netloc not in visited_capabilities:
+                                self.info('get_cap')
                                 visited_capabilities.append(url_components.netloc)
 
                                 def parse_capabilities_result(response):
