@@ -4,4 +4,4 @@ __pycache__
 i18n
 .DS_Store
 github_deploy_key.out
-swiss_locator/resources_rcs.py
+swiss_locator/resources_rc.py

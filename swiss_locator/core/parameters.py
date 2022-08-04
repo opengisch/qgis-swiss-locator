@@ -2,7 +2,7 @@
 # -----------------------------------------------------------
 #
 # QGIS Swiss Locator Plugin
-# Copyright (C) 2018 Denis Rouzaud
+# Copyright (C) 2022 Denis Rouzaud
 #
 # -----------------------------------------------------------
 #
@@ -24,26 +24,11 @@
 #
 # ---------------------------------------------------------------------
 
-from PyQt5.QtCore import QLocale, QSettings
-from .settings import Settings
 
-
-def get_language() -> str:
-    """
-    Returns the language to be used.
-    Reads from the settings, if it's None, try to use the locale one and defaults to English
-    :return: 2 chars long string representing the language to be used
-    """
-    # get lang from settings
-    lang = Settings().value('lang')
-    if not lang:
-        # if None, try to use the locale one
-        from .parameters import AVAILABLE_LANGUAGES
-        locale_lang = QLocale.languageToString(QLocale(QSettings().value('locale/userLocale')).language())
-        if locale_lang in AVAILABLE_LANGUAGES:
-            lang = AVAILABLE_LANGUAGES[locale_lang]
-        else:
-            # defaults to English
-            lang = 'en'
-
-    return lang
+AVAILABLE_CRS = ('2056', '21781')
+AVAILABLE_LANGUAGES = {'German': 'de',
+                       'SwissGerman': 'de',
+                       'French': 'fr',
+                       'Italian': 'it',
+                       'Romansh': 'rm',
+                       'English': 'en'}

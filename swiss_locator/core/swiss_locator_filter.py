@@ -35,6 +35,7 @@ from qgis.core import Qgis, QgsLocatorFilter, QgsLocatorResult, QgsRectangle, Qg
 from qgis.gui import QgsRubberBand, QgisInterface
 
 from swiss_locator.core.network_access_manager import NetworkAccessManager, RequestsException, RequestsExceptionUserAbort
+from swiss_locator.core.parameters import AVAILABLE_CRS
 from swiss_locator.core.settings import Settings
 from swiss_locator.core.language import get_language
 from swiss_locator.gui.config_dialog import ConfigDialog
@@ -43,19 +44,9 @@ from swiss_locator.swiss_locator_plugin import DEBUG
 from swiss_locator.utils.html_stripper import strip_tags
 from swiss_locator.map_geo_admin.layers import searchable_layers
 
-import swiss_locator.resources_rc  # NOQA
-
 from urllib.parse import urlparse, parse_qs
 
 import xml.etree.ElementTree as ET
-
-AVAILABLE_CRS = ('2056', '21781')
-AVAILABLE_LANGUAGES = {'German': 'de',
-                       'SwissGerman': 'de',
-                       'French': 'fr',
-                       'Italian': 'it',
-                       'Romansh': 'rm',
-                       'English': 'en'}
 
 
 class FilterType(Enum):
@@ -369,11 +360,11 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 if self.settings.value('layers_include_opendataswiss') and self.type is FilterType.WMS:
                     search_urls.append(('https://opendata.swiss/api/3/action/package_search?', {'q': 'q=WMS+%C3'+str(search)}))
 
-                for (swisstopo_base_url, swisstopo_base_params) in search_urls:
-                    swisstopo_base_url = self.url_with_param(swisstopo_base_url, swisstopo_base_params)
-                    self.dbg_info(swisstopo_base_url)
+                for (url, params) in search_urls:
+                    url = self.url_with_param(url, params)
+                    self.dbg_info(url)
                     try:
-                        (response, content) = nam.request(swisstopo_base_url, headers=self.HEADERS, blocking=True)
+                        (response, content) = nam.request(url, headers=self.HEADERS, blocking=True)
                         self.handle_response(response, search, feedback)
                     except RequestsExceptionUserAbort:
                         pass
@@ -605,6 +596,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             swiss_result = result_from_data(result)
         except SystemError:
             self.message_emitted.emit(self.displayName(), self.tr('QGIS Swiss Locator encountered an error. Please <b>update to QGIS 3.16.2</b> or newer.'), Qgis.Warning, None)
+            return
 
         if type(swiss_result) == NoResult:
             return

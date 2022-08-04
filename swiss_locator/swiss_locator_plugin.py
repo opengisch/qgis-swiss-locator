@@ -24,7 +24,7 @@ from PyQt5.QtCore import QCoreApplication, QLocale, QSettings, QTranslator
 from PyQt5.QtWidgets import QWidget
 from qgis.core import Qgis
 from qgis.gui import QgisInterface, QgsMessageBarItem
-from .swiss_locator_filter import SwissLocatorFilter, FilterType
+from swiss_locator.core.swiss_locator_filter import SwissLocatorFilter, FilterType
 
 
 class SwissLocatorPlugin:

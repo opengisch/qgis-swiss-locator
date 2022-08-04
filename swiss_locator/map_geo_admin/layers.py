@@ -24,7 +24,7 @@
 
 import os
 import json
-import swiss_locator.swiss_locator_filter
+from swiss_locator.core.parameters import AVAILABLE_LANGUAGES
 from swiss_locator.core.settings import Settings
 
 
@@ -40,7 +40,7 @@ def searchable_layers(lang: str, restrict: bool=False) -> dict:
     :param restrict: if True, restrict from the list from settings if restriction is enabled
     :return: a dict of searchable layers (key: layer id, value: description in given language)
     """
-    assert lang in swiss_locator.swiss_locator_filter.AVAILABLE_LANGUAGES.values()
+    assert lang in AVAILABLE_LANGUAGES.values()
 
     settings = Settings()
     restrict_enabled_by_user = settings.value('feature_search_restrict')
