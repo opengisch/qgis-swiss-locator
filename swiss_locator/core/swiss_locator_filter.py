@@ -36,6 +36,7 @@ from qgis.gui import QgsRubberBand, QgisInterface
 
 from swiss_locator.core.network_access_manager import NetworkAccessManager, RequestsException, RequestsExceptionUserAbort
 from swiss_locator.core.parameters import AVAILABLE_CRS
+from swiss_locator.core.results import WMSLayerResult, LocationResult, FeatureResult, NoResult
 from swiss_locator.core.settings import Settings
 from swiss_locator.core.language import get_language
 from swiss_locator.gui.config_dialog import ConfigDialog
@@ -53,80 +54,6 @@ class FilterType(Enum):
     Location = 'locations'
     WMS = 'layers'
     Feature = 'featuresearch'
-
-
-class WMSLayerResult:
-    def __init__(self, layer, title, url):
-        self.title = title
-        self.layer = layer
-        self.url = url
-
-    @staticmethod
-    def from_dict(dict_data: dict):
-        return WMSLayerResult(dict_data['layer'], dict_data['title'], dict_data['url'])
-        
-    def as_definition(self):
-        definition = {
-            'type': 'WMSLayerResult',
-            'title': self.title,
-            'layer': self.layer,
-            'url': self.url,
-        }
-        return json.dumps(definition)
-
-class LocationResult:
-    def __init__(self, point, bbox, layer, feature_id, html_label):
-        self.point = point
-        self.bbox = bbox
-        self.layer = layer
-        self.feature_id = feature_id
-        self.html_label = html_label
-
-    @staticmethod
-    def from_dict(dict_data: dict):
-        return LocationResult(QgsGeometry.fromWkt(dict_data['point']).asPoint(), QgsRectangle.fromWkt(dict_data['bbox']), dict_data['layer'], dict_data['feature_id'],
-                              dict_data['html_label'])
-    
-    def as_definition(self):
-        definition = {
-            'type': 'LocationResult',
-            'point': self.point.asWkt(),
-            'bbox': self.bbox.asWktPolygon(),
-            'layer': self.layer,
-            'feature_id': self.feature_id,
-            'html_label': self.html_label,
-        }
-        return json.dumps(definition)
-
-
-class FeatureResult:
-    def __init__(self, point, layer, feature_id):
-        self.point = point
-        self.layer = layer
-        self.feature_id = feature_id
-
-    @staticmethod
-    def from_dict(dict_data: dict):
-        return FeatureResult(QgsGeometry.fromWkt(dict_data['point']).asPoint(), dict_data['layer'], dict_data['feature_id'])
-
-    def as_definition(self):
-        definition = {
-            'type': 'FeatureResult',
-            'point': self.point.asWkt(),
-            'layer': self.layer,
-            'feature_id': self.feature_id,
-        }
-        return json.dumps(definition)
-
-
-class NoResult:
-    def __init__(self):
-        pass
-
-    @staticmethod
-    def as_definition():
-        definition = {'type': 'NoResult'}
-        return json.dumps(definition)
 
 
 def result_from_data(result: QgsLocatorResult):
@@ -569,11 +496,11 @@ class SwissLocatorFilter(QgsLocatorFilter):
                         #     result.description = loc['attrs']['featureId']
                         result.group = group_name
                         result.userData = LocationResult(point=QgsPointXY(loc['attrs']['y'], loc['attrs']['x']),
-                                                        bbox=self.box2geometry(loc['attrs']['geom_st_box2d']),
-                                                        layer=group_layer,
-                                                        feature_id=loc['attrs']['featureId'] if 'featureId' in loc['attrs']
+                                                         bbox=self.box2geometry(loc['attrs']['geom_st_box2d']),
+                                                         layer=group_layer,
+                                                         feature_id=loc['attrs']['featureId'] if 'featureId' in loc['attrs']
                                                         else None,
-                                                        html_label=loc['attrs']['label']).as_definition()
+                                                         html_label=loc['attrs']['label']).as_definition()
                         result.icon = QIcon(":/plugins/swiss_locator/icons/swiss_locator.png")
                         self.result_found = True
                         self.resultFetched.emit(result)
