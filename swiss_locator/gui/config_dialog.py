@@ -43,7 +43,7 @@ class ConfigDialog(QDialog, DialogUi, SettingDialog):
         self.setupUi(self)
 
         self.lang.addItem(self.tr('use the application locale, defaults to English'), '')
-        from swiss_locator.core.swiss_locator_filter import FilterType
+        from swiss_locator.core.filters.swiss_locator_filter import FilterType
         from ..core.parameters import AVAILABLE_LANGUAGES
         for key, val in AVAILABLE_LANGUAGES.items():
             self.lang.addItem(key, val)

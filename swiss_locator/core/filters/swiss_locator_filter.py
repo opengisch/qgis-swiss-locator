@@ -52,8 +52,9 @@ import xml.etree.ElementTree as ET
 
 class FilterType(Enum):
     Location = 'locations'
-    WMS = 'layers'
+    Layers = 'layers'
     Feature = 'featuresearch'
+    WMTS = 'wmts'
 
 
 def result_from_data(result: QgsLocatorResult):
@@ -106,6 +107,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         self.access_managers = {}
         self.nam_map_tip = None
         self.nam_fetch_feature = None
+        self.registry = QgsApplication.networkContentFetcherRegistry()
 
         if crs:
             self.crs = crs
@@ -138,31 +140,16 @@ class SwissLocatorFilter(QgsLocatorFilter):
     def name(self):
         return '{}_{}'.format(self.__class__.__name__, FilterType(self.type).name)
 
-    def clone(self):
-        return SwissLocatorFilter(self.type, crs=self.crs)
-
     def priority(self):
         return self.settings.value('{type}_priority'.format(type=self.type.value))
 
     def displayName(self):
-        if self.type is FilterType.Location:
-            return self.tr('Swiss Geoportal locations')
-        elif self.type is FilterType.WMS:
-            return self.tr('Swiss Geoportal / opendata.swiss WMS layers')
-        elif self.type is FilterType.Feature:
-            return self.tr('Swiss Geoportal features')
-        else:
-            raise NameError('Filter type is not valid.')
+        # this should be re-implemented
+        raise NameError('Filter type is not valid.')
 
     def prefix(self):
-        if self.type is FilterType.Location:
-            return 'chl'
-        elif self.type is FilterType.WMS:
-            return 'chw'
-        elif self.type is FilterType.Feature:
-            return 'chf'
-        else:
-            raise NameError('Filter type is not valid.')
+        # this should be re-implemented
+        raise NameError('Filter type is not valid.')
 
     def clearPreviousResults(self):
         self.rubber_band.reset(QgsWkbTypes.PointGeometry)
@@ -265,6 +252,36 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
             self.result_found = False
 
+            # WMTS layers
+            if self.type is FilterType.WMTS:
+                url = f'https://wmts.geo.admin.ch/EPSG/{self.crs}/1.0.0/WMTSCapabilities.xml?lang={self.lang}'
+                content = self.registry.fetch(url)
+
+                def parse_capabilities():
+                    capabilities = ET.parse(content.filePath())
+                    self.info(capabilities)
+                    for layer in capabilities.findall('.//Layer'):
+                        layer_title = self.find_text(layer, 'ows:Title')
+                        layer_abstract = self.find_text(layer, 'ows:Abstract')
+                        layer_identifier = self.find_text(layer, 'ows: Identifier')
+
+                        if layer_title and (search in layer_title.lower() or search in layer_abstract.lower()):
+                            wmts_url = 'http://wmts.geo.admin.ch'
+
+                            result = QgsLocatorResult()
+                            result.filter = self
+                            result.icon = QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
+
+                            result.displayString = layer_title
+                            result.description = layer_abstract
+                            result.userData = WMSLayerResult(layer=layer_identifier, title=layer_title,
+                                                             url=wmts_url).as_definition()
+                            self.resultFetched.emit(result)
+                            self.result_found = True
+
+                content.fetched.connect(parse_capabilities)
+                return
+
             url = 'https://api3.geo.admin.ch/rest/services/api/SearchServer'
             swisstopo_base_params = {
                 'type': self.type.value,
@@ -277,15 +294,15 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 # A comma separated list of 4 coordinates representing
                 # the bounding box on which features should be filtered (SRID: 21781).
             }
-            # Locations, WMS layers
-            if self.type is not FilterType.Feature:
+            # Locations, Layers layers
+            if self.type in (FilterType.Location, FilterType.Layers):
                 nam = NetworkAccessManager()
                 feedback.canceled.connect(nam.abort)
 
                 search_urls = [(url, swisstopo_base_params)]
 
-                if self.settings.value('layers_include_opendataswiss') and self.type is FilterType.WMS:
-                    search_urls.append(('https://opendata.swiss/api/3/action/package_search?', {'q': 'q=WMS+%C3'+str(search)}))
+                if self.settings.value('layers_include_opendataswiss') and self.type is FilterType.Layers:
+                    search_urls.append(('https://opendata.swiss/api/3/action/package_search?', {'q': 'q=Layers+%C3'+str(search)}))
 
                 for (url, params) in search_urls:
                     url = self.url_with_param(url, params)
@@ -399,7 +416,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                             continue
 
                         if 'wms' in url.lower():
-                            if res['media_type'] == 'WMS':
+                            if res['media_type'] == 'Layers':
                                 result.displayString = display_name
                                 result.description = url
 
@@ -535,7 +552,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         if type(swiss_result) == NoResult:
             return
 
-        # WMS
+        # Layers
         if type(swiss_result) == WMSLayerResult:
             url_with_params = 'contextualWMSLegend=0' \
                               '&crs=EPSG:{crs}' \
@@ -558,11 +575,11 @@ class SwissLocatorFilter(QgsLocatorFilter):
                                 'Open layer in map.geo.admin.ch</a>'.format(self.lang, swiss_result.layer))
 
             if not wms_layer.isValid():
-                msg = self.tr('Cannot load WMS layer: {} ({})'.format(swiss_result.title, swiss_result.layer))
+                msg = self.tr('Cannot load Layers layer: {} ({})'.format(swiss_result.title, swiss_result.layer))
                 level = Qgis.Warning
                 self.info(msg, level)
             else:
-                msg = self.tr('WMS layer added to the map: {} ({})'.format(swiss_result.title, swiss_result.layer))
+                msg = self.tr('Layers layer added to the map: {} ({})'.format(swiss_result.title, swiss_result.layer))
                 level = Qgis.Info
 
                 QgsProject.instance().addMapLayer(wms_layer)
@@ -697,3 +714,5 @@ class SwissLocatorFilter(QgsLocatorFilter):
     def find_text(self, xmlElement, match):
         node = xmlElement.find(match)
         return node.text if node is not None else ''
+
+

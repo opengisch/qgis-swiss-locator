@@ -24,7 +24,10 @@ from PyQt5.QtCore import QCoreApplication, QLocale, QSettings, QTranslator
 from PyQt5.QtWidgets import QWidget
 from qgis.core import Qgis
 from qgis.gui import QgisInterface, QgsMessageBarItem
-from swiss_locator.core.swiss_locator_filter import SwissLocatorFilter, FilterType
+from swiss_locator.core.filters.swiss_locator_filter_feature import SwissLocatorFilterFeature
+from swiss_locator.core.filters.swiss_locator_filter_layer import SwissLocatorFilterLayer
+from swiss_locator.core.filters.swiss_locator_filter_location import SwissLocatorFilterLocation
+from swiss_locator.core.filters.swiss_locator_filter_wmts import SwissLocatorFilterWMTS
 
 
 class SwissLocatorPlugin:
@@ -39,17 +42,17 @@ class SwissLocatorPlugin:
         self.translator.load(qgis_locale, 'qgis-swiss-locator', '_', locale_path)
         QCoreApplication.installTranslator(self.translator)
 
-        self.locator_filters = {}
-        for filter_type in FilterType:
-            self.locator_filters[filter_type] = SwissLocatorFilter(filter_type, iface)
-            self.iface.registerLocatorFilter(self.locator_filters[filter_type])
-            self.locator_filters[filter_type].message_emitted.connect(self.show_message)
+        self.locator_filters = []
+        for _filter in (SwissLocatorFilterLocation, SwissLocatorFilterWMTS, SwissLocatorFilterLayer, SwissLocatorFilterFeature):
+            self.locator_filters.append(_filter(iface))
+            self.iface.registerLocatorFilter(self.locator_filters[-1])
+            self.locator_filters[-1].message_emitted.connect(self.show_message)
 
     def initGui(self):
         pass
 
     def unload(self):
-        for locator_filter in self.locator_filters.values():
+        for locator_filter in self.locator_filters:
             self.iface.deregisterLocatorFilter(locator_filter)
 
     def show_message(self, title: str, msg: str, level: Qgis.MessageLevel, widget: QWidget = None):

@@ -44,6 +44,8 @@ class Settings(SettingManager):
 
         self.add_setting(Enum('locations_priority', Scope.Global, QgsLocatorFilter.Highest))
         self.add_setting(Integer('locations_limit', Scope.Global, 8))
+        self.add_setting(Enum('wmts_priority', Scope.Global, QgsLocatorFilter.Highest))
+        self.add_setting(Integer('wmts_limit', Scope.Global, 8))
         self.add_setting(Enum('featuresearch_priority', Scope.Global, QgsLocatorFilter.Medium))
         self.add_setting(Integer('featuresearch_limit', Scope.Global, 8))
         self.add_setting(Enum('layers_priority', Scope.Global, QgsLocatorFilter.High))
