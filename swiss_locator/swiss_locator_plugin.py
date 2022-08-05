@@ -17,7 +17,7 @@
  ***************************************************************************/
 """
 
-DEBUG = True
+DEBUG = False
 
 import os
 from PyQt5.QtCore import QCoreApplication, QLocale, QSettings, QTranslator
@@ -43,13 +43,12 @@ class SwissLocatorPlugin:
         QCoreApplication.installTranslator(self.translator)
 
         self.locator_filters = []
-        for _filter in (SwissLocatorFilterLocation, SwissLocatorFilterWMTS, SwissLocatorFilterLayer, SwissLocatorFilterFeature):
-            self.locator_filters.append(_filter(iface))
-            self.iface.registerLocatorFilter(self.locator_filters[-1])
-            self.locator_filters[-1].message_emitted.connect(self.show_message)
 
     def initGui(self):
-        pass
+        for _filter in (SwissLocatorFilterLocation, SwissLocatorFilterWMTS, SwissLocatorFilterLayer, SwissLocatorFilterFeature):
+            self.locator_filters.append(_filter(self.iface))
+            self.iface.registerLocatorFilter(self.locator_filters[-1])
+            self.locator_filters[-1].message_emitted.connect(self.show_message)
 
     def unload(self):
         for locator_filter in self.locator_filters:

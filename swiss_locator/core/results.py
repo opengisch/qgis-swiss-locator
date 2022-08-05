@@ -29,14 +29,24 @@ from qgis.core import QgsGeometry, QgsRectangle
 
 
 class WMSLayerResult:
-    def __init__(self, layer, title, url):
+    def __init__(self, layer, title, url, tile_matrix_set: str = None, _format: str = 'image/png', style: str = None):
         self.title = title
         self.layer = layer
         self.url = url
+        self.tile_matrix_set = tile_matrix_set
+        self.format = _format
+        self.style = style
 
     @staticmethod
     def from_dict(dict_data: dict):
-        return WMSLayerResult(dict_data['layer'], dict_data['title'], dict_data['url'])
+        return WMSLayerResult(
+            dict_data['layer'],
+            dict_data['title'],
+            dict_data['url'],
+            tile_matrix_set=dict_data.get('tile_matrix_set'),
+            _format=dict_data.get('format'),
+            style=dict_data.get('style')
+        )
 
     def as_definition(self):
         definition = {
@@ -44,6 +54,9 @@ class WMSLayerResult:
             'title': self.title,
             'layer': self.layer,
             'url': self.url,
+            'tile_matrix_set': self.tile_matrix_set,
+            'format': self.format,
+            'style': self.style,
         }
         return json.dumps(definition)
 

@@ -25,7 +25,7 @@ from swiss_locator.core.filters.swiss_locator_filter import SwissLocatorFilter, 
 
 class SwissLocatorFilterLayer(SwissLocatorFilter):
     def __init__(self, iface: QgisInterface = None, crs: str = None):
-        super().__init__(FilterType.WMTS, iface, crs)
+        super().__init__(FilterType.Layers, iface, crs)
 
     def clone(self):
         return SwissLocatorFilterLayer(crs=self.crs)

@@ -252,36 +252,6 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
             self.result_found = False
 
-            # WMTS layers
-            if self.type is FilterType.WMTS:
-                url = f'https://wmts.geo.admin.ch/EPSG/{self.crs}/1.0.0/WMTSCapabilities.xml?lang={self.lang}'
-                content = self.registry.fetch(url)
-
-                def parse_capabilities():
-                    capabilities = ET.parse(content.filePath())
-                    self.info(capabilities)
-                    for layer in capabilities.findall('.//Layer'):
-                        layer_title = self.find_text(layer, 'ows:Title')
-                        layer_abstract = self.find_text(layer, 'ows:Abstract')
-                        layer_identifier = self.find_text(layer, 'ows: Identifier')
-
-                        if layer_title and (search in layer_title.lower() or search in layer_abstract.lower()):
-                            wmts_url = 'http://wmts.geo.admin.ch'
-
-                            result = QgsLocatorResult()
-                            result.filter = self
-                            result.icon = QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
-
-                            result.displayString = layer_title
-                            result.description = layer_abstract
-                            result.userData = WMSLayerResult(layer=layer_identifier, title=layer_title,
-                                                             url=wmts_url).as_definition()
-                            self.resultFetched.emit(result)
-                            self.result_found = True
-
-                content.fetched.connect(parse_capabilities)
-                return
-
             url = 'https://api3.geo.admin.ch/rest/services/api/SearchServer'
             swisstopo_base_params = {
                 'type': self.type.value,
@@ -555,14 +525,15 @@ class SwissLocatorFilter(QgsLocatorFilter):
         # Layers
         if type(swiss_result) == WMSLayerResult:
             url_with_params = 'contextualWMSLegend=0' \
-                              '&crs=EPSG:{crs}' \
+                              f'&crs=EPSG:{self.crs}' \
                               '&dpiMode=7' \
                               '&featureCount=10' \
-                              '&format=image/png' \
-                              '&layers={layer}' \
-                              '&styles=' \
-                              '&url={url}' \
-                .format(crs=self.crs, layer=swiss_result.layer, url=swiss_result.url)
+                              f'&format={swiss_result.format}' \
+                              f'&layers={swiss_result.layer}' \
+                              f'&styles={swiss_result.style}' \
+                              f'&tileMatrixSet={swiss_result.tile_matrix_set}' \
+                              '&tileDimensions=Time%3Dcurrent' \
+                              f'&url={swiss_result.url}'
             wms_layer = QgsRasterLayer(url_with_params, result.displayString, 'wms')
             label = QLabel()
             label.setTextFormat(Qt.RichText)
