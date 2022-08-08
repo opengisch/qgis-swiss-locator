@@ -32,6 +32,7 @@ from swiss_locator.core.filters.swiss_locator_filter import (
 from swiss_locator.core.results import WMSLayerResult
 
 import xml.etree.ElementTree as ET
+import urllib.parse
 
 
 class SwissLocatorFilterWMTS(SwissLocatorFilter):
@@ -95,6 +96,15 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
             layer_title = layer.find(".//ows:Title", namespaces).text
             layer_abstract = layer.find(".//ows:Abstract", namespaces).text
             layer_identifier = layer.find(".//ows:Identifier", namespaces).text
+            dimensions = dict()
+            for dim in layer.findall(".//wmts:Dimension", namespaces):
+                identifier = dim.find("./ows:Identifier", namespaces).text
+                default = dim.find("./wmts:Default", namespaces).text
+                dimensions[identifier] = default
+            dimensions = "&".join([f"{k}={v}" for (k, v) in dimensions.items()])
+            dimensions = urllib.parse.quote(dimensions)
+
+            self.info(dimensions)
 
             results = {}
 
@@ -125,6 +135,7 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
                     tile_matrix_set=tile_matrix_set,
                     _format=_format,
                     style=style,
+                    tile_dimensions=dimensions,
                 ).as_definition()
 
                 results[result] = score

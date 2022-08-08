@@ -550,11 +550,11 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
                     result = QgsLocatorResult()
                     result.filter = self
-                    result.group = "Swiss Geoportal"
+                    result.group = self.tr("Swiss Geoportal")
                     if loc["attrs"]["origin"] == "layer":
-                        # available keys: ﻿['origin', 'lang', 'layer', 'staging', 'title', 'topics', 'detail', 'label', 'id']
+                        # available keys: ['origin', 'lang', 'layer', 'staging', 'title', 'topics', 'detail', 'label', 'id']
                         for key, val in loc["attrs"].items():
-                            self.dbg_info("{}: {}".format(key, val))
+                            self.dbg_info(f"{key}: {val}")
                         result.displayString = loc["attrs"]["title"]
                         result.description = loc["attrs"]["layer"]
                         result.userData = WMSLayerResult(
@@ -570,7 +570,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
                     elif loc["attrs"]["origin"] == "feature":
                         for key, val in loc["attrs"].items():
-                            self.dbg_info("{}: {}".format(key, val))
+                            self.dbg_info(f"{key}: {val}")
                         layer = loc["attrs"]["layer"]
                         point = QgsPointXY(loc["attrs"]["lon"], loc["attrs"]["lat"])
                         if layer in self.searchable_layers:
@@ -599,7 +599,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
                     else:  # locations
                         for key, val in loc["attrs"].items():
-                            self.dbg_info("{}: {}".format(key, val))
+                            self.dbg_info(f"{key}: {val}")
                         group_name, group_layer = self.group_info(
                             loc["attrs"]["origin"]
                         )
@@ -637,7 +637,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             exc_type, exc_obj, exc_traceback = sys.exc_info()
             filename = os.path.split(exc_traceback.tb_frame.f_code.co_filename)[1]
             self.info(
-                "{} {} {}".format(exc_type, filename, exc_traceback.tb_lineno),
+                f"{exc_type} {filename} {exc_traceback.tb_lineno}",
                 Qgis.Critical,
             )
             self.info(
@@ -670,18 +670,23 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
         # Layers
         if type(swiss_result) == WMSLayerResult:
-            url_with_params = (
-                "contextualWMSLegend=0"
-                f"&crs=EPSG:{self.crs}"
-                "&dpiMode=7"
-                "&featureCount=10"
-                f"&format={swiss_result.format}"
-                f"&layers={swiss_result.layer}"
-                f"&styles={swiss_result.style}"
-                f"&tileMatrixSet={swiss_result.tile_matrix_set}"
-                "&tileDimensions=Time%3Dcurrent"
-                f"&url={swiss_result.url}"
-            )
+            params = dict()
+            params["contextualWMSLegend"] = 0
+            params["crs"] = f"EPSG:{self.crs}"
+            params["dpiMode"] = 7
+            params["featureCount"] = 10
+            params["format"] = swiss_result.format
+            params["layers"] = swiss_result.layer
+            params["styles"] = swiss_result.style or ""
+            if swiss_result.tile_matrix_set:
+                params["tileMatrixSet"] = f"{swiss_result.tile_matrix_set}"
+            if swiss_result.tile_dimensions:
+                params["tileDimensions"] = swiss_result.tile_dimensions
+            params["url"] = f"{swiss_result.url}"
+
+            url_with_params = "&".join([f"{k}={v}" for (k, v) in params.items()])
+
+            self.info(f"Loading layer: {url_with_params}")
             wms_layer = QgsRasterLayer(url_with_params, result.displayString, "wms")
             label = QLabel()
             label.setTextFormat(Qt.RichText)
