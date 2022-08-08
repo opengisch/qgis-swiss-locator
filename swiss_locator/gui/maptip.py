@@ -42,14 +42,22 @@ class MapTip(QDockWidget):
         self.point = point
         self.web_view = QWebView(self)
 
-        self.dbg_info('map position: {}'.format(point.asWkt()))
+        self.dbg_info("map position: {}".format(point.asWkt()))
 
-        self.web_view.page().setLinkDelegationPolicy(QWebPage.DelegateAllLinks)  # Handle link clicks by yourself
-        self.web_view.setContextMenuPolicy(Qt.NoContextMenu)  # No context menu is allowed if you don't need it
+        self.web_view.page().setLinkDelegationPolicy(
+            QWebPage.DelegateAllLinks
+        )  # Handle link clicks by yourself
+        self.web_view.setContextMenuPolicy(
+            Qt.NoContextMenu
+        )  # No context menu is allowed if you don't need it
         self.web_view.linkClicked.connect(self.on_link_clicked)
 
-        self.web_view.page().settings().setAttribute(QWebSettings.DeveloperExtrasEnabled, True)
-        self.web_view.page().settings().setAttribute(QWebSettings.JavascriptEnabled, True)
+        self.web_view.page().settings().setAttribute(
+            QWebSettings.DeveloperExtrasEnabled, True
+        )
+        self.web_view.page().settings().setAttribute(
+            QWebSettings.JavascriptEnabled, True
+        )
 
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setWidget(self.web_view)
@@ -57,7 +65,7 @@ class MapTip(QDockWidget):
         # assure the map tip is never larger than half the map canvas
         max_width = int(self.map_canvas.geometry().width() / 1.8)
         max_height = int(self.map_canvas.geometry().height() / 1.8)
-        self.dbg_info('max size {} {}'.format(max_height, max_width))
+        self.dbg_info("max size {} {}".format(max_height, max_width))
         self.setMaximumSize(max_width, max_height)
 
         # start with 0 size,
@@ -66,8 +74,8 @@ class MapTip(QDockWidget):
 
         background_color = self.palette().base().color()
         background_color.setAlpha(235)
-        stroke_color = self.palette().shadow().color()
-        #self.setStyleSheet(".QDocWidget{{ border: 1px solid {stroke}; background-color: {bg} }}"
+        # stroke_color = self.palette().shadow().color()
+        # self.setStyleSheet(".QDocWidget{{ border: 1px solid {stroke}; background-color: {bg} }}"
         #                          .format(stroke=stroke_color.name(QColor.HexArgb),
         #                                  bg=background_color.name(QColor.HexArgb)))
 
@@ -80,23 +88,29 @@ class MapTip(QDockWidget):
         body_style = "background-color: {bg}; margin: 0".format(bg=background_color)
         container_style = "display: inline-block; margin: 0px"
 
-        body_html = "<html><body style='{body_style}'>" \
-                    "<div id='QgsWebViewContainer' style='{container_style}'>{html}</div><" \
-                    "/body></html>".format(body_style=body_style,
-                                           container_style=container_style,
-                                           html=html)
+        body_html = (
+            "<html><body style='{body_style}'>"
+            "<div id='QgsWebViewContainer' style='{container_style}'>{html}</div><"
+            "/body></html>".format(
+                body_style=body_style, container_style=container_style, html=html
+            )
+        )
 
         self.web_view.setHtml(body_html)
 
-        scrollbar_width = self.web_view.page().mainFrame().scrollBarGeometry(Qt.Vertical).width()
-        scrollbar_height = self.web_view.page().mainFrame().scrollBarGeometry(Qt.Horizontal).height()
-        if scrollbar_width > 0 or scrollbar_height > 0:
-            # Get the content size
-            container = self.web_view.page().mainFrame().findFirstElement("#QgsWebViewContainer")
-            width = container.geometry().width() + 25 + scrollbar_width
-            height = container.geometry().height() + 25 + scrollbar_height
+        # scrollbar_width = self.web_view.page().mainFrame().scrollBarGeometry(Qt.Vertical).width())
+        # scrollbar_height = self.web_view.page().mainFrame().scrollBarGeometry(Qt.Horizontal).height())
+        # if scrollbar_width > 0 or scrollbar_height > 0:
+        # Get the content size
+        # container = (
+        #    self.web_view.page()
+        #    .mainFrame()
+        #    .findFirstElement("#QgsWebViewContainer")
+        # )
+        # width = container.geometry().width() + 25 + scrollbar_width
+        # height = container.geometry().height() + 25 + scrollbar_height
 
-            #self.resize(width, height)
+        # self.resize(width, height)
 
         iface.addDockWidget(Qt.RightDockWidgetArea, self)
         self.setFeatures(QDockWidget.AllDockWidgetFeatures)
@@ -105,8 +119,12 @@ class MapTip(QDockWidget):
         self.move_to_point()
 
     def move_to_point(self):
-        pixel_position = self.map_canvas.mapSettings().mapToPixel().transform(self.point)
-        pixel_position = self.map_canvas.mapToGlobal(QPoint(pixel_position.x(), pixel_position.y()))
+        pixel_position = (
+            self.map_canvas.mapSettings().mapToPixel().transform(self.point)
+        )
+        pixel_position = self.map_canvas.mapToGlobal(
+            QPoint(pixel_position.x(), pixel_position.y())
+        )
         self.move(pixel_position.x() + 10, pixel_position.y() + 10)
 
     def on_link_clicked(self, url):
@@ -116,7 +134,9 @@ class MapTip(QDockWidget):
         self.closed.emit()
 
     def info(self, msg="", level=Qgis.Info):
-        QgsMessageLog.logMessage('{} {}'.format(self.__class__.__name__, msg), 'Locator bar', level)
+        QgsMessageLog.logMessage(
+            "{} {}".format(self.__class__.__name__, msg), "Locator bar", level
+        )
 
     def dbg_info(self, msg=""):
         if DEBUG:

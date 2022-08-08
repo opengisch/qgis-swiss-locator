@@ -1,0 +1,12 @@
+repos:
+ - repo: https://github.com/psf/black
+   rev: 22.6.0
+   hooks:
+   - id: black
+     language_version: python3
+
+ - repo: https://gitlab.com/pycqa/flake8
+   rev: 3.9.2
+   hooks:
+   - id: flake8
+     args: ['--ignore=E203,E402,E501,W503', '--exclude=swiss_locator/core/network_access_manager.py']
