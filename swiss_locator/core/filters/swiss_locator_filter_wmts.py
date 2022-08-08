@@ -104,8 +104,6 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
             dimensions = "&".join([f"{k}={v}" for (k, v) in dimensions.items()])
             dimensions = urllib.parse.quote(dimensions)
 
-            self.info(dimensions)
-
             results = {}
 
             if layer_identifier:
