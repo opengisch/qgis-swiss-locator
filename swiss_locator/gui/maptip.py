@@ -29,7 +29,7 @@ from PyQt5.QtGui import QPalette, QDesktopServices, QCloseEvent
 from qgis.core import Qgis, QgsPointXY, QgsMessageLog
 from qgis.gui import QgisInterface
 
-from ..swiss_locator_plugin import DEBUG
+from swiss_locator import DEBUG
 
 
 class MapTip(QDockWidget):

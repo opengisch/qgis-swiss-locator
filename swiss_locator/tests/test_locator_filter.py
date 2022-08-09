@@ -14,18 +14,46 @@
  ***************************************************************************/
 """
 
+from qgis.PyQt.QtTest import QSignalSpy
+
 from qgis.testing import start_app, unittest
 from qgis.testing.mocked import get_iface
 
-from qgis.core import QgsLocator
+from qgis.core import QgsLocator, QgsLocatorContext
 
 from swiss_locator.core.filters.swiss_locator_filter_wmts import SwissLocatorFilterWMTS
 
 start_app()
 
 
-class TestQgsLocator(unittest.TestCase):
-    def testRegisteringFilters(self):
+class TestSwissLocatorFilters(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.iface = get_iface()
+
+    def setUp(self):
+        pass
+
+    def testSwissLocatorFilterWMTS(self):
+        def got_hit(result):
+            print(result)
+            print(result.displayString)
+            got_hit._results_.append(result.displayString)
+
+        got_hit._results_ = []
+
+        context = QgsLocatorContext()
+
         loc = QgsLocator()
         _filter = SwissLocatorFilterWMTS(get_iface())
         loc.registerFilter(_filter)
+
+        loc.foundResult.connect(got_hit)
+
+        spy = QSignalSpy(loc.foundResult)
+
+        loc.fetchResults("pixelkarte", context)
+
+        spy.wait(1000)
+
+        self.assertTrue(got_hit._results_[0].startswith("National Map"))

@@ -17,9 +17,13 @@
  ***************************************************************************/
 """
 
+from qgis.PyQt.QtCore import QUrl
+from qgis.PyQt.QtNetwork import QNetworkRequest
+
 from qgis.gui import QgisInterface
 from qgis.core import (
     QgsApplication,
+    QgsBlockingNetworkRequest,
     QgsFetchedContent,
     QgsLocatorResult,
     QgsLocatorContext,
@@ -62,6 +66,23 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
                 self.content.download()
 
     def clone(self):
+        if self.capabilities is None:
+            self.content.cancel()
+            nam = QgsBlockingNetworkRequest()
+            request = QNetworkRequest(QUrl(self.capabilities_url))
+            nam.get(request, forceRefresh=True)
+            reply = nam.reply()
+            if (
+                reply.attribute(QNetworkRequest.HttpStatusCodeAttribute) == 200
+            ):  # other codes are handled by NetworkAccessManager
+                self.capabilities = ET.fromstring(reply.content().data().decode("utf8"))
+            else:
+                self.info(
+                    self.tr(
+                        "The Swiss Locator filter for WMTS layers could not fetch capabilities."
+                    )
+                )
+
         return SwissLocatorFilterWMTS(crs=self.crs, capabilities=self.capabilities)
 
     def displayName(self):
@@ -71,10 +92,11 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
         return "chw"
 
     def handle_capabilities_response(self):
-        self.info(
-            f"Swisstopo capabilities has been downloaded. Reading from {self.content.filePath()}"
-        )
-        self.capabilities = ET.parse(self.content.filePath()).getroot()
+        if self.content.status() == QgsFetchedContent.ContentStatus.Finished:
+            self.info(
+                f"Swisstopo capabilities has been downloaded. Reading from {self.content.filePath()}"
+            )
+            self.capabilities = ET.parse(self.content.filePath()).getroot()
 
     def fetchResults(
         self, search: str, context: QgsLocatorContext, feedback: QgsFeedback
@@ -88,7 +110,11 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
             return
 
         if self.capabilities is None:
-            # TODO wait for fetch
+            self.info(
+                self.tr(
+                    "The Swiss Locator filter for WMTS layers could not fetch capabilities."
+                )
+            )
             return
 
         # Search for layers containing the search term in the name or title

@@ -48,6 +48,8 @@ from qgis.core import (
 )
 from qgis.gui import QgsRubberBand, QgisInterface
 
+from swiss_locator import DEBUG
+
 from swiss_locator.core.network_access_manager import (
     NetworkAccessManager,
     RequestsException,
@@ -64,7 +66,6 @@ from swiss_locator.core.settings import Settings
 from swiss_locator.core.language import get_language
 from swiss_locator.gui.config_dialog import ConfigDialog
 from swiss_locator.gui.maptip import MapTip
-from swiss_locator.swiss_locator_plugin import DEBUG
 from swiss_locator.utils.html_stripper import strip_tags
 from swiss_locator.map_geo_admin.layers import searchable_layers
 
