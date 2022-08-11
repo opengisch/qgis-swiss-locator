@@ -293,8 +293,6 @@ class SwissLocatorFilter(QgsLocatorFilter):
         self, search: str, context: QgsLocatorContext, feedback: QgsFeedback
     ):
         try:
-            self.dbg_info("start Swiss locator search...")
-
             if len(search) < 2:
                 return
 
@@ -345,7 +343,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     try:
                         nam.get(request)
                         reply = nam.reply()
-                        self.handle_reply(reply, search, feedback)
+                        self.handle_reply2(reply, search, feedback)
                     except Exception as err:
                         self.info(err)
 
@@ -366,7 +364,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                         url = self.url_with_param(
                             swisstopo_base_url, swisstopo_base_params
                         ).url()
-                        self.access_managers[url] = None
+                        self.access_managers[url] = QgsNetworkContentFetcher()
                 except IOError:
                     self.info(
                         "Layers data file not found. Please report an issue.",
@@ -378,13 +376,11 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 self.event_loop = QEventLoop()
                 feedback.canceled.connect(self.event_loop.quit)
 
-                # init the network access managers, create the URL
-                for url in self.access_managers:
+                # init the network access managers
+                for url, nam in self.access_managers.items():
                     self.info(url)
-                    nam = QgsNetworkContentFetcher()
                     nam.finished.connect(lambda _url=url: self.handle_reply(_url))
                     feedback.canceled.connect(nam.cancel)
-                    self.access_managers[url] = nam
                     nam.fetchContent(QUrl(url))
 
                 # Let the requests end and catch all exceptions (and clean up requests)
@@ -414,7 +410,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 Qgis.Critical,
             )
 
-    def handle_reply(self, reply, search: str, feedback: QgsFeedback):
+    def handle_reply2(self, reply, search: str, feedback: QgsFeedback):
         try:
             if reply.attribute(QNetworkRequest.HttpStatusCodeAttribute) != 200:
                 self.info(

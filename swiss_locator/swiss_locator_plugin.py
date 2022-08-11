@@ -61,7 +61,9 @@ class SwissLocatorPlugin:
 
     def unload(self):
         for locator_filter in self.locator_filters:
+            locator_filter.message_emitted.disconnect(self.show_message)
             self.iface.deregisterLocatorFilter(locator_filter)
+        self.locator_filters = []
 
     def show_message(
         self, title: str, msg: str, level: Qgis.MessageLevel, widget: QWidget = None
