@@ -26,6 +26,7 @@
 
 from PyQt5.QtCore import QLocale, QSettings
 from .settings import Settings
+from qgis.core import NULL
 
 
 def get_language() -> str:
@@ -35,15 +36,17 @@ def get_language() -> str:
     :return: 2 chars long string representing the language to be used
     """
     # get lang from settings
-    lang = Settings().value('lang')
+    lang = Settings().value("lang")
     if not lang:
         # if None, try to use the locale one
         from .parameters import AVAILABLE_LANGUAGES
-        locale_lang = QLocale.languageToString(QLocale(QSettings().value('locale/userLocale')).language())
+
+        locale = str(QSettings().value("locale/userLocale")).replace(str(NULL), "en_CH")
+        locale_lang = QLocale.languageToString(QLocale(locale).language())
         if locale_lang in AVAILABLE_LANGUAGES:
             lang = AVAILABLE_LANGUAGES[locale_lang]
         else:
             # defaults to English
-            lang = 'en'
+            lang = "en"
 
     return lang

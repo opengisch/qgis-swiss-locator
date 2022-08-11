@@ -29,9 +29,11 @@ from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QColor, QIcon
 from PyQt5.QtWidgets import QLabel, QWidget, QTabWidget
 from PyQt5.QtCore import QUrl, QUrlQuery, pyqtSignal, QEventLoop
+from PyQt5.QtNetwork import QNetworkRequest
 
 from qgis.core import (
     Qgis,
+    QgsBlockingNetworkRequest,
     QgsLocatorFilter,
     QgsLocatorResult,
     QgsRectangle,
@@ -43,18 +45,13 @@ from qgis.core import (
     QgsWkbTypes,
     QgsPointXY,
     QgsLocatorContext,
+    QgsNetworkContentFetcher,
     QgsFeedback,
     QgsRasterLayer,
 )
 from qgis.gui import QgsRubberBand, QgisInterface
 
 from swiss_locator import DEBUG
-
-from swiss_locator.core.network_access_manager import (
-    NetworkAccessManager,
-    RequestsException,
-    RequestsExceptionUserAbort,
-)
 from swiss_locator.core.parameters import AVAILABLE_CRS
 from swiss_locator.core.results import (
     WMSLayerResult,
@@ -166,18 +163,22 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.create_transforms()
 
     def name(self):
-        return "{}_{}".format(self.__class__.__name__, FilterType(self.type).name)
+        return self.__class__.__name__
 
     def priority(self):
         return self.settings.value("{type}_priority".format(type=self.type.value))
 
     def displayName(self):
         # this should be re-implemented
-        raise NameError("Filter type is not valid.")
+        raise NameError(
+            "Filter type is not valid. This method should be reimplemented."
+        )
 
     def prefix(self):
         # this should be re-implemented
-        raise NameError("Filter type is not valid.")
+        raise NameError(
+            "Filter type is not valid. This method should be reimplemented."
+        )
 
     def clearPreviousResults(self):
         self.rubber_band.reset(QgsWkbTypes.PointGeometry)
@@ -286,7 +287,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         for key, value in params.items():
             q.addQueryItem(key, value)
         url.setQuery(q)
-        return url.url()
+        return url
 
     def fetchResults(
         self, search: str, context: QgsLocatorContext, feedback: QgsFeedback
@@ -302,26 +303,23 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
             self.result_found = False
 
-            url = "https://api3.geo.admin.ch/rest/services/api/SearchServer"
+            swisstopo_base_url = (
+                "https://api3.geo.admin.ch/rest/services/api/SearchServer"
+            )
             swisstopo_base_params = {
                 "type": self.type.value,
                 "searchText": str(search),
                 "returnGeometry": "true",
                 "lang": self.lang,
                 "sr": self.crs,
-                "limit": str(
-                    self.settings.value("{type}_limit".format(type=self.type.value))
-                )
+                "limit": str(self.settings.value(f"{self.type.value}_limit"))
                 # bbox Must be provided if the searchText is not.
                 # A comma separated list of 4 coordinates representing
                 # the bounding box on which features should be filtered (SRID: 21781).
             }
-            # Locations, Layers layers
+            # Locations, Layers
             if self.type in (FilterType.Location, FilterType.Layers):
-                nam = NetworkAccessManager()
-                feedback.canceled.connect(nam.abort)
-
-                search_urls = [(url, swisstopo_base_params)]
+                search_urls = [(swisstopo_base_url, swisstopo_base_params)]
 
                 if (
                     self.settings.value("layers_include_opendataswiss")
@@ -334,17 +332,21 @@ class SwissLocatorFilter(QgsLocatorFilter):
                         )
                     )
 
+                nam = QgsBlockingNetworkRequest()
+                feedback.canceled.connect(nam.abort)
                 for (url, params) in search_urls:
                     url = self.url_with_param(url, params)
-                    self.dbg_info(url)
+                    self.dbg_info(url.url())
+
+                    request = QNetworkRequest(url)
+                    for k, v in list(self.HEADERS.items()):
+                        request.setRawHeader(k, v)
+
                     try:
-                        (response, content) = nam.request(
-                            url, headers=self.HEADERS, blocking=True
-                        )
-                        self.handle_response(response, search, feedback)
-                    except RequestsExceptionUserAbort:
-                        pass
-                    except RequestsException as err:
+                        nam.get(request)
+                        reply = nam.reply()
+                        self.handle_reply(reply, search, feedback)
+                    except Exception as err:
                         self.info(err)
 
             # Feature search
@@ -361,9 +363,10 @@ class SwissLocatorFilter(QgsLocatorFilter):
                         swisstopo_base_params["features"] = ",".join(
                             layers[i_layer:last]
                         )
-                        self.access_managers[
-                            self.url_with_param(url, swisstopo_base_params)
-                        ] = None
+                        url = self.url_with_param(
+                            swisstopo_base_url, swisstopo_base_params
+                        ).url()
+                        self.access_managers[url] = None
                 except IOError:
                     self.info(
                         "Layers data file not found. Please report an issue.",
@@ -373,34 +376,22 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 # init event loop
                 # wait for all requests to end
                 self.event_loop = QEventLoop()
-
-                def reply_finished(response):
-                    self.handle_response(response, search, feedback)
-                    if response.url in self.access_managers:
-                        self.access_managers[response.url] = None
-                    for nam in self.access_managers.values():
-                        if nam is not None:
-                            return
-                        self.event_loop.quit()
-
                 feedback.canceled.connect(self.event_loop.quit)
 
                 # init the network access managers, create the URL
                 for url in self.access_managers:
-                    self.dbg_info(url)
-                    nam = NetworkAccessManager()
+                    self.info(url)
+                    nam = QgsNetworkContentFetcher()
+                    nam.finished.connect(lambda _url=url: self.handle_reply(_url))
+                    feedback.canceled.connect(nam.cancel)
                     self.access_managers[url] = nam
-                    nam.finished.connect(reply_finished)
-                    nam.request(url, headers=self.HEADERS, blocking=False)
-                    feedback.canceled.connect(nam.abort)
+                    nam.fetchContent(QUrl(url))
 
                 # Let the requests end and catch all exceptions (and clean up requests)
                 if len(self.access_managers) > 0:
                     try:
                         self.event_loop.exec_(QEventLoop.ExcludeUserInputEvents)
-                    except RequestsExceptionUserAbort:
-                        pass
-                    except RequestsException as err:
+                    except Exception as err:
                         self.info(str(err))
 
             if not self.result_found:
@@ -423,215 +414,163 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 Qgis.Critical,
             )
 
-    def handle_response(self, response, search: str, feedback: QgsFeedback):
+    def handle_reply(self, reply, search: str, feedback: QgsFeedback):
         try:
-            if response.status_code != 200:
-                if not isinstance(response.exception, RequestsExceptionUserAbort):
-                    self.info(
-                        "Error in main response with status code: {} from {}".format(
-                            response.status_code, response.url
-                        )
+            if reply.attribute(QNetworkRequest.HttpStatusCodeAttribute) != 200:
+                self.info(
+                    "Error in main response with status code: {} from {}".format(
+                        reply.attribute(QNetworkRequest.HttpStatusCodeAttribute),
+                        reply.request().url(),
                     )
-                return
+                )
 
-            data = json.loads(response.content.decode("utf-8"))
-            # self.dbg_info(data)
+            else:
+                data = json.loads(reply.content().data().decode("utf8"))
+                self.dbg_info(data)
 
-            if self.is_opendata_swiss_response(data):
-                visited_capabilities = []
+                if self.is_opendata_swiss_response(data):
+                    visited_capabilities = []
 
-                for loc in data["result"]["results"]:
-                    display_name = loc["title"].get(self.lang, "")
-                    self.info(display_name)
-                    if not display_name:
-                        # Fallback to german
-                        display_name = loc["title"]["de"]
+                    # opendata might search on other servers
+                    # and might perform several getCapabilities requests
+                    self.access_managers = {}
 
-                    for res in loc["resources"]:
+                    # init event loop
+                    # wait for all requests (for get_capabilities) to end
+                    self.event_loop = QEventLoop()
+                    feedback.canceled.connect(self.event_loop.quit)
 
-                        url = res["url"]
-                        url_components = urlparse(url)
-                        wms_url = f"{url_components.scheme}://{url_components.netloc}/{url_components.path}?"
+                    for loc in data["result"]["results"]:
+                        display_name = loc["title"].get(self.lang, "")
+                        self.info(display_name)
+                        if not display_name:
+                            # Fallback to german
+                            display_name = loc["title"]["de"]
+
+                        for res in loc["resources"]:
+
+                            url = res["url"]
+                            url_components = urlparse(url)
+                            wms_url = f"{url_components.scheme}://{url_components.netloc}/{url_components.path}?"
+
+                            result = QgsLocatorResult()
+                            result.filter = self
+                            result.group = "opendata.swiss"
+                            result.icon = QgsApplication.getThemeIcon(
+                                "/mActionAddWmsLayer.svg"
+                            )
+
+                            if re.match(r"https?:\/\/wmt?s.geo.admin.ch", url):
+                                # skip swisstopo since it's handled in other filter
+                                self.dbg_info(
+                                    "skip swisstopo get capabilities since it"
+                                    "s handled in other filter"
+                                )
+                                continue
+
+                            if "wms" in url.lower():
+                                if res["media_type"] == "Layers":
+                                    result.displayString = display_name
+                                    result.description = url
+
+                                    if res["title"]["de"] == "GetMap":
+                                        layers = parse_qs(url_components.query)[
+                                            "LAYERS"
+                                        ]
+                                        result.userData = WMSLayerResult(
+                                            layer=layers[0],
+                                            title=display_name,
+                                            url=wms_url,
+                                        ).as_definition()
+                                        self.result_found = True
+                                        self.resultFetched.emit(result)
+
+                                elif (
+                                    "request=getcapabilities" in url.lower()
+                                    and url_components.netloc
+                                    not in visited_capabilities
+                                ):
+                                    self.info("get_cap")
+                                    visited_capabilities.append(url_components.netloc)
+
+                                    # Retrieve Capabilities xml
+                                    nam = QgsNetworkContentFetcher()
+                                    nam.fetchContent(QUrl(url))
+                                    nam.finished.connect(
+                                        lambda: self.parse_capabilities_result(
+                                            nam.reply(), search, result, wms_url
+                                        )
+                                    )
+                                    self.access_managers[url] = nam
+                                    feedback.canceled.connect(nam.cancel)
+
+                                    # Let the requests end and catch all exceptions (and clean up requests)
+                                    if len(self.access_managers) > 0:
+                                        try:
+                                            self.event_loop.exec_(
+                                                QEventLoop.ExcludeUserInputEvents
+                                            )
+                                        except Exception as err:
+                                            self.info(str(err))
+
+                else:
+                    for loc in data["results"]:
+                        self.dbg_info("keys: {}".format(loc["attrs"].keys()))
 
                         result = QgsLocatorResult()
                         result.filter = self
-                        result.group = "opendata.swiss"
-                        result.icon = QgsApplication.getThemeIcon(
-                            "/mActionAddWmsLayer.svg"
-                        )
-
-                        if re.match(r"https?:\/\/wmt?s.geo.admin.ch", url):
-                            # skip swisstopo since it's handled in other filter
-                            self.dbg_info(
-                                "skip swisstopo get capabilities since it"
-                                "s handled in other filter"
+                        result.group = self.tr("Swiss Geoportal")
+                        if loc["attrs"]["origin"] == "layer":
+                            # available keys: ['origin', 'lang', 'layer', 'staging', 'title', 'topics', 'detail', 'label', 'id']
+                            for key, val in loc["attrs"].items():
+                                self.dbg_info(f"{key}: {val}")
+                            result.displayString = loc["attrs"]["title"]
+                            result.description = loc["attrs"]["layer"]
+                            result.userData = WMSLayerResult(
+                                layer=loc["attrs"]["layer"],
+                                title=loc["attrs"]["title"],
+                                url="http://wms.geo.admin.ch/?VERSION%3D2.0.0",
+                            ).as_definition()
+                            result.icon = QgsApplication.getThemeIcon(
+                                "/mActionAddWmsLayer.svg"
                             )
-                            continue
+                            self.result_found = True
+                            self.resultFetched.emit(result)
 
-                        if "wms" in url.lower():
-                            if res["media_type"] == "Layers":
-                                result.displayString = display_name
-                                result.description = url
-
-                                if res["title"]["de"] == "GetMap":
-                                    layers = parse_qs(url_components.query)["LAYERS"]
-                                    result.userData = WMSLayerResult(
-                                        layer=layers[0], title=display_name, url=wms_url
-                                    ).as_definition()
-                                    self.result_found = True
-                                    self.resultFetched.emit(result)
-
-                            elif (
-                                "request=getcapabilities" in url.lower()
-                                and url_components.netloc not in visited_capabilities
-                            ):
-                                self.info("get_cap")
-                                visited_capabilities.append(url_components.netloc)
-
-                                def parse_capabilities_result(response):
-                                    capabilities = ET.fromstring(response.content)
-
-                                    # Get xml namespace
-                                    match = re.match(r"\{.*\}", capabilities.tag)
-                                    namespace = match.group(0) if match else ""
-
-                                    # Search for layers containing the search term in the name or title
-                                    for layer in capabilities.findall(
-                                        ".//{}Layer".format(namespace)
-                                    ):
-                                        layername = self.find_text(
-                                            layer, "{}Name".format(namespace)
-                                        )
-                                        layertitle = self.find_text(
-                                            layer, "{}Title".format(namespace)
-                                        )
-                                        if layername and (
-                                            search in layername.lower()
-                                            or search in layertitle.lower()
-                                        ):
-                                            if not layertitle:
-                                                layertitle = layername
-
-                                            result.displayString = layertitle
-                                            result.description = "{}?LAYERS={}".format(
-                                                url.replace(
-                                                    "GetCapabilities", "GetMap"
-                                                ),
-                                                layername,
-                                            )
-                                            result.userData = WMSLayerResult(
-                                                layer=layername,
-                                                title=layertitle,
-                                                url=wms_url,
-                                            ).as_definition()
-                                            self.result_found = True
-                                            self.resultFetched.emit(result)
-
-                                    self.event_loop.quit()
-
-                                # Retrieve Capabilities xml
-                                self.event_loop = QEventLoop()
-                                nam = NetworkAccessManager()
-                                nam.finished.connect(parse_capabilities_result)
-                                nam.request(url, headers=self.HEADERS, blocking=False)
-                                feedback.canceled.connect(self.event_loop.quit)
-
-                                try:
-                                    self.event_loop.exec_(
-                                        QEventLoop.ExcludeUserInputEvents
-                                    )
-                                except RequestsExceptionUserAbort:
-                                    pass
-                                except RequestsException as err:
-                                    self.info(err)
-
-            else:
-                for loc in data["results"]:
-                    self.dbg_info("keys: {}".format(loc["attrs"].keys()))
-
-                    result = QgsLocatorResult()
-                    result.filter = self
-                    result.group = self.tr("Swiss Geoportal")
-                    if loc["attrs"]["origin"] == "layer":
-                        # available keys: ['origin', 'lang', 'layer', 'staging', 'title', 'topics', 'detail', 'label', 'id']
-                        for key, val in loc["attrs"].items():
-                            self.dbg_info(f"{key}: {val}")
-                        result.displayString = loc["attrs"]["title"]
-                        result.description = loc["attrs"]["layer"]
-                        result.userData = WMSLayerResult(
-                            layer=loc["attrs"]["layer"],
-                            title=loc["attrs"]["title"],
-                            url="http://wms.geo.admin.ch/?VERSION%3D2.0.0",
-                        ).as_definition()
-                        result.icon = QgsApplication.getThemeIcon(
-                            "/mActionAddWmsLayer.svg"
-                        )
-                        self.result_found = True
-                        self.resultFetched.emit(result)
-
-                    elif loc["attrs"]["origin"] == "feature":
-                        for key, val in loc["attrs"].items():
-                            self.dbg_info(f"{key}: {val}")
-                        layer = loc["attrs"]["layer"]
-                        point = QgsPointXY(loc["attrs"]["lon"], loc["attrs"]["lat"])
-                        if layer in self.searchable_layers:
-                            layer_display = self.searchable_layers[layer]
-                        else:
-                            self.info(
-                                self.tr(
-                                    f"Layer {layer} is not in the list of searchable layers."
-                                    " Please report issue."
-                                ),
-                                Qgis.Warning,
+                        else:  # locations
+                            for key, val in loc["attrs"].items():
+                                self.dbg_info(f"{key}: {val}")
+                            group_name, group_layer = self.group_info(
+                                loc["attrs"]["origin"]
                             )
-                            layer_display = layer
-                        result.group = layer_display
-                        result.displayString = loc["attrs"]["detail"]
-                        result.userData = FeatureResult(
-                            point=point,
-                            layer=layer,
-                            feature_id=loc["attrs"]["feature_id"],
-                        ).as_definition()
-                        result.icon = QIcon(
-                            ":/plugins/swiss_locator/icons/swiss_locator.png"
-                        )
-                        self.result_found = True
-                        self.resultFetched.emit(result)
+                            if "layerBodId" in loc["attrs"]:
+                                self.dbg_info(
+                                    "layer: {}".format(loc["attrs"]["layerBodId"])
+                                )
+                            if "featureId" in loc["attrs"]:
+                                self.dbg_info(
+                                    "feature: {}".format(loc["attrs"]["featureId"])
+                                )
 
-                    else:  # locations
-                        for key, val in loc["attrs"].items():
-                            self.dbg_info(f"{key}: {val}")
-                        group_name, group_layer = self.group_info(
-                            loc["attrs"]["origin"]
-                        )
-                        if "layerBodId" in loc["attrs"]:
-                            self.dbg_info(
-                                "layer: {}".format(loc["attrs"]["layerBodId"])
+                            result.displayString = strip_tags(loc["attrs"]["label"])
+                            # result.description = loc['attrs']['detail']
+                            # if 'featureId' in loc['attrs']:
+                            #     result.description = loc['attrs']['featureId']
+                            result.group = group_name
+                            result.userData = LocationResult(
+                                point=QgsPointXY(loc["attrs"]["y"], loc["attrs"]["x"]),
+                                bbox=self.box2geometry(loc["attrs"]["geom_st_box2d"]),
+                                layer=group_layer,
+                                feature_id=loc["attrs"]["featureId"]
+                                if "featureId" in loc["attrs"]
+                                else None,
+                                html_label=loc["attrs"]["label"],
+                            ).as_definition()
+                            result.icon = QIcon(
+                                ":/plugins/swiss_locator/icons/swiss_locator.png"
                             )
-                        if "featureId" in loc["attrs"]:
-                            self.dbg_info(
-                                "feature: {}".format(loc["attrs"]["featureId"])
-                            )
-
-                        result.displayString = strip_tags(loc["attrs"]["label"])
-                        # result.description = loc['attrs']['detail']
-                        # if 'featureId' in loc['attrs']:
-                        #     result.description = loc['attrs']['featureId']
-                        result.group = group_name
-                        result.userData = LocationResult(
-                            point=QgsPointXY(loc["attrs"]["y"], loc["attrs"]["x"]),
-                            bbox=self.box2geometry(loc["attrs"]["geom_st_box2d"]),
-                            layer=group_layer,
-                            feature_id=loc["attrs"]["featureId"]
-                            if "featureId" in loc["attrs"]
-                            else None,
-                            html_label=loc["attrs"]["label"],
-                        ).as_definition()
-                        result.icon = QIcon(
-                            ":/plugins/swiss_locator/icons/swiss_locator.png"
-                        )
-                        self.result_found = True
-                        self.resultFetched.emit(result)
+                            self.result_found = True
+                            self.resultFetched.emit(result)
 
         except Exception as e:
             self.info(str(e), Qgis.Critical)
@@ -758,56 +697,6 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 self.current_timer.setSingleShot(True)
                 self.current_timer.start(5000)
 
-    def highlight(self, point, bbox=None):
-        if bbox is None:
-            bbox = point
-        self.rubber_band.reset(QgsWkbTypes.PointGeometry)
-        self.rubber_band.addGeometry(point, None)
-        rect = bbox.boundingBox()
-        rect.scale(1.1)
-        self.map_canvas.setExtent(rect)
-        self.map_canvas.refresh()
-
-    def fetch_feature(self, layer, feature_id):
-        # Try to get more info
-        self.nam_fetch_feature = NetworkAccessManager()
-        url_detail = "https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}".format(
-            layer=layer, feature_id=feature_id
-        )
-        params = {"lang": self.lang, "sr": self.crs}
-        url_detail = self.url_with_param(url_detail, params)
-        self.dbg_info(url_detail)
-        self.nam_fetch_feature.finished.connect(self.parse_feature_response)
-        self.nam_fetch_feature.request(url_detail, headers=self.HEADERS, blocking=False)
-
-    def parse_feature_response(self, response):
-        if response.status_code != 200:
-            if not isinstance(response.exception, RequestsExceptionUserAbort):
-                self.info(
-                    "Error in feature response with status code: {} from {}".format(
-                        response.status_code, response.url
-                    )
-                )
-            return
-
-        data = json.loads(response.content.decode("utf-8"))
-        self.dbg_info(data)
-
-        if "feature" not in data or "geometry" not in data["feature"]:
-            return
-
-        if "rings" in data["feature"]["geometry"]:
-            rings = data["feature"]["geometry"]["rings"]
-            self.dbg_info(rings)
-            for r in range(0, len(rings)):
-                for p in range(0, len(rings[r])):
-                    rings[r][p] = QgsPointXY(rings[r][p][0], rings[r][p][1])
-            geometry = QgsGeometry.fromPolygonXY(rings)
-            geometry.transform(self.transform_ch)
-
-            self.feature_rubber_band.reset(QgsWkbTypes.PolygonGeometry)
-            self.feature_rubber_band.addGeometry(geometry, None)
-
     def show_map_tip(self, layer, feature_id, point):
         if layer and feature_id:
             url_html = "https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}/htmlPopup".format(
@@ -817,27 +706,27 @@ class SwissLocatorFilter(QgsLocatorFilter):
             url_html = self.url_with_param(url_html, params)
             self.dbg_info(url_html)
 
-            self.nam_map_tip = NetworkAccessManager()
+            self.nam_map_tip = QgsNetworkContentFetcher()
             self.nam_map_tip.finished.connect(
-                lambda response: self.parse_map_tip_response(response, point)
-            )
-            self.nam_map_tip.request(url_html, headers=self.HEADERS, blocking=False)
-
-    def parse_map_tip_response(self, response, point):
-        if response.status_code != 200:
-            if not isinstance(response.exception, RequestsExceptionUserAbort):
-                self.info(
-                    "Error in map tip response with status code: {} from {}".format(
-                        response.status_code, response.url
-                    )
+                lambda: self.parse_map_tip_response(
+                    self.nam_map_tip.contentAsString(), point
                 )
-            return
+            )
+            self.nam_map_tip.fetchContent(QUrl(url_html))
 
-        self.dbg_info(response.content.decode("utf-8"))
-        self.map_tip = MapTip(
-            self.iface, response.content.decode("utf-8"), point.asPoint()
-        )
+    def parse_map_tip_response(self, content, point):
+        self.map_tip = MapTip(self.iface, content, point.asPoint())
         self.map_tip.closed.connect(self.clearPreviousResults)
+
+    def highlight(self, point, bbox=None):
+        if bbox is None:
+            bbox = point
+        self.rubber_band.reset(QgsWkbTypes.PointGeometry)
+        self.rubber_band.addGeometry(point, None)
+        rect = bbox.boundingBox()
+        rect.scale(1.1)
+        self.map_canvas.setExtent(rect)
+        self.map_canvas.refresh()
 
     def info(self, msg="", level=Qgis.Info):
         self.logMessage(str(msg), level)
@@ -859,3 +748,41 @@ class SwissLocatorFilter(QgsLocatorFilter):
     def find_text(self, xmlElement, match):
         node = xmlElement.find(match)
         return node.text if node is not None else ""
+
+    def parse_capabilities_result(self, reply, search, result, wms_url):
+        if reply.content().url() in self.access_managers:
+            self.info("url in access manager")
+            self.access_managers[reply.content().url()] = None
+        else:
+            self.info("url not in")
+
+        capabilities = ET.fromstring(reply.content().data().decode("utf-8"))
+
+        # Get xml namespace
+        match = re.match(r"\{.*\}", capabilities.tag)
+        namespace = match.group(0) if match else ""
+
+        # Search for layers containing the search term in the name or title
+        for layer in capabilities.findall(".//{}Layer".format(namespace)):
+            layername = self.find_text(layer, "{}Name".format(namespace))
+            layertitle = self.find_text(layer, "{}Title".format(namespace))
+            if layername and (
+                search in layername.lower() or search in layertitle.lower()
+            ):
+                if not layertitle:
+                    layertitle = layername
+
+                result.displayString = layertitle
+                result.description = layername
+                result.userData = WMSLayerResult(
+                    layer=layername,
+                    title=layertitle,
+                    url=wms_url,
+                ).as_definition()
+                self.result_found = True
+                self.resultFetched.emit(result)
+
+        for _nam in self.access_managers.values():
+            if _nam is not None:
+                return
+            self.event_loop.quit()

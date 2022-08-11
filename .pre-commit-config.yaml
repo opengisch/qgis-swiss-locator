@@ -9,4 +9,4 @@ repos:
    rev: 3.9.2
    hooks:
    - id: flake8
-     args: ['--ignore=E203,E402,E501,W503', '--exclude=swiss_locator/core/network_access_manager.py']
+     args: ['--ignore=E203,E402,E501,W503']

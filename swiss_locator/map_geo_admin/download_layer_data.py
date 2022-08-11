@@ -28,26 +28,35 @@ import urllib.request
 
 def main():
 
-    AVAILABLE_LANGUAGES = ('de', 'de', 'fr', 'it', 'rm', 'en')
-    names = ["chargeableLayers", "notChargeableLayers", "tooltipLayers", "searchableLayers"]
+    AVAILABLE_LANGUAGES = ("de", "de", "fr", "it", "rm", "en")
+    names = [
+        "chargeableLayers",
+        "notChargeableLayers",
+        "tooltipLayers",
+        "searchableLayers",
+    ]
     counts = {}
 
     for lang in AVAILABLE_LANGUAGES:
         counts[lang] = {}
 
-        url = 'https://api3.geo.admin.ch/rest/services/api/faqlist?lang={}'.format(lang)
-        contents = urllib.request.urlopen(url).read().decode('utf-8')\
-            .replace('","', '",\n"')\
-            .replace('":["', '":[\n"')\
+        url = f"https://api3.geo.admin.ch/rest/services/api/faqlist?lang={lang}"
+        contents = (
+            urllib.request.urlopen(url)
+            .read()
+            .decode("utf-8")
+            .replace('","', '",\n"')
+            .replace('":["', '":[\n"')
             .replace('"]}', '"\n]}')
+        )
 
-        with open('layers_{}.data'.format(lang), 'w') as f:
+        with open(f"layers_{lang}.data", "w") as f:
             f.write(contents)
 
         data = json.loads(contents)
-        translations_api = data['translations']
+        translations_api = data["translations"]
 
-        #print(translations_api)
+        # print(translations_api)
 
         for name in names:
             counts[lang][name] = 0
@@ -60,9 +69,9 @@ def main():
                 already_print = True
 
     for lang in AVAILABLE_LANGUAGES:
-        print('****** {}'.format(lang))
+        print("****** {}".format(lang))
         for name in names:
-            print('{}: {}'.format(name, counts[lang][name]))
+            print("{}: {}".format(name, counts[lang][name]))
 
 
 if __name__ == "__main__":

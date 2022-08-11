@@ -123,7 +123,7 @@ class MapTip(QDockWidget):
             self.map_canvas.mapSettings().mapToPixel().transform(self.point)
         )
         pixel_position = self.map_canvas.mapToGlobal(
-            QPoint(pixel_position.x(), pixel_position.y())
+            QPoint(int(pixel_position.x()), int(pixel_position.y()))
         )
         self.move(pixel_position.x() + 10, pixel_position.y() + 10)
 
