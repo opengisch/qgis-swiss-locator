@@ -31,8 +31,8 @@ from qgis.core import (
 )
 from swiss_locator.core.filters.swiss_locator_filter import (
     SwissLocatorFilter,
-    FilterType,
 )
+from swiss_locator.core.filters.filter_type import FilterType
 from swiss_locator.core.results import WMSLayerResult
 
 import xml.etree.ElementTree as ET

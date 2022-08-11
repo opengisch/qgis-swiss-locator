@@ -19,25 +19,30 @@
 
 import json
 
+from PyQt5.QtCore import QUrl, QEventLoop
 from PyQt5.QtGui import QIcon
 
 from qgis.core import (
     Qgis,
+    QgsFeedback,
     QgsLocatorResult,
+    QgsNetworkContentFetcher,
     QgsPointXY,
 )
 from qgis.gui import QgisInterface
 
 from swiss_locator.core.filters.swiss_locator_filter import (
     SwissLocatorFilter,
-    FilterType,
 )
+from swiss_locator.core.filters.filter_type import FilterType
 from swiss_locator.core.results import FeatureResult
+from swiss_locator.core.filters.map_geo_admin import map_geo_admin_url
 
 
 class SwissLocatorFilterFeature(SwissLocatorFilter):
     def __init__(self, iface: QgisInterface = None, crs: str = None):
         super().__init__(FilterType.Feature, iface, crs)
+        self.minimum_search_length = 4
 
     def clone(self):
         return SwissLocatorFilterFeature(crs=self.crs)
@@ -47,6 +52,48 @@ class SwissLocatorFilterFeature(SwissLocatorFilter):
 
     def prefix(self):
         return "chf"
+
+    def perform_fetch_results(self, search: str, feedback: QgsFeedback):
+        # Feature search is split in several requests
+        # otherwise URL is too long
+        self.access_managers = {}
+        try:
+            limit = self.settings.value(f"{FilterType.Feature.value}_limit")
+            layers = list(self.searchable_layers.keys())
+            assert len(layers) > 0
+            step = 30
+            for i_layer in range(0, len(layers), step):
+                last = min(i_layer + step - 1, len(layers) - 1)
+                url, params = map_geo_admin_url(
+                    search, self.type.value, self.crs, self.lang, limit
+                )
+                params["features"] = ",".join(layers[i_layer:last])
+                url = self.url_with_param(url, params).url()
+                self.access_managers[url] = QgsNetworkContentFetcher()
+        except IOError:
+            self.info(
+                "Layers data file not found. Please report an issue.",
+                Qgis.Critical,
+            )
+
+        # init event loop
+        # wait for all requests to end
+        self.event_loop = QEventLoop()
+        feedback.canceled.connect(self.event_loop.quit)
+
+        # init the network access managers
+        for url, nam in self.access_managers.items():
+            self.info(url)
+            nam.finished.connect(lambda _url=url: self.handle_reply(_url))
+            feedback.canceled.connect(nam.cancel)
+            nam.fetchContent(QUrl(url))
+
+        # Let the requests end and catch all exceptions (and clean up requests)
+        if len(self.access_managers) > 0:
+            try:
+                self.event_loop.exec_(QEventLoop.ExcludeUserInputEvents)
+            except Exception as err:
+                self.info(str(err))
 
     def handle_reply(self, url):
         self.dbg_info(f"feature handle reply {url}")
@@ -93,10 +140,7 @@ class SwissLocatorFilterFeature(SwissLocatorFilter):
             self.access_managers[url] = None
 
         # quit loop if every nam has completed
-        i = 0
         for url, nam in self.access_managers.items():
-            i += 1
-            self.dbg_info(f'nam {i} is: {url if nam is None else "running"}')
             if nam is not None:
                 self.dbg_info("nams still running, stay in loop")
                 return

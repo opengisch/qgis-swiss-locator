@@ -25,8 +25,8 @@ from qgis.gui import QgisInterface
 
 from swiss_locator.core.filters.swiss_locator_filter import (
     SwissLocatorFilter,
-    FilterType,
 )
+from swiss_locator.core.filters.filter_type import FilterType
 
 
 class SwissLocatorFilterLocation(SwissLocatorFilter):
@@ -72,3 +72,36 @@ class SwissLocatorFilterLocation(SwissLocatorFilter):
 
             self.feature_rubber_band.reset(QgsWkbTypes.PolygonGeometry)
             self.feature_rubber_band.addGeometry(geometry, None)
+
+    def group_info(self, group: str) -> (str, str):
+        groups = {
+            "zipcode": {
+                "name": self.tr("ZIP code"),
+                "layer": "ch.swisstopo-vd.ortschaftenverzeichnis_plz",
+            },
+            "gg25": {
+                "name": self.tr("Municipal boundaries"),
+                "layer": "ch.swisstopo.swissboundaries3d-gemeinde-flaeche.fill",
+            },
+            "district": {
+                "name": self.tr("District"),
+                "layer": "ch.swisstopo.swissboundaries3d-bezirk-flaeche.fill",
+            },
+            "kantone": {
+                "name": self.tr("Cantons"),
+                "layer": "ch.swisstopo.swissboundaries3d-kanton-flaeche.fill",
+            },
+            "gazetteer": {
+                "name": self.tr("Index"),
+                "layer": "ch.swisstopo.swissnames3d",
+            },  # there is also: ch.bav.haltestellen-oev ?
+            "address": {
+                "name": self.tr("Address"),
+                "layer": "ch.bfs.gebaeude_wohnungs_register",
+            },
+            "parcel": {"name": self.tr("Parcel"), "layer": None},
+        }
+        if group not in groups:
+            self.info("Could not find group {} in dictionary".format(group))
+            return None, None
+        return groups[group]["name"], groups[group]["layer"]

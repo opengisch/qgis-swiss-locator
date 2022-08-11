@@ -23,7 +23,6 @@ import os
 import re
 import sys
 import traceback
-from enum import Enum
 
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QColor, QIcon
@@ -52,6 +51,7 @@ from qgis.core import (
 from qgis.gui import QgsRubberBand, QgisInterface
 
 from swiss_locator import DEBUG
+from swiss_locator.core.filters.filter_type import FilterType
 from swiss_locator.core.parameters import AVAILABLE_CRS
 from swiss_locator.core.results import (
     WMSLayerResult,
@@ -61,6 +61,8 @@ from swiss_locator.core.results import (
 )
 from swiss_locator.core.settings import Settings
 from swiss_locator.core.language import get_language
+from swiss_locator.core.filters.map_geo_admin import map_geo_admin_url
+from swiss_locator.core.filters.opendata_swiss import opendata_swiss_url
 from swiss_locator.gui.config_dialog import ConfigDialog
 from swiss_locator.gui.maptip import MapTip
 from swiss_locator.utils.html_stripper import strip_tags
@@ -69,13 +71,6 @@ from swiss_locator.map_geo_admin.layers import searchable_layers
 from urllib.parse import urlparse, parse_qs
 
 import xml.etree.ElementTree as ET
-
-
-class FilterType(Enum):
-    Location = "locations"
-    Layers = "layers"
-    Feature = "featuresearch"
-    WMTS = "wmts"
 
 
 def result_from_data(result: QgsLocatorResult):
@@ -130,8 +125,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         self.access_managers = {}
         self.nam_map_tip = None
         self.nam_fetch_feature = None
-        self.registry = QgsApplication.networkContentFetcherRegistry()
-
+        self.minimum_search_length = 2
         if crs:
             self.crs = crs
 
@@ -223,39 +217,6 @@ class SwissLocatorFilter(QgsLocatorFilter):
             src_crs_4326, dst_crs, QgsProject.instance()
         )
 
-    def group_info(self, group: str) -> (str, str):
-        groups = {
-            "zipcode": {
-                "name": self.tr("ZIP code"),
-                "layer": "ch.swisstopo-vd.ortschaftenverzeichnis_plz",
-            },
-            "gg25": {
-                "name": self.tr("Municipal boundaries"),
-                "layer": "ch.swisstopo.swissboundaries3d-gemeinde-flaeche.fill",
-            },
-            "district": {
-                "name": self.tr("District"),
-                "layer": "ch.swisstopo.swissboundaries3d-bezirk-flaeche.fill",
-            },
-            "kantone": {
-                "name": self.tr("Cantons"),
-                "layer": "ch.swisstopo.swissboundaries3d-kanton-flaeche.fill",
-            },
-            "gazetteer": {
-                "name": self.tr("Index"),
-                "layer": "ch.swisstopo.swissnames3d",
-            },  # there is also: ch.bav.haltestellen-oev ?
-            "address": {
-                "name": self.tr("Address"),
-                "layer": "ch.bfs.gebaeude_wohnungs_register",
-            },
-            "parcel": {"name": self.tr("Parcel"), "layer": None},
-        }
-        if group not in groups:
-            self.info("Could not find group {} in dictionary".format(group))
-            return None, None
-        return groups[group]["name"], groups[group]["layer"]
-
     @staticmethod
     def rank2priority(rank) -> float:
         """
@@ -293,42 +254,27 @@ class SwissLocatorFilter(QgsLocatorFilter):
         self, search: str, context: QgsLocatorContext, feedback: QgsFeedback
     ):
         try:
-            if len(search) < 2:
-                return
-
-            if len(search) < 4 and self.type is FilterType.Feature:
+            if len(search) < self.minimum_search_length:
                 return
 
             self.result_found = False
 
-            swisstopo_base_url = (
-                "https://api3.geo.admin.ch/rest/services/api/SearchServer"
-            )
-            swisstopo_base_params = {
-                "type": self.type.value,
-                "searchText": str(search),
-                "returnGeometry": "true",
-                "lang": self.lang,
-                "sr": self.crs,
-                "limit": str(self.settings.value(f"{self.type.value}_limit"))
-                # bbox Must be provided if the searchText is not.
-                # A comma separated list of 4 coordinates representing
-                # the bounding box on which features should be filtered (SRID: 21781).
-            }
+            self.perform_fetch_results(search, feedback)
+
             # Locations, Layers
             if self.type in (FilterType.Location, FilterType.Layers):
-                search_urls = [(swisstopo_base_url, swisstopo_base_params)]
+                limit = self.settings.value(f"{self.type.value}_limit")
+                search_urls = [
+                    map_geo_admin_url(
+                        search, self.type.value, self.crs, self.lang, limit
+                    )
+                ]
 
                 if (
                     self.settings.value("layers_include_opendataswiss")
                     and self.type is FilterType.Layers
                 ):
-                    search_urls.append(
-                        (
-                            "https://opendata.swiss/api/3/action/package_search?",
-                            {"q": "q=Layers+%C3" + str(search)},
-                        )
-                    )
+                    search_urls.append(opendata_swiss_url(search))
 
                 nam = QgsBlockingNetworkRequest()
                 feedback.canceled.connect(nam.abort)
@@ -343,52 +289,9 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     try:
                         nam.get(request)
                         reply = nam.reply()
-                        self.handle_reply2(reply, search, feedback)
+                        self.handle_reply(reply, search, feedback)
                     except Exception as err:
                         self.info(err)
-
-            # Feature search
-            else:
-                # Feature search is split in several requests
-                # otherwise URL is too long
-                self.access_managers = {}
-                try:
-                    layers = list(self.searchable_layers.keys())
-                    assert len(layers) > 0
-                    step = 30
-                    for i_layer in range(0, len(layers), step):
-                        last = min(i_layer + step - 1, len(layers) - 1)
-                        swisstopo_base_params["features"] = ",".join(
-                            layers[i_layer:last]
-                        )
-                        url = self.url_with_param(
-                            swisstopo_base_url, swisstopo_base_params
-                        ).url()
-                        self.access_managers[url] = QgsNetworkContentFetcher()
-                except IOError:
-                    self.info(
-                        "Layers data file not found. Please report an issue.",
-                        Qgis.Critical,
-                    )
-
-                # init event loop
-                # wait for all requests to end
-                self.event_loop = QEventLoop()
-                feedback.canceled.connect(self.event_loop.quit)
-
-                # init the network access managers
-                for url, nam in self.access_managers.items():
-                    self.info(url)
-                    nam.finished.connect(lambda _url=url: self.handle_reply(_url))
-                    feedback.canceled.connect(nam.cancel)
-                    nam.fetchContent(QUrl(url))
-
-                # Let the requests end and catch all exceptions (and clean up requests)
-                if len(self.access_managers) > 0:
-                    try:
-                        self.event_loop.exec_(QEventLoop.ExcludeUserInputEvents)
-                    except Exception as err:
-                        self.info(str(err))
 
             if not self.result_found:
                 result = QgsLocatorResult()
@@ -410,7 +313,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 Qgis.Critical,
             )
 
-    def handle_reply2(self, reply, search: str, feedback: QgsFeedback):
+    def handle_reply(self, reply, search: str, feedback: QgsFeedback):
         try:
             if reply.attribute(QNetworkRequest.HttpStatusCodeAttribute) != 200:
                 self.info(

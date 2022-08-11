@@ -20,7 +20,8 @@
 
 from qgis.gui import QgisInterface
 
-from swiss_locator.core.filters.swiss_locator_filter import SwissLocatorFilter, FilterType
+from swiss_locator.core.filters.swiss_locator_filter import SwissLocatorFilter
+from swiss_locator.core.filters.filter_type import FilterType
 
 
 class SwissLocatorFilterLayer(SwissLocatorFilter):
@@ -31,7 +32,7 @@ class SwissLocatorFilterLayer(SwissLocatorFilter):
         return SwissLocatorFilterLayer(crs=self.crs)
 
     def displayName(self):
-        return self.tr('Swiss Geoportal / opendata.swiss Layers layers')
+        return self.tr("Swiss Geoportal / opendata.swiss Layers layers")
 
     def prefix(self):
-        return 'chl'
+        return "chl"
