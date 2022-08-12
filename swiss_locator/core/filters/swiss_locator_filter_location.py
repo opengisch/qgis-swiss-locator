@@ -17,16 +17,35 @@
  ***************************************************************************/
 """
 
+import traceback
 import json
-from qgis.PyQt.QtCore import QUrl
+import sys
+import os
 
-from qgis.core import QgsNetworkContentFetcher, QgsPointXY, QgsGeometry, QgsWkbTypes
+from qgis.PyQt.QtCore import QUrl
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtNetwork import QNetworkRequest
+
+from qgis.core import (
+    Qgis,
+    QgsLocatorResult,
+    QgsNetworkContentFetcher,
+    QgsPointXY,
+    QgsGeometry,
+    QgsWkbTypes,
+    QgsFeedback,
+    QgsBlockingNetworkRequest,
+)
 from qgis.gui import QgisInterface
 
-from swiss_locator.core.filters.swiss_locator_filter import (
-    SwissLocatorFilter,
-)
+from swiss_locator.core.filters.swiss_locator_filter import SwissLocatorFilter
 from swiss_locator.core.filters.filter_type import FilterType
+from swiss_locator.core.filters.map_geo_admin import map_geo_admin_url
+from swiss_locator.core.results import (
+    LocationResult,
+    NoResult,
+)
+from swiss_locator.utils.html_stripper import strip_tags
 
 
 class SwissLocatorFilterLocation(SwissLocatorFilter):
@@ -41,6 +60,85 @@ class SwissLocatorFilterLocation(SwissLocatorFilter):
 
     def prefix(self):
         return "chs"
+
+    def perform_fetch_results(self, search: str, feedback: QgsFeedback):
+        limit = self.settings.value(f"{FilterType.Location.value}_limit")
+        url, params = map_geo_admin_url(
+            search, self.type.value, self.crs, self.lang, limit
+        )
+        request = self.request_for_url(url, params, self.HEADERS)
+        nam = QgsBlockingNetworkRequest()
+        feedback.canceled.connect(nam.abort)
+        try:
+            nam.get(request)
+            reply = nam.reply()
+            self.handle_reply(reply, search, feedback)
+        except Exception as err:
+            self.info(err)
+
+        if not self.result_found:
+            result = QgsLocatorResult()
+            result.filter = self
+            result.displayString = self.tr("No result found.")
+            result.userData = NoResult().as_definition()
+            self.resultFetched.emit(result)
+
+    def handle_reply(self, reply, search: str, feedback: QgsFeedback):
+        try:
+            if reply.attribute(QNetworkRequest.HttpStatusCodeAttribute) != 200:
+                self.info(
+                    "Error in main response with status code: {} from {}".format(
+                        reply.attribute(QNetworkRequest.HttpStatusCodeAttribute),
+                        reply.request().url(),
+                    )
+                )
+
+            else:
+                data = json.loads(reply.content().data().decode("utf8"))
+                for loc in data["results"]:
+                    result = QgsLocatorResult()
+                    result.filter = self
+                    result.group = self.tr("Swiss Geoportal")
+                    for key, val in loc["attrs"].items():
+                        self.dbg_info(f"{key}: {val}")
+                    group_name, group_layer = self.group_info(loc["attrs"]["origin"])
+                    if "layerBodId" in loc["attrs"]:
+                        self.dbg_info("layer: {}".format(loc["attrs"]["layerBodId"]))
+                    if "featureId" in loc["attrs"]:
+                        self.dbg_info("feature: {}".format(loc["attrs"]["featureId"]))
+
+                    result.displayString = strip_tags(loc["attrs"]["label"])
+                    # result.description = loc['attrs']['detail']
+                    # if 'featureId' in loc['attrs']:
+                    #     result.description = loc['attrs']['featureId']
+                    result.group = group_name
+                    result.userData = LocationResult(
+                        point=QgsPointXY(loc["attrs"]["y"], loc["attrs"]["x"]),
+                        bbox=self.box2geometry(loc["attrs"]["geom_st_box2d"]),
+                        layer=group_layer,
+                        feature_id=loc["attrs"]["featureId"]
+                        if "featureId" in loc["attrs"]
+                        else None,
+                        html_label=loc["attrs"]["label"],
+                    ).as_definition()
+                    result.icon = QIcon(
+                        ":/plugins/swiss_locator/icons/swiss_locator.png"
+                    )
+                    self.result_found = True
+                    self.resultFetched.emit(result)
+
+        except Exception as e:
+            self.info(str(e), Qgis.Critical)
+            exc_type, exc_obj, exc_traceback = sys.exc_info()
+            filename = os.path.split(exc_traceback.tb_frame.f_code.co_filename)[1]
+            self.info(
+                f"{exc_type} {filename} {exc_traceback.tb_lineno}",
+                Qgis.Critical,
+            )
+            self.info(
+                traceback.print_exception(exc_type, exc_obj, exc_traceback),
+                Qgis.Critical,
+            )
 
     def fetch_feature(self, layer, feature_id):
         # Try to get more info

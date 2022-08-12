@@ -26,7 +26,6 @@ from qgis.core import (
     QgsBlockingNetworkRequest,
     QgsFetchedContent,
     QgsLocatorResult,
-    QgsLocatorContext,
     QgsFeedback,
 )
 from swiss_locator.core.filters.swiss_locator_filter import (
@@ -98,9 +97,7 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
             )
             self.capabilities = ET.parse(self.content.filePath()).getroot()
 
-    def fetchResults(
-        self, search: str, context: QgsLocatorContext, feedback: QgsFeedback
-    ):
+    def perform_fetch_results(self, search: str, feedback: QgsFeedback):
         namespaces = {
             "wmts": "http://www.opengis.net/wmts/1.0",
             "ows": "http://www.opengis.net/ows/1.1",

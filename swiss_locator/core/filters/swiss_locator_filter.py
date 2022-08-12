@@ -23,16 +23,16 @@ import os
 import re
 import sys
 import traceback
+from datetime import datetime
 
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QColor, QIcon
+from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QLabel, QWidget, QTabWidget
 from PyQt5.QtCore import QUrl, QUrlQuery, pyqtSignal, QEventLoop
 from PyQt5.QtNetwork import QNetworkRequest
 
 from qgis.core import (
     Qgis,
-    QgsBlockingNetworkRequest,
     QgsLocatorFilter,
     QgsLocatorResult,
     QgsRectangle,
@@ -42,7 +42,6 @@ from qgis.core import (
     QgsProject,
     QgsGeometry,
     QgsWkbTypes,
-    QgsPointXY,
     QgsLocatorContext,
     QgsNetworkContentFetcher,
     QgsFeedback,
@@ -61,11 +60,8 @@ from swiss_locator.core.results import (
 )
 from swiss_locator.core.settings import Settings
 from swiss_locator.core.language import get_language
-from swiss_locator.core.filters.map_geo_admin import map_geo_admin_url
-from swiss_locator.core.filters.opendata_swiss import opendata_swiss_url
 from swiss_locator.gui.config_dialog import ConfigDialog
 from swiss_locator.gui.maptip import MapTip
-from swiss_locator.utils.html_stripper import strip_tags
 from swiss_locator.map_geo_admin.layers import searchable_layers
 
 from urllib.parse import urlparse, parse_qs
@@ -126,6 +122,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         self.nam_map_tip = None
         self.nam_fetch_feature = None
         self.minimum_search_length = 2
+        self.time_stamp = None
         if crs:
             self.crs = crs
 
@@ -250,9 +247,40 @@ class SwissLocatorFilter(QgsLocatorFilter):
         url.setQuery(q)
         return url
 
+    @staticmethod
+    def request_for_url(url, params, headers) -> QNetworkRequest:
+        url = SwissLocatorFilter.url_with_param(url, params)
+        request = QNetworkRequest(url)
+        for k, v in list(headers.items()):
+            request.setRawHeader(k, v)
+        return request
+
+    def fetch_urls(self, urls, feedback: QgsFeedback):
+        for url in urls:
+            nam = QgsNetworkContentFetcher()
+            nam.finished.connect(lambda _url=url: self.handle_reply(_url))
+            feedback.canceled.connect(nam.cancel)
+            self.access_managers[url] = nam
+            nam.fetchContent(QUrl(url))
+
+        # Let the requests end and catch all exceptions (and clean up requests)
+        if len(self.access_managers) > 0:
+            try:
+                self.event_loop.exec_(QEventLoop.ExcludeUserInputEvents)
+            except Exception as err:
+                self.info(str(err))
+
     def fetchResults(
         self, search: str, context: QgsLocatorContext, feedback: QgsFeedback
     ):
+        self.access_managers = {}
+        self.time_stamp = datetime.timestamp(datetime.now())
+
+        # init event loop
+        # wait for all requests to end
+        self.event_loop = QEventLoop()
+        feedback.canceled.connect(self.event_loop.quit)
+
         try:
             if len(search) < self.minimum_search_length:
                 return
@@ -260,38 +288,6 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.result_found = False
 
             self.perform_fetch_results(search, feedback)
-
-            # Locations, Layers
-            if self.type in (FilterType.Location, FilterType.Layers):
-                limit = self.settings.value(f"{self.type.value}_limit")
-                search_urls = [
-                    map_geo_admin_url(
-                        search, self.type.value, self.crs, self.lang, limit
-                    )
-                ]
-
-                if (
-                    self.settings.value("layers_include_opendataswiss")
-                    and self.type is FilterType.Layers
-                ):
-                    search_urls.append(opendata_swiss_url(search))
-
-                nam = QgsBlockingNetworkRequest()
-                feedback.canceled.connect(nam.abort)
-                for (url, params) in search_urls:
-                    url = self.url_with_param(url, params)
-                    self.dbg_info(url.url())
-
-                    request = QNetworkRequest(url)
-                    for k, v in list(self.HEADERS.items()):
-                        request.setRawHeader(k, v)
-
-                    try:
-                        nam.get(request)
-                        reply = nam.reply()
-                        self.handle_reply(reply, search, feedback)
-                    except Exception as err:
-                        self.info(err)
 
             if not self.result_found:
                 result = QgsLocatorResult()
@@ -436,41 +432,6 @@ class SwissLocatorFilter(QgsLocatorFilter):
                             self.result_found = True
                             self.resultFetched.emit(result)
 
-                        else:  # locations
-                            for key, val in loc["attrs"].items():
-                                self.dbg_info(f"{key}: {val}")
-                            group_name, group_layer = self.group_info(
-                                loc["attrs"]["origin"]
-                            )
-                            if "layerBodId" in loc["attrs"]:
-                                self.dbg_info(
-                                    "layer: {}".format(loc["attrs"]["layerBodId"])
-                                )
-                            if "featureId" in loc["attrs"]:
-                                self.dbg_info(
-                                    "feature: {}".format(loc["attrs"]["featureId"])
-                                )
-
-                            result.displayString = strip_tags(loc["attrs"]["label"])
-                            # result.description = loc['attrs']['detail']
-                            # if 'featureId' in loc['attrs']:
-                            #     result.description = loc['attrs']['featureId']
-                            result.group = group_name
-                            result.userData = LocationResult(
-                                point=QgsPointXY(loc["attrs"]["y"], loc["attrs"]["x"]),
-                                bbox=self.box2geometry(loc["attrs"]["geom_st_box2d"]),
-                                layer=group_layer,
-                                feature_id=loc["attrs"]["featureId"]
-                                if "featureId" in loc["attrs"]
-                                else None,
-                                html_label=loc["attrs"]["label"],
-                            ).as_definition()
-                            result.icon = QIcon(
-                                ":/plugins/swiss_locator/icons/swiss_locator.png"
-                            )
-                            self.result_found = True
-                            self.resultFetched.emit(result)
-
         except Exception as e:
             self.info(str(e), Qgis.Critical)
             exc_type, exc_obj, exc_traceback = sys.exc_info()
@@ -568,6 +529,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.highlight(point)
             if self.settings.value("show_map_tip"):
                 self.show_map_tip(swiss_result.layer, swiss_result.feature_id, point)
+
         # Location
         else:
             point = QgsGeometry.fromPointXY(swiss_result.point)

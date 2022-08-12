@@ -20,7 +20,7 @@
 import os
 from PyQt5.QtCore import QCoreApplication, QLocale, QSettings, QTranslator
 from PyQt5.QtWidgets import QWidget
-from qgis.core import Qgis
+from qgis.core import Qgis, NULL
 from qgis.gui import QgisInterface, QgsMessageBarItem
 
 from swiss_locator.core.filters.swiss_locator_filter_feature import (
@@ -40,7 +40,9 @@ class SwissLocatorPlugin:
         self.iface = iface
 
         # initialize translation
-        qgis_locale = QLocale(QSettings().value("locale/userLocale"))
+        qgis_locale = QLocale(
+            str(QSettings().value("locale/userLocale")).replace(str(NULL), "en_CH")
+        )
         locale_path = os.path.join(os.path.dirname(__file__), "i18n")
         self.translator = QTranslator()
         self.translator.load(qgis_locale, "qgis-swiss-locator", "_", locale_path)
@@ -63,7 +65,6 @@ class SwissLocatorPlugin:
         for locator_filter in self.locator_filters:
             locator_filter.message_emitted.disconnect(self.show_message)
             self.iface.deregisterLocatorFilter(locator_filter)
-        self.locator_filters = []
 
     def show_message(
         self, title: str, msg: str, level: Qgis.MessageLevel, widget: QWidget = None

@@ -19,14 +19,12 @@
 
 import json
 
-from PyQt5.QtCore import QUrl, QEventLoop
 from PyQt5.QtGui import QIcon
 
 from qgis.core import (
     Qgis,
     QgsFeedback,
     QgsLocatorResult,
-    QgsNetworkContentFetcher,
     QgsPointXY,
 )
 from qgis.gui import QgisInterface
@@ -56,44 +54,25 @@ class SwissLocatorFilterFeature(SwissLocatorFilter):
     def perform_fetch_results(self, search: str, feedback: QgsFeedback):
         # Feature search is split in several requests
         # otherwise URL is too long
-        self.access_managers = {}
+        urls = []
         try:
             limit = self.settings.value(f"{FilterType.Feature.value}_limit")
             layers = list(self.searchable_layers.keys())
             assert len(layers) > 0
-            step = 30
+            step = 20
             for i_layer in range(0, len(layers), step):
                 last = min(i_layer + step - 1, len(layers) - 1)
                 url, params = map_geo_admin_url(
                     search, self.type.value, self.crs, self.lang, limit
                 )
                 params["features"] = ",".join(layers[i_layer:last])
-                url = self.url_with_param(url, params).url()
-                self.access_managers[url] = QgsNetworkContentFetcher()
+                urls.append(self.url_with_param(url, params).url())
         except IOError:
             self.info(
                 "Layers data file not found. Please report an issue.",
                 Qgis.Critical,
             )
-
-        # init event loop
-        # wait for all requests to end
-        self.event_loop = QEventLoop()
-        feedback.canceled.connect(self.event_loop.quit)
-
-        # init the network access managers
-        for url, nam in self.access_managers.items():
-            self.info(url)
-            nam.finished.connect(lambda _url=url: self.handle_reply(_url))
-            feedback.canceled.connect(nam.cancel)
-            nam.fetchContent(QUrl(url))
-
-        # Let the requests end and catch all exceptions (and clean up requests)
-        if len(self.access_managers) > 0:
-            try:
-                self.event_loop.exec_(QEventLoop.ExcludeUserInputEvents)
-            except Exception as err:
-                self.info(str(err))
+        self.fetch_urls(urls, feedback)
 
     def handle_reply(self, url):
         self.dbg_info(f"feature handle reply {url}")
@@ -137,12 +116,12 @@ class SwissLocatorFilterFeature(SwissLocatorFilter):
         # clean nam
         if url in self.access_managers:
             self.dbg_info("cleaning nam")
-            self.access_managers[url] = None
+            # self.access_managers[url] = None
 
         # quit loop if every nam has completed
         for url, nam in self.access_managers.items():
             if nam is not None:
-                self.dbg_info("nams still running, stay in loop")
+                self.dbg_info(f"{url} nams still running, stay in loop")
                 return
-            self.dbg_info("no nam left, exit loop")
+            self.dbg_info(f"{url} no nam left, exit loop")
             self.event_loop.quit()
