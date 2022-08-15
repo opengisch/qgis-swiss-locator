@@ -46,11 +46,14 @@ def main():
             .read()
             .decode("utf-8")
             .replace('","', '",\n"')
+            .replace('":{"', '":{\n"')
+            .replace('"},"', '"},\n"')
             .replace('":["', '":[\n"')
+            .replace('"],', '"],\n')
             .replace('"]}', '"\n]}')
         )
 
-        with open(f"layers_{lang}.data", "w") as f:
+        with open(f"layers_{lang}.json", "w") as f:
             f.write(contents)
 
         data = json.loads(contents)

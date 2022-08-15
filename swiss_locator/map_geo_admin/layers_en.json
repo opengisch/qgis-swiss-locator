@@ -1,4 +1,5 @@
-{"translations":{"ch.are.agglomerationsverkehr":"Cities and conurbations BeSA",
+{"translations":{
+"ch.are.agglomerationsverkehr":"Cities and conurbations BeSA",
 "ch.are.alpenkonvention":"Alpine Convention",
 "ch.are.bauzonen":"Building zones Switzerland (harm.)",
 "ch.are.belastung-gueterverkehr-bahn":"Freight traffic by rail 2012",
@@ -759,7 +760,8 @@
 "ch.swisstopo.geologie-spezialkarten_schweiz_vector.metadata":"Division special geological maps Vector",
 "ch.swisstopo.geologie-generalkarte-ggk200.metadata":"Division general geological map 200 Raster",
 "ch.bfe.elektrizitaetsproduktionsanlagen":"Electricity production plants",
-"ch.swisstopo.geologie-geologischer_atlas.metadata":"Division geological atlas 25 Raster"},"tooltipLayers":[
+"ch.swisstopo.geologie-geologischer_atlas.metadata":"Division geological atlas 25 Raster"},
+"tooltipLayers":[
 "ch.are.agglomerationsverkehr",
 "ch.are.alpenkonvention",
 "ch.are.bauzonen",
@@ -1221,7 +1223,8 @@
 "ch.vbs.sachplan-infrastruktur-militaer_kraft",
 "ch.vbs.schiessanzeigen",
 "ch.vbs.territorialregionen",
-"ch.vbs.waldschadenkarte"],"searchableLayers":[
+"ch.vbs.waldschadenkarte"],
+"searchableLayers":[
 "ch.astra.ivs-nat",
 "ch.astra.ivs-nat-verlaeufe",
 "ch.astra.ivs-reg_loc",
@@ -1445,7 +1448,8 @@
 "ch.vbs.kataster-belasteter-standorte-militaer",
 "ch.vbs.logistikraeume-armeelogistikcenter",
 "ch.vbs.retablierungsstellen",
-"ch.vbs.schiessanzeigen"],"chargeableLayers":[
+"ch.vbs.schiessanzeigen"],
+"chargeableLayers":[
 "ch.bazl.luftfahrtkarten-icao",
 "ch.bazl.segelflugkarte",
 "ch.swisstopo-karto.hangneigung",
@@ -1497,7 +1501,8 @@
 "ch.swisstopo.vec25-gewaessernetz_referenz",
 "ch.swisstopo.vec25-heckenbaeume",
 "ch.swisstopo.vec25-primaerflaechen",
-"ch.swisstopo.zeitreihen"],"notChargeableLayers":[
+"ch.swisstopo.zeitreihen"],
+"notChargeableLayers":[
 "ch.are.agglomerationsverkehr",
 "ch.are.alpenkonvention",
 "ch.are.bauzonen",
@@ -2207,7 +2212,8 @@
 "ch.vbs.waldschadenkarte",
 "org.epsg.grid_2056",
 "org.epsg.grid_21781",
-"org.epsg.grid_4326"],"queryableLayers":[
+"org.epsg.grid_4326"],
+"queryableLayers":[
 "ch.astra.unfaelle-personenschaeden_alle",
 "ch.astra.unfaelle-personenschaeden_fahrraeder",
 "ch.astra.unfaelle-personenschaeden_fussgaenger",
