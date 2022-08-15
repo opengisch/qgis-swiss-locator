@@ -21,6 +21,8 @@
  ***************************************************************************/
 """
 
+DEBUG = False
+
 
 def classFactory(iface):
     """Load plugin.
@@ -30,4 +32,5 @@ def classFactory(iface):
     """
     #
     from .swiss_locator_plugin import SwissLocatorPlugin
+
     return SwissLocatorPlugin(iface)

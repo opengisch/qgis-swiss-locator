@@ -26,7 +26,16 @@
 
 
 from qgis.core import QgsLocatorFilter
-from swiss_locator.qgissettingmanager import SettingManager, Scope, Bool, String, Stringlist, Integer, Enum
+from swiss_locator.qgissettingmanager import (
+    SettingManager,
+    Scope,
+    Bool,
+    String,
+    Stringlist,
+    Integer,
+    Enum,
+)
+from swiss_locator.core.filters.filter_type import FilterType
 
 pluginName = "swiss_locator_plugin"
 
@@ -38,19 +47,51 @@ class Settings(SettingManager):
         # lang of the service
         # possible values are de, fr, it , rm, en
         # if left empty or NULL, try to use locale and defaults to en
-        self.add_setting(String("lang", Scope.Global, ''))
-        self.add_setting(String("crs", Scope.Global, 'project', allowed_values=('2056', '21781', 'project')))
+        self.add_setting(String("lang", Scope.Global, ""))
+        self.add_setting(
+            String(
+                "crs",
+                Scope.Global,
+                "project",
+                allowed_values=("2056", "21781", "project"),
+            )
+        )
         self.add_setting(Bool("show_map_tip", Scope.Global, False))
 
-        self.add_setting(Enum('locations_priority', Scope.Global, QgsLocatorFilter.Highest))
-        self.add_setting(Integer('locations_limit', Scope.Global, 8))
-        self.add_setting(Enum('featuresearch_priority', Scope.Global, QgsLocatorFilter.Medium))
-        self.add_setting(Integer('featuresearch_limit', Scope.Global, 8))
-        self.add_setting(Enum('layers_priority', Scope.Global, QgsLocatorFilter.High))
-        self.add_setting(Integer('layers_limit', Scope.Global, 5))
+        self.add_setting(
+            Enum(
+                f"{FilterType.Location.value}_priority",
+                Scope.Global,
+                QgsLocatorFilter.Highest,
+            )
+        )
+        self.add_setting(Integer(f"{FilterType.Location.value}_limit", Scope.Global, 8))
+        self.add_setting(
+            Enum(
+                f"{FilterType.WMTS.value}_priority",
+                Scope.Global,
+                QgsLocatorFilter.Highest,
+            )
+        )
+        self.add_setting(Integer(f"{FilterType.WMTS.value}_limit", Scope.Global, 8))
+        self.add_setting(
+            Enum(
+                f"{FilterType.Feature.value}_priority",
+                Scope.Global,
+                QgsLocatorFilter.Medium,
+            )
+        )
+        self.add_setting(Integer(f"{FilterType.Feature.value}_limit", Scope.Global, 8))
+        self.add_setting(
+            Enum(
+                f"{FilterType.Layers.value}_priority",
+                Scope.Global,
+                QgsLocatorFilter.High,
+            )
+        )
+        self.add_setting(Integer(f"{FilterType.Layers.value}_limit", Scope.Global, 5))
 
         self.add_setting(Bool("feature_search_restrict", Scope.Global, False))
         self.add_setting(Stringlist("feature_search_layers_list", Scope.Global, None))
 
         self.add_setting(Bool("layers_include_opendataswiss", Scope.Global, True))
-

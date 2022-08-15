@@ -1,0 +1,25 @@
+name: Run Tests
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+env:
+  QGIS_TEST_VERSION: latest
+
+
+jobs:
+  qgis_deps_build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: docker test
+        run: |
+          docker run -v $(pwd):/usr/src -w /usr/src opengisch/qgis:${QGIS_TEST_VERSION} sh -c 'xvfb-run pytest-3 --ignore-glob=**/qgissettingmanager/*'
