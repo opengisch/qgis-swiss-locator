@@ -30,10 +30,10 @@ from swiss_locator.core.settings import Settings
 
 def data_file(lang: str):
     cur_dir = os.path.dirname(__file__)
-    return os.path.join(cur_dir, 'layers_{}.data'.format(lang))
+    return os.path.join(cur_dir, "layers_{}.json".format(lang))
 
 
-def searchable_layers(lang: str, restrict: bool=False) -> dict:
+def searchable_layers(lang: str, restrict: bool = False) -> dict:
     """
     Returns the searchable layers
     :param lang: 2 characters lang.
@@ -43,18 +43,18 @@ def searchable_layers(lang: str, restrict: bool=False) -> dict:
     assert lang in AVAILABLE_LANGUAGES.values()
 
     settings = Settings()
-    restrict_enabled_by_user = settings.value('feature_search_restrict')
-    restrict_layer_list = settings.value('feature_search_layers_list')
+    restrict_enabled_by_user = settings.value("feature_search_restrict")
+    restrict_layer_list = settings.value("feature_search_layers_list")
 
     layers = {}
 
-    with open(data_file(lang), 'r') as f:
+    with open(data_file(lang), "r") as f:
         content = f.read()
 
     data = json.loads(content)
-    translations_api = data['translations']
+    translations_api = data["translations"]
 
-    for layer in data['searchableLayers']:
+    for layer in data["searchableLayers"]:
         if restrict and restrict_enabled_by_user and layer not in restrict_layer_list:
             continue
         layers[layer] = translations_api[layer]

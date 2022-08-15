@@ -52,9 +52,9 @@ class SwissLocatorPlugin:
 
     def initGui(self):
         for _filter in (
-            SwissLocatorFilterLocation,
-            SwissLocatorFilterWMTS,
-            SwissLocatorFilterLayer,
+            # SwissLocatorFilterLocation,
+            # SwissLocatorFilterWMTS,
+            # SwissLocatorFilterLayer,
             SwissLocatorFilterFeature,
         ):
             self.locator_filters.append(_filter(self.iface))

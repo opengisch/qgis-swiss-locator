@@ -16,6 +16,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+from qgis.PyQt.QtNetwork import QNetworkReply
 
 from qgis.core import (
     QgsLocatorResult,
@@ -58,7 +59,7 @@ class SwissLocatorFilterLayer(SwissLocatorFilter):
             try:
                 nam.get(request)
                 reply = nam.reply()
-                self.handle_reply(reply, search, feedback)
+                self.handle_reply(reply)
             except Exception as err:
                 self.info(err)
 
@@ -68,3 +69,6 @@ class SwissLocatorFilterLayer(SwissLocatorFilter):
             result.displayString = self.tr("No result found.")
             result.userData = NoResult().as_definition()
             self.resultFetched.emit(result)
+
+    def handle_reply(self, reply: QNetworkReply):
+        pass

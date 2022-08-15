@@ -54,7 +54,7 @@ class SwissLocatorFilterFeature(SwissLocatorFilter):
     def perform_fetch_results(self, search: str, feedback: QgsFeedback):
         # Feature search is split in several requests
         # otherwise URL is too long
-        urls = []
+        requests = []
         try:
             limit = self.settings.value(f"{FilterType.Feature.value}_limit")
             layers = list(self.searchable_layers.keys())
@@ -66,62 +66,44 @@ class SwissLocatorFilterFeature(SwissLocatorFilter):
                     search, self.type.value, self.crs, self.lang, limit
                 )
                 params["features"] = ",".join(layers[i_layer:last])
-                urls.append(self.url_with_param(url, params).url())
+                requests.append(self.request_for_url(url, params, self.HEADERS))
         except IOError:
             self.info(
                 "Layers data file not found. Please report an issue.",
                 Qgis.Critical,
             )
-        self.fetch_urls(urls, feedback)
+        self.fetch_requests(requests, feedback, self.handle_content)
 
-    def handle_reply(self, url):
-        self.dbg_info(f"feature handle reply {url}")
-        content = self.access_managers[url].contentAsString()
-        try:
-            data = json.loads(content)
-            for loc in data["results"]:
-                self.dbg_info("keys: {}".format(loc["attrs"].keys()))
-                result = QgsLocatorResult()
-                result.filter = self
-                result.group = self.tr("Swiss Geoportal")
-                for key, val in loc["attrs"].items():
-                    self.dbg_info(f"{key}: {val}")
-                layer = loc["attrs"]["layer"]
-                point = QgsPointXY(loc["attrs"]["lon"], loc["attrs"]["lat"])
-                if layer in self.searchable_layers:
-                    layer_display = self.searchable_layers[layer]
-                else:
-                    self.info(
-                        self.tr(
-                            f"Layer {layer} is not in the list of searchable layers."
-                            " Please report issue."
-                        ),
-                        Qgis.Warning,
-                    )
-                    layer_display = layer
-                result.group = layer_display
-                result.displayString = loc["attrs"]["detail"]
-                result.userData = FeatureResult(
-                    point=point,
-                    layer=layer,
-                    feature_id=loc["attrs"]["feature_id"],
-                ).as_definition()
-                result.icon = QIcon(":/plugins/swiss_locator/icons/swiss_locator.png")
-                self.result_found = True
-                self.resultFetched.emit(result)
-        except json.decoder.JSONDecodeError:
-            self.info(f"cannot load data from {url}. Are you online?")
-            self.dbg_info(content)
-
-        # clean nam
-        if url in self.access_managers:
-            self.dbg_info("cleaning nam")
-            # self.access_managers[url] = None
-
-        # quit loop if every nam has completed
-        for url, nam in self.access_managers.items():
-            if nam is not None:
-                self.dbg_info(f"{url} nams still running, stay in loop")
-                return
-            self.dbg_info(f"{url} no nam left, exit loop")
-            self.event_loop.quit()
+    def handle_content(self, content: str):
+        self.info(f"content: {content}")
+        data = json.loads(content)
+        for loc in data["results"]:
+            self.dbg_info("keys: {}".format(loc["attrs"].keys()))
+            result = QgsLocatorResult()
+            result.filter = self
+            result.group = self.tr("Swiss Geoportal")
+            for key, val in loc["attrs"].items():
+                self.dbg_info(f"{key}: {val}")
+            layer = loc["attrs"]["layer"]
+            point = QgsPointXY(loc["attrs"]["lon"], loc["attrs"]["lat"])
+            if layer in self.searchable_layers:
+                layer_display = self.searchable_layers[layer]
+            else:
+                self.info(
+                    self.tr(
+                        f"Layer {layer} is not in the list of searchable layers."
+                        " Please report issue."
+                    ),
+                    Qgis.Warning,
+                )
+                layer_display = layer
+            result.group = layer_display
+            result.displayString = loc["attrs"]["detail"]
+            result.userData = FeatureResult(
+                point=point,
+                layer=layer,
+                feature_id=loc["attrs"]["feature_id"],
+            ).as_definition()
+            result.icon = QIcon(":/plugins/swiss_locator/icons/swiss_locator.png")
+            self.result_found = True
+            self.resultFetched.emit(result)

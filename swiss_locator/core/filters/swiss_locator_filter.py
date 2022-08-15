@@ -23,13 +23,12 @@ import os
 import re
 import sys
 import traceback
-from datetime import datetime
 
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QLabel, QWidget, QTabWidget
 from PyQt5.QtCore import QUrl, QUrlQuery, pyqtSignal, QEventLoop
-from PyQt5.QtNetwork import QNetworkRequest
+from PyQt5.QtNetwork import QNetworkRequest, QNetworkReply, QNetworkAccessManager
 
 from qgis.core import (
     Qgis,
@@ -43,7 +42,6 @@ from qgis.core import (
     QgsGeometry,
     QgsWkbTypes,
     QgsLocatorContext,
-    QgsNetworkContentFetcher,
     QgsFeedback,
     QgsRasterLayer,
 )
@@ -122,7 +120,10 @@ class SwissLocatorFilter(QgsLocatorFilter):
         self.nam_map_tip = None
         self.nam_fetch_feature = None
         self.minimum_search_length = 2
-        self.time_stamp = None
+
+        self.nam = QNetworkAccessManager()
+        self.network_replies = dict()
+
         if crs:
             self.crs = crs
 
@@ -255,32 +256,56 @@ class SwissLocatorFilter(QgsLocatorFilter):
             request.setRawHeader(k, v)
         return request
 
-    def fetch_urls(self, urls, feedback: QgsFeedback):
-        for url in urls:
-            nam = QgsNetworkContentFetcher()
-            nam.finished.connect(lambda _url=url: self.handle_reply(_url))
-            feedback.canceled.connect(nam.cancel)
-            self.access_managers[url] = nam
-            nam.fetchContent(QUrl(url))
+    def handle_reply(self, url: str, slot, data=None):
+        try:
+            self.dbg_info(f"feature handle reply {url}")
+            reply = self.network_replies[url]
 
-        # Let the requests end and catch all exceptions (and clean up requests)
-        if len(self.access_managers) > 0:
-            try:
-                self.event_loop.exec_(QEventLoop.ExcludeUserInputEvents)
-            except Exception as err:
-                self.info(str(err))
+            if reply.error() != QNetworkReply.NoError:
+                self.info(f"could not load url: {reply.errorString()}")
+            else:
+                content = reply.readAll().data().decode("utf-8")
+                if data:
+                    slot(content, data)
+                else:
+                    slot(content)
 
-    def fetchResults(
-        self, search: str, context: QgsLocatorContext, feedback: QgsFeedback
+            # clean nam
+            reply.deleteLater()
+            self.network_replies.pop(url)
+
+            # quit loop if every nam has completed
+            if len(self.network_replies) == 0:
+                self.dbg_info(f"{url} no nam left, exit loop")
+                self.event_loop.quit()
+
+        except json.decoder.JSONDecodeError:
+            self.info(f"cannot load data from {url}. Are you online?")
+            self.dbg_info(content)
+
+    def fetch_requests(
+        self, requests: [QNetworkRequest], feedback: QgsFeedback, slot, data=None
     ):
-        self.access_managers = {}
-        self.time_stamp = datetime.timestamp(datetime.now())
-
         # init event loop
         # wait for all requests to end
         self.event_loop = QEventLoop()
         feedback.canceled.connect(self.event_loop.quit)
 
+        for request in requests:
+            url = request.url().url()
+            self.info(f"fetching {url}")
+            reply = self.nam.get(request)
+            reply.finished.connect(lambda _url=url: self.handle_reply(_url, slot, data))
+            feedback.canceled.connect(reply.abort)
+            self.network_replies[url] = reply
+
+        # Let the requests end and catch all exceptions (and clean up requests)
+        if len(self.network_replies) > 0:
+            self.event_loop.exec_(QEventLoop.ExcludeUserInputEvents)
+
+    def fetchResults(
+        self, search: str, context: QgsLocatorContext, feedback: QgsFeedback
+    ):
         try:
             if len(search) < self.minimum_search_length:
                 return
@@ -309,7 +334,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 Qgis.Critical,
             )
 
-    def handle_reply(self, reply, search: str, feedback: QgsFeedback):
+    def handle_reply2(self, reply, search: str, feedback: QgsFeedback):
+        raise NameError
         try:
             if reply.attribute(QNetworkRequest.HttpStatusCodeAttribute) != 200:
                 self.info(
@@ -389,7 +415,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                                     visited_capabilities.append(url_components.netloc)
 
                                     # Retrieve Capabilities xml
-                                    nam = QgsNetworkContentFetcher()
+                                    nam = QNetworkAccessManager()
                                     nam.fetchContent(QUrl(url))
                                     nam.finished.connect(
                                         lambda: self.parse_capabilities_result(
@@ -560,20 +586,16 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
     def show_map_tip(self, layer, feature_id, point):
         if layer and feature_id:
-            url_html = "https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}/htmlPopup".format(
+            url = "https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}/htmlPopup".format(
                 layer=layer, feature_id=feature_id
             )
             params = {"lang": self.lang, "sr": self.crs}
-            url_html = self.url_with_param(url_html, params)
-            self.dbg_info(url_html)
-
-            self.nam_map_tip = QgsNetworkContentFetcher()
-            self.nam_map_tip.finished.connect(
-                lambda: self.parse_map_tip_response(
-                    self.nam_map_tip.contentAsString(), point
-                )
+            url = self.url_with_param(url, params)
+            self.dbg_info(url)
+            request = QNetworkRequest(QUrl(url))
+            self.fetch_requests(
+                [request], QgsFeedback(), self.parse_map_tip_response, data=point
             )
-            self.nam_map_tip.fetchContent(QUrl(url_html))
 
     def parse_map_tip_response(self, content, point):
         self.map_tip = MapTip(self.iface, content, point.asPoint())
