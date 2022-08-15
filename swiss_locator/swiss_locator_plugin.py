@@ -53,7 +53,7 @@ class SwissLocatorPlugin:
     def initGui(self):
         for _filter in (
             SwissLocatorFilterLocation,
-            # SwissLocatorFilterWMTS,
+            SwissLocatorFilterWMTS,
             # SwissLocatorFilterLayer,
             SwissLocatorFilterFeature,
         ):
