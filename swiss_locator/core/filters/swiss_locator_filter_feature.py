@@ -35,12 +35,14 @@ from swiss_locator.core.filters.swiss_locator_filter import (
 from swiss_locator.core.filters.filter_type import FilterType
 from swiss_locator.core.results import FeatureResult
 from swiss_locator.core.filters.map_geo_admin import map_geo_admin_url
+from swiss_locator.map_geo_admin.layers import searchable_layers
 
 
 class SwissLocatorFilterFeature(SwissLocatorFilter):
     def __init__(self, iface: QgisInterface = None, crs: str = None):
         super().__init__(FilterType.Feature, iface, crs)
         self.minimum_search_length = 4
+        self.searchable_layers = searchable_layers(self.lang, restrict=True)
 
     def clone(self):
         return SwissLocatorFilterFeature(crs=self.crs)

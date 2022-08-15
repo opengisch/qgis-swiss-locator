@@ -59,7 +59,6 @@ from swiss_locator.core.settings import Settings
 from swiss_locator.core.language import get_language
 from swiss_locator.gui.config_dialog import ConfigDialog
 from swiss_locator.gui.maptip import MapTip
-from swiss_locator.map_geo_admin.layers import searchable_layers
 
 
 def result_from_data(result: QgsLocatorResult):
@@ -125,8 +124,6 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
         self.lang = get_language()
 
-        self.searchable_layers = searchable_layers(self.lang, restrict=True)
-
         if iface is not None:
             # happens only in main thread
             self.map_canvas = iface.mapCanvas()
@@ -154,7 +151,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         return self.__class__.__name__
 
     def priority(self):
-        return self.settings.value("{type}_priority".format(type=self.type.value))
+        return self.settings.value(f"{self.type.value}_priority")
 
     def displayName(self):
         # this should be re-implemented
@@ -493,13 +490,6 @@ class SwissLocatorFilter(QgsLocatorFilter):
     def dbg_info(self, msg=""):
         if DEBUG:
             self.info(msg)
-
-    @staticmethod
-    def break_camelcase(identifier):
-        matches = re.finditer(
-            ".+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)", identifier
-        )
-        return " ".join([m.group(0) for m in matches])
 
     def is_opendata_swiss_response(self, json):
         return "opendata.swiss" in json.get("help", [])
