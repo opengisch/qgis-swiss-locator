@@ -283,6 +283,9 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.info(f"cannot load data from {url}. Are you online?")
             self.dbg_info(content)
 
+    def fetch_request(self, request: QNetworkRequest, feedback: QgsFeedback, slot, data=None):
+        return self.fetch_requests([request], feedback, slot, data)
+
     def fetch_requests(
         self, requests: [QNetworkRequest], feedback: QgsFeedback, slot, data=None
     ):
@@ -593,9 +596,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             url = self.url_with_param(url, params)
             self.dbg_info(url)
             request = QNetworkRequest(QUrl(url))
-            self.fetch_requests(
-                [request], QgsFeedback(), self.parse_map_tip_response, data=point
-            )
+            self.fetch_request(request, QgsFeedback(), self.parse_map_tip_response, data=point)
 
     def parse_map_tip_response(self, content, point):
         self.map_tip = MapTip(self.iface, content, point.asPoint())

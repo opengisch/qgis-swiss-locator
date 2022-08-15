@@ -67,20 +67,7 @@ class SwissLocatorFilterLocation(SwissLocatorFilter):
             search, self.type.value, self.crs, self.lang, limit
         )
         request = self.request_for_url(url, params, self.HEADERS)
-        nam = QgsBlockingNetworkRequest()
-        feedback.canceled.connect(nam.abort)
-        try:
-            nam.get(request)
-            reply = nam.reply()
-        except Exception as err:
-            self.info(err)
-
-        if not self.result_found:
-            result = QgsLocatorResult()
-            result.filter = self
-            result.displayString = self.tr("No result found.")
-            result.userData = NoResult().as_definition()
-            self.resultFetched.emit(result)
+        self.fetch_request(request, feedback, self.handle_content)
 
     def handle_reply(self, reply: QNetworkReply):
         url = reply.request().url()

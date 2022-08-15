@@ -75,7 +75,7 @@ class SwissLocatorFilterFeature(SwissLocatorFilter):
         self.fetch_requests(requests, feedback, self.handle_content)
 
     def handle_content(self, content: str):
-        self.info(f"content: {content}")
+        self.dbg_info(f"content: {content}")
         data = json.loads(content)
         for loc in data["results"]:
             self.dbg_info("keys: {}".format(loc["attrs"].keys()))
