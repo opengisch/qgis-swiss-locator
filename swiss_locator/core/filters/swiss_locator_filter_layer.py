@@ -61,9 +61,7 @@ class SwissLocatorFilterLayer(SwissLocatorFilter):
         requests = []
         for (url, params) in urls:
             requests.append(self.request_for_url(url, params, self.HEADERS))
-            self.fetch_requests(
-                requests, feedback, slot=self.handle_content, data=search
-            )
+        self.fetch_requests(requests, feedback, slot=self.handle_content, data=search)
 
     def handle_content(self, content, feedback: QgsFeedback, search: str):
         data = json.loads(content)
@@ -71,7 +69,6 @@ class SwissLocatorFilterLayer(SwissLocatorFilter):
 
         if self.is_opendata_swiss_response(data):
             visited_capabilities = []
-            request_capabilities = []
 
             for loc in data["result"]["results"]:
                 display_name = loc["title"].get(self.lang, "")
@@ -106,6 +103,7 @@ class SwissLocatorFilterLayer(SwissLocatorFilter):
 
                             if res["title"]["de"] == "GetMap":
                                 layers = parse_qs(url_components.query)["LAYERS"]
+                                self.info(layers)
                                 result.userData = WMSLayerResult(
                                     layer=layers[0],
                                     title=display_name,
@@ -118,17 +116,14 @@ class SwissLocatorFilterLayer(SwissLocatorFilter):
                             "request=getcapabilities" in url.lower()
                             and url_components.netloc not in visited_capabilities
                         ):
-                            self.info(f"get_cap: {url_components.netloc} {url}")
+                            self.dbg_info(f"get_cap: {url_components.netloc} {url}")
                             visited_capabilities.append(url_components.netloc)
-                            request_capabilities.append(QNetworkRequest(QUrl(url)))
-
-            if len(request_capabilities) > 0:
-                self.fetch_requests(
-                    request_capabilities,
-                    feedback,
-                    slot=self.handle_capabilities_response,
-                    data=search,
-                )
+                        self.fetch_request(
+                            QNetworkRequest(QUrl(url)),
+                            feedback,
+                            slot=self.handle_capabilities_response,
+                            data=(search, wms_url),
+                        )
 
         else:
             for loc in data["results"]:
@@ -152,7 +147,9 @@ class SwissLocatorFilterLayer(SwissLocatorFilter):
                     self.result_found = True
                     self.resultFetched.emit(result)
 
-    def handle_capabilities_response(self, content, feedback: QgsFeedback, search):
+    def handle_capabilities_response(self, content, feedback: QgsFeedback, data):
+        search = data[0]
+        wms_url = data[1]
         capabilities = etree.fromstring(content)
 
         # Get xml namespace
@@ -178,7 +175,7 @@ class SwissLocatorFilterLayer(SwissLocatorFilter):
                 result.userData = WMSLayerResult(
                     layer=layername,
                     title=layertitle,
-                    url="wms_url",
+                    url=wms_url,
                 ).as_definition()
                 self.result_found = True
                 self.resultFetched.emit(result)
