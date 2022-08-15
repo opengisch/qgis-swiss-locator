@@ -60,13 +60,13 @@ def main():
 
         for name in names:
             counts[lang][name] = 0
-            already_print = False
+            already_print = []
             for layer in data[name]:
                 counts[lang][name] += 1
-                if already_print:
-                    continue
+                if layer in already_print:
+                    raise NameError(f"layer {layer} already listed in {name}")
                 print(layer, translations_api[layer])
-                already_print = True
+                already_print.append(layer)
 
     for lang in AVAILABLE_LANGUAGES:
         print("****** {}".format(lang))
