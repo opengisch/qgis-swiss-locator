@@ -24,27 +24,22 @@ import os
 
 from qgis.PyQt.QtCore import QUrl
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply
+from qgis.PyQt.QtNetwork import QNetworkRequest
 
 from qgis.core import (
     Qgis,
     QgsLocatorResult,
-    QgsNetworkContentFetcher,
     QgsPointXY,
     QgsGeometry,
     QgsWkbTypes,
     QgsFeedback,
-    QgsBlockingNetworkRequest,
 )
 from qgis.gui import QgisInterface
 
 from swiss_locator.core.filters.swiss_locator_filter import SwissLocatorFilter
 from swiss_locator.core.filters.filter_type import FilterType
 from swiss_locator.core.filters.map_geo_admin import map_geo_admin_url
-from swiss_locator.core.results import (
-    LocationResult,
-    NoResult,
-)
+from swiss_locator.core.results import LocationResult
 from swiss_locator.utils.html_stripper import strip_tags
 
 
@@ -69,13 +64,7 @@ class SwissLocatorFilterLocation(SwissLocatorFilter):
         request = self.request_for_url(url, params, self.HEADERS)
         self.fetch_request(request, feedback, self.handle_content)
 
-    def handle_reply(self, reply: QNetworkReply):
-        url = reply.request().url()
-        self.dbg_info(f"feature handle reply {url}")
-        if reply.error() != QNetworkReply.NoError:
-            self.info(f"could not load url: {reply.errorString()}")
-        else:
-            content = reply.content().data().decode("utf-8")
+    def handle_content(self, content: str):
         try:
             data = json.loads(content)
             for loc in data["results"]:
@@ -123,18 +112,14 @@ class SwissLocatorFilterLocation(SwissLocatorFilter):
 
     def fetch_feature(self, layer, feature_id):
         # Try to get more info
-        url_detail = "https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}".format(
-            layer=layer, feature_id=feature_id
-        )
+        url = f"https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}"
         params = {"lang": self.lang, "sr": self.crs}
-        url_detail = self.url_with_param(url_detail, params)
-        self.dbg_info(url_detail)
-        self.nam_fetch_feature = QgsNetworkContentFetcher()
-        self.nam_fetch_feature.finished.connect(self.parse_feature_response)
-        self.nam_fetch_feature.fetchContent(QUrl(url_detail))
+        url = self.url_with_param(url, params)
+        request = QNetworkRequest(QUrl(url))
+        self.fetch_request(request, QgsFeedback(), self.parse_feature_response)
 
-    def parse_feature_response(self, response):
-        data = json.loads(self.nam_fetch_feature.contentAsString())
+    def parse_feature_response(self, content):
+        data = json.loads(content)
         self.dbg_info(data)
 
         if "feature" not in data or "geometry" not in data["feature"]:
