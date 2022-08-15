@@ -18,7 +18,7 @@
 """
 
 from qgis.PyQt.QtCore import QUrl
-from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply
+from qgis.PyQt.QtNetwork import QNetworkRequest
 
 from qgis.gui import QgisInterface
 from qgis.core import (
@@ -167,6 +167,3 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
             for result in results[0 : self.settings.value("wmts_limit")]:
                 self.resultFetched.emit(result)
                 self.result_found = True
-
-    def handle_reply(self, reply: QNetworkReply):
-        pass

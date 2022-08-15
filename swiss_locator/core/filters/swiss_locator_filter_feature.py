@@ -74,7 +74,7 @@ class SwissLocatorFilterFeature(SwissLocatorFilter):
             )
         self.fetch_requests(requests, feedback, self.handle_content)
 
-    def handle_content(self, content: str):
+    def handle_content(self, content: str, feedback: QgsFeedback):
         self.dbg_info(f"content: {content}")
         data = json.loads(content)
         for loc in data["results"]:

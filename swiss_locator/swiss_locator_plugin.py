@@ -54,7 +54,7 @@ class SwissLocatorPlugin:
         for _filter in (
             SwissLocatorFilterLocation,
             SwissLocatorFilterWMTS,
-            # SwissLocatorFilterLayer,
+            SwissLocatorFilterLayer,
             SwissLocatorFilterFeature,
         ):
             self.locator_filters.append(_filter(self.iface))
