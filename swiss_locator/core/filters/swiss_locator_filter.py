@@ -470,7 +470,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 request, QgsFeedback(), self.parse_map_tip_response, data=point
             )
 
-    def parse_map_tip_response(self, content, point):
+    def parse_map_tip_response(self, content, feedback, point):
         self.map_tip = MapTip(self.iface, content, point.asPoint())
         self.map_tip.closed.connect(self.clearPreviousResults)
 
