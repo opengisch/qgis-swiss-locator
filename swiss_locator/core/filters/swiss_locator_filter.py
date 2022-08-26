@@ -111,8 +111,6 @@ class SwissLocatorFilter(QgsLocatorFilter):
         self.event_loop = None
         self.result_found = False
         self.access_managers = {}
-        self.nam_map_tip = None
-        self.nam_fetch_feature = None
         self.minimum_search_length = 2
 
         self.nam = QNetworkAccessManager()
@@ -472,6 +470,13 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
     def parse_map_tip_response(self, content, feedback, point):
         self.map_tip = MapTip(self.iface, content, point.asPoint())
+        QgsProject.instance().annotationManager().addAnnotation(self.map_tip)
+
+        for item in self.iface.mapCanvas().annotationItems():
+            if item.annotation() == self.map_tip:
+                item.setSelected(True)
+                break
+
         self.map_tip.closed.connect(self.clearPreviousResults)
 
     def highlight(self, point, bbox=None):
