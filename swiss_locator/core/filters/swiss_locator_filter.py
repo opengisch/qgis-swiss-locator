@@ -111,8 +111,6 @@ class SwissLocatorFilter(QgsLocatorFilter):
         self.event_loop = None
         self.result_found = False
         self.access_managers = {}
-        self.nam_map_tip = None
-        self.nam_fetch_feature = None
         self.minimum_search_length = 2
 
         self.nam = QNetworkAccessManager()
