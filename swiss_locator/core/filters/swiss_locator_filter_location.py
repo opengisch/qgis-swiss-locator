@@ -118,7 +118,7 @@ class SwissLocatorFilterLocation(SwissLocatorFilter):
         request = QNetworkRequest(QUrl(url))
         self.fetch_request(request, QgsFeedback(), self.parse_feature_response)
 
-    def parse_feature_response(self, content):
+    def parse_feature_response(self, content, feedback: QgsFeedback):
         data = json.loads(content)
         self.dbg_info(data)
 
