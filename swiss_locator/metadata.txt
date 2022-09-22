@@ -5,7 +5,7 @@ qgisMinimumVersion=3.16
 description=A locator filter for Swiss Geoportal (geo.admin.ch) and opendata.swiss resources
 about=Search for locations, WMS layers of features in the whole Swiss Geoportal catalog as well as in opendata.swiss
 version=dev
-author=OEPNGIS.ch
+author=OPENGIS.ch
 email=info@opengis.ch
 
 # Tags are comma separated with spaces allowed
