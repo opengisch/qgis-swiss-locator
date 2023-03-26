@@ -783,9 +783,9 @@
 "ch.bafu.gefahren-waldbrand_warnung":"Danger d'incendie de for\u00eat",
 "ch.bafu.gefahren-waldbrand_praeventionsmassnahmen_kantone":"Mesures de pr\u00e9vention des incendies de for\u00eat",
 "ch.bfs.gebaeude_wohnungs_register_waermequelle_heizung":"RegBL: source d'\u00e9nergie/de chaleur du chauffage",
-"ch.bafu.tranquillity-gebiete":"Zones tranquil",
-"ch.bfe.ladestellen-elektromobilitaet":"Stations pour voitures \u00e9lectriques",
-"ch.bafu.tranquillity-karte":"Carte Tranquillit\u00e9"},
+"ch.bafu.tranquillity-gebiete":"Zones de qui\u00e9tude",
+"ch.bafu.tranquillity-karte":"Tranquillity Map",
+"ch.bfe.ladestellen-elektromobilitaet":"Stations pour voitures \u00e9lectriques"},
 "tooltipLayers":[
 "ch.are.agglomerationsverkehr",
 "ch.are.alpenkonvention",
