@@ -784,8 +784,8 @@
 "ch.bafu.gefahren-waldbrand_praeventionsmassnahmen_kantone":"Waldbrandpr\u00e4ventionsmassnahmen",
 "ch.bfs.gebaeude_wohnungs_register_waermequelle_heizung":"GWR: Energie-/W\u00e4rmequelle Heizung",
 "ch.bafu.tranquillity-gebiete":"Zonas umidas alp. ordaif. inv.fed.",
-"ch.bfe.ladestellen-elektromobilitaet":"Staziuns per chargiar autos elec.",
-"ch.bafu.tranquillity-karte":"Tranquillity Map"},
+"ch.bafu.tranquillity-karte":"Tranquillity Map",
+"ch.bfe.ladestellen-elektromobilitaet":"Staziuns per chargiar autos elec."},
 "tooltipLayers":[
 "ch.are.agglomerationsverkehr",
 "ch.are.alpenkonvention",

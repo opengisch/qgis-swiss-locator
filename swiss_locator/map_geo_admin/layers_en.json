@@ -784,8 +784,8 @@
 "ch.bafu.gefahren-waldbrand_praeventionsmassnahmen_kantone":"Forest fire prevention measures",
 "ch.bfs.gebaeude_wohnungs_register_waermequelle_heizung":"RBD: energy/heat source heating",
 "ch.bafu.tranquillity-gebiete":"Tranquillity Areas",
-"ch.bfe.ladestellen-elektromobilitaet":"Charging points for electric cars",
-"ch.bafu.tranquillity-karte":"Tranquillity Map"},
+"ch.bafu.tranquillity-karte":"Tranquillity Map",
+"ch.bfe.ladestellen-elektromobilitaet":"Charging points for electric cars"},
 "tooltipLayers":[
 "ch.are.agglomerationsverkehr",
 "ch.are.alpenkonvention",

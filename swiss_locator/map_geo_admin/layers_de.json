@@ -784,8 +784,8 @@
 "ch.bafu.gefahren-waldbrand_praeventionsmassnahmen_kantone":"Waldbrandpr\u00e4ventionsmassnahmen",
 "ch.bfs.gebaeude_wohnungs_register_waermequelle_heizung":"GWR: Energie-/W\u00e4rmequelle Heizung",
 "ch.bafu.tranquillity-gebiete":"Tranquillity Gebiete",
-"ch.bfe.ladestellen-elektromobilitaet":"Ladestationen f\u00fcr Elektroautos",
-"ch.bafu.tranquillity-karte":"Tranquillity Map"},
+"ch.bafu.tranquillity-karte":"Tranquillity Map",
+"ch.bfe.ladestellen-elektromobilitaet":"Ladestationen f\u00fcr Elektroautos"},
 "tooltipLayers":[
 "ch.are.agglomerationsverkehr",
 "ch.are.alpenkonvention",
