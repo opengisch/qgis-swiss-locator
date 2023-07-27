@@ -35,10 +35,11 @@ class TestSwissLocatorFilters(unittest.TestCase):
         pass
 
     def testSwissLocatorFilterWMTS(self):
+        found = False
         def got_hit(result):
-            print(result)
             print(result.displayString)
-            got_hit._results_.append(result.displayString)
+            if result.startswith("National Map"):
+                found = True
 
         got_hit._results_ = []
 
@@ -54,11 +55,7 @@ class TestSwissLocatorFilters(unittest.TestCase):
 
         loc.fetchResults("pixelkarte", context)
 
-        spy.wait(1000)
+        while not found:
+          spy.wait(1000)
 
-        found = False
-        for result in got_hit._results_:
-            if result.startswith("National Map"):
-                found = True
-                break
         self.assertTrue(found)
