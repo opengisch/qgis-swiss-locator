@@ -56,4 +56,4 @@ class TestSwissLocatorFilters(unittest.TestCase):
 
         spy.wait(1000)
 
-        self.assertTrue(got_hit._results_[0].startswith("National Map"))
+        self.assertEqual(got_hit._results_[0], "National Map")
