@@ -52,7 +52,7 @@ class TestSwissLocatorFilters(unittest.TestCase):
 
         spy = QSignalSpy(loc.foundResult)
 
-        loc.fetchResults("pixelkarte", context)
+        loc.fetchResults("pixelkarte-farbe", context)
 
         spy.wait(1000)
 
