@@ -38,7 +38,7 @@ class TestSwissLocatorFilters(unittest.TestCase):
         found = False
         def got_hit(result):
             print(result.displayString)
-            if result.startswith("National Map"):
+            if result.displayString.startswith("National Map"):
                 found = True
 
         got_hit._results_ = []
@@ -55,7 +55,6 @@ class TestSwissLocatorFilters(unittest.TestCase):
 
         loc.fetchResults("pixelkarte", context)
 
-        while not found:
-          spy.wait(1000)
+        spy.wait(1000)
 
         self.assertTrue(found)
