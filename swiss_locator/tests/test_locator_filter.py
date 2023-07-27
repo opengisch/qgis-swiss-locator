@@ -61,4 +61,4 @@ class TestSwissLocatorFilters(unittest.TestCase):
             if result.startswith("National Map"):
                 found = True
                 break
-        self.asertTrue(found)
+        self.assertTrue(found)
