@@ -3,6 +3,7 @@ github_organization_slug: opengisch
 project_slug: qgis-swiss-locator
 
 transifex_coordinator: geoninja
+transifex_resource: swiss_locator
 translation_languages:
   - fr
   - it
