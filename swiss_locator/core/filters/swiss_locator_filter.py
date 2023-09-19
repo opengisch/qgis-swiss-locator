@@ -189,7 +189,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         self.crs = self.settings.value("crs")
         if self.crs == "project":
             map_crs = self.map_canvas.mapSettings().destinationCrs()
-            if map_crs.isValid():
+            if map_crs.isValid() and ":" in map_crs.authid():
                 self.crs = map_crs.authid().split(":")[1]
             if self.crs not in AVAILABLE_CRS:
                 self.crs = "2056"
