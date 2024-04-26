@@ -20,7 +20,7 @@
 import os
 from PyQt5.QtCore import QCoreApplication, QLocale, QSettings, QTranslator
 from PyQt5.QtWidgets import QWidget
-from qgis.core import Qgis, NULL
+from qgis.core import Qgis, QgsApplication, NULL
 from qgis.gui import QgisInterface, QgsMessageBarItem
 
 from swiss_locator.core.filters.swiss_locator_filter_feature import (
@@ -36,6 +36,7 @@ from swiss_locator.core.filters.swiss_locator_filter_wmts import SwissLocatorFil
 from swiss_locator.core.filters.swiss_locator_filter_vector_tiles import (
     SwissLocatorFilterVectorTiles,
 )
+from swiss_locator.core.profiles.profile_generator import SwissProfileSource
 
 
 class SwissLocatorPlugin:
@@ -52,6 +53,7 @@ class SwissLocatorPlugin:
         QCoreApplication.installTranslator(self.translator)
 
         self.locator_filters = []
+        self.profile_source = SwissProfileSource()
 
     def initGui(self):
         for _filter in (
@@ -65,10 +67,14 @@ class SwissLocatorPlugin:
             self.iface.registerLocatorFilter(self.locator_filters[-1])
             self.locator_filters[-1].message_emitted.connect(self.show_message)
 
+        QgsApplication.profileSourceRegistry().registerProfileSource(self.profile_source)
+
     def unload(self):
         for locator_filter in self.locator_filters:
             locator_filter.message_emitted.disconnect(self.show_message)
             self.iface.deregisterLocatorFilter(locator_filter)
+
+        QgsApplication.profileSourceRegistry().unregisterProfileSource(self.profile_source)
 
     def show_message(
         self, title: str, msg: str, level: Qgis.MessageLevel, widget: QWidget = None
