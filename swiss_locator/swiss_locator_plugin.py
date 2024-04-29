@@ -67,14 +67,16 @@ class SwissLocatorPlugin:
             self.iface.registerLocatorFilter(self.locator_filters[-1])
             self.locator_filters[-1].message_emitted.connect(self.show_message)
 
-        QgsApplication.profileSourceRegistry().registerProfileSource(self.profile_source)
+        if Qgis.QGIS_VERSION_INT >= 33700:
+            QgsApplication.profileSourceRegistry().registerProfileSource(self.profile_source)
 
     def unload(self):
         for locator_filter in self.locator_filters:
             locator_filter.message_emitted.disconnect(self.show_message)
             self.iface.deregisterLocatorFilter(locator_filter)
 
-        QgsApplication.profileSourceRegistry().unregisterProfileSource(self.profile_source)
+        if Qgis.QGIS_VERSION_INT >= 33700:
+            QgsApplication.profileSourceRegistry().unregisterProfileSource(self.profile_source)
 
     def show_message(
         self, title: str, msg: str, level: Qgis.MessageLevel, widget: QWidget = None
