@@ -27,7 +27,7 @@ class SwissProfileResults(QgsAbstractProfileResults):
             {'name': 'square', 'size': 2, 'color': '#00ff00',
              'outline_style': 'no'})
 
-    def asFeatures(self, profile_export_type, feedback):
+    def asFeatures(self, type, feedback):
         result = []
 
         if type == Qgis.ProfileExportType.Features3D:
@@ -46,6 +46,9 @@ class SwissProfileResults(QgsAbstractProfileResults):
 
     def asGeometries(self):
         return self.geometries
+
+    def sampledPoints(self):
+        return self.raw_points
 
     def zRange(self):
         return QgsDoubleRange(self.min_z, self.max_z)

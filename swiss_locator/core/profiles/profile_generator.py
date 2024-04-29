@@ -3,10 +3,15 @@ import json
 from qgis.PyQt.QtCore import QUrl, QUrlQuery
 from qgis.PyQt.QtNetwork import QNetworkRequest
 from qgis.core import (
+    Qgis,
     QgsAbstractProfileGenerator,
     QgsAbstractProfileSource,
+    QgsCoordinateReferenceSystem,
+    QgsCoordinateTransform,
+    QgsCsException,
     QgsFeedback,
     QgsGeometry,
+    QgsMessageLog,
     QgsNetworkAccessManager,
     QgsPoint,
 )
@@ -26,6 +31,10 @@ class SwissProfileGenerator(QgsAbstractProfileGenerator):
         QgsAbstractProfileGenerator.__init__(self)
         self.__request = request
         self.__profile_curve = request.profileCurve().clone() if request.profileCurve() else None
+        self.__transformed_curve = None
+        self.__transformation = QgsCoordinateTransform(request.crs(),  # Profile curve's CRS
+                                                       QgsCoordinateReferenceSystem("EPSG:2056"),
+                                                       request.transformContext())
         self.__results = None  # SwissProfileResults()
         self.__feedback = QgsFeedback()
 
@@ -42,7 +51,7 @@ class SwissProfileGenerator(QgsAbstractProfileGenerator):
             return url
 
         result = {}
-        geojson = self.__profile_curve.asJson(3)
+        geojson = self.__transformed_curve.asJson(3)
         base_url, base_params = profile_url(geojson)
         url = url_with_param(base_url, base_params)
 
@@ -52,7 +61,6 @@ class SwissProfileGenerator(QgsAbstractProfileGenerator):
         reply = network_access_manager.blockingGet(req, feedback=self.__feedback)
 
         if reply.error():
-            print(reply.errorString())
             result = {"error": reply.errorString()}
         else:
             content = reply.content()
@@ -67,13 +75,22 @@ class SwissProfileGenerator(QgsAbstractProfileGenerator):
         if self.__profile_curve is None:
             return False
 
+        self.__transformed_curve = self.__profile_curve.clone()
+        try:
+            self.__transformed_curve.transform(self.__transformation)
+        except QgsCsException as e:
+            QgsMessageLog.logMessage("Error transforming profile line to EPSG:2056.",
+                                     "Swiss locator",
+                                     Qgis.Critical)
+            return False
+
         self.__results = SwissProfileResults()
         self.__results.copyPropertiesFromGenerator(self)
 
         result = self.__get_profile_from_rest_api()
 
         if "error" in result:
-            print(result["error"])
+            QgsMessageLog.logMessage(result["error"], "Swiss locator", Qgis.Critical)
             return False
 
         for point in result:
@@ -81,7 +98,10 @@ class SwissProfileGenerator(QgsAbstractProfileGenerator):
                 return False
 
             x, y, z, d = self.__parse_response_point(point)
-            self.__results.raw_points.append(QgsPoint(x, y))
+            point_z = QgsPoint(x, y, z)
+            point_z.transform(self.__transformation, Qgis.TransformDirection.Reverse)
+
+            self.__results.raw_points.append(point_z)
             self.__results.distance_to_height[d] = z
             if z < self.__results.min_z:
                 self.__results.min_z = z
@@ -89,7 +109,7 @@ class SwissProfileGenerator(QgsAbstractProfileGenerator):
             if z > self.__results.max_z:
                 self.__results.max_z = z
 
-            self.__results.geometries.append(QgsGeometry(QgsPoint(x, y, z)))
+            self.__results.geometries.append(QgsGeometry(point_z))
             self.__results.cross_section_geometries = QgsGeometry(QgsPoint(d, z))
 
         return not self.__feedback.isCanceled()
