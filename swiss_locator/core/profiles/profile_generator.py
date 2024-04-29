@@ -1,6 +1,6 @@
 import json
 
-from qgis.PyQt.QtCore import QEventLoop, QUrl, QUrlQuery
+from qgis.PyQt.QtCore import QUrl, QUrlQuery
 from qgis.PyQt.QtNetwork import QNetworkRequest
 from qgis.core import (
     QgsAbstractProfileGenerator,
@@ -12,8 +12,7 @@ from qgis.core import (
 )
 
 from swiss_locator.core.profiles.profile_results import  SwissProfileResults
-
-NB_POINTS = '100'  # The number of points used for the polyline segmentation. Default “200”.
+from swiss_locator.core.profiles.profile_url import profile_url
 
 
 class SwissProfileGenerator(QgsAbstractProfileGenerator):
@@ -43,29 +42,21 @@ class SwissProfileGenerator(QgsAbstractProfileGenerator):
             return url
 
         result = {}
-        url = "https://api3.geo.admin.ch/rest/services/profile.json"
-
         geojson = self.__profile_curve.asJson(3)
-        params = {"geom": geojson, "sr": '2056', "nb_points": NB_POINTS}
-        url = url_with_param(url, params)
+        base_url, base_params = profile_url(geojson)
+        url = url_with_param(base_url, base_params)
 
         network_access_manager = QgsNetworkAccessManager.instance()
 
         req = QNetworkRequest(QUrl(url))
-        reply = network_access_manager.get(req)
-
-        loop = QEventLoop()
-        reply.finished.connect(loop.quit)
-        loop.exec_()
+        reply = network_access_manager.blockingGet(req, feedback=self.__feedback)
 
         if reply.error():
             print(reply.errorString())
             result = {"error": reply.errorString()}
         else:
-            content = reply.readAll()
+            content = reply.content()
             result = json.loads(str(content, 'utf-8'))
-
-        reply.deleteLater()
 
         return result
 
