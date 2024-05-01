@@ -64,7 +64,14 @@ class SwissProfileGenerator(QgsAbstractProfileGenerator):
             result = {"error": reply.errorString()}
         else:
             content = reply.content()
-            result = json.loads(str(content, 'utf-8'))
+            try:
+                result = json.loads(str(content, 'utf-8'))
+            except json.decoder.JSONDecodeError as e:
+                QgsMessageLog.logMessage(
+                    "Unable to parse results from Profile service. Details: {}".format(e.msg),
+                    "Swiss locator",
+                    Qgis.Critical
+                )
 
         return result
 

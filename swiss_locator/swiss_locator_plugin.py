@@ -36,7 +36,11 @@ from swiss_locator.core.filters.swiss_locator_filter_wmts import SwissLocatorFil
 from swiss_locator.core.filters.swiss_locator_filter_vector_tiles import (
     SwissLocatorFilterVectorTiles,
 )
-from swiss_locator.core.profiles.profile_generator import SwissProfileSource
+try:
+    from swiss_locator.core.profiles.profile_generator import SwissProfileSource
+except ImportError:
+    # Should fail only for QGIS < 3.26, where profiles weren't available
+    SwissProfileSource = None
 
 
 class SwissLocatorPlugin:
@@ -53,7 +57,10 @@ class SwissLocatorPlugin:
         QCoreApplication.installTranslator(self.translator)
 
         self.locator_filters = []
-        self.profile_source = SwissProfileSource()
+
+        if Qgis.QGIS_VERSION_INT >= 33700:
+            # Only on QGIS 3.37+ we'll be able to register profile sources
+            self.profile_source = SwissProfileSource()
 
     def initGui(self):
         for _filter in (
