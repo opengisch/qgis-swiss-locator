@@ -44,6 +44,19 @@ class SwissProfileResults(QgsAbstractProfileResults):
                 feature.layerIdentifier = self.type()
                 result.append(feature)
 
+        elif type == Qgis.ProfileExportType.DistanceVsElevationTable:
+            for i, geom in enumerate(self.geometries):
+                feature = QgsAbstractProfileResults.Feature()
+                feature.geometry = geom
+                feature.layerIdentifier = self.type()
+
+                # Since we've got distance/elevation pairs as
+                # x,y for cross-section geometries, and since
+                # both point arrays have the same length:
+                p = self.cross_section_geometries[i].asPoint()
+                feature.attributes = {"distance": p.x(), "elevation": p.y()}
+                result.append(feature)
+
         return result
 
     def asGeometries(self):
