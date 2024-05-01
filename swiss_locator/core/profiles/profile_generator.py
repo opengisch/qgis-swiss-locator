@@ -71,6 +71,9 @@ class SwissProfileGenerator(QgsAbstractProfileGenerator):
     def __parse_response_point(self, point):
         return point[self.X], point[self.Y], point[self.Z_DICT][self.Z], point[self.DISTANCE]
 
+    def feedback(self):
+        return self.__feedback
+
     def generateProfile(self, context):  # QgsProfileGenerationContext
         if self.__profile_curve is None:
             return False
@@ -110,7 +113,7 @@ class SwissProfileGenerator(QgsAbstractProfileGenerator):
                 self.__results.max_z = z
 
             self.__results.geometries.append(QgsGeometry(point_z))
-            self.__results.cross_section_geometries = QgsGeometry(QgsPoint(d, z))
+            self.__results.cross_section_geometries.append(QgsGeometry(QgsPoint(d, z)))
 
         return not self.__feedback.isCanceled()
 
