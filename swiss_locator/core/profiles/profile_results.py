@@ -34,12 +34,14 @@ class SwissProfileResults(QgsAbstractProfileResults):
             for geom in self.geometries:
                 feature = QgsAbstractProfileResults.Feature()
                 feature.geometry = geom
+                feature.layerIdentifier = self.type()
                 result.append(feature)
 
         elif type == Qgis.ProfileExportType.Profile2D:
             for geom in self.cross_section_geometries:
                 feature = QgsAbstractProfileResults.Feature()
                 feature.geometry = geom
+                feature.layerIdentifier = self.type()
                 result.append(feature)
 
         return result
@@ -54,7 +56,7 @@ class SwissProfileResults(QgsAbstractProfileResults):
         return QgsDoubleRange(self.min_z, self.max_z)
 
     def type(self):
-        return "swiss-web-service"
+        return "swiss-profile-web-service"
 
     def renderResults(self, context: QgsProfileRenderContext):
         painter = context.renderContext().painter()
