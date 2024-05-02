@@ -20,7 +20,7 @@
 import os
 from PyQt5.QtCore import QCoreApplication, QLocale, QSettings, QTranslator
 from PyQt5.QtWidgets import QWidget
-from qgis.core import Qgis, QgsApplication, NULL
+from qgis.core import Qgis, QgsApplication, QgsMessageLog, NULL
 from qgis.gui import QgisInterface, QgsMessageBarItem
 
 from swiss_locator.core.filters.swiss_locator_filter_feature import (
@@ -76,6 +76,11 @@ class SwissLocatorPlugin:
 
         if Qgis.QGIS_VERSION_INT >= 33700:
             QgsApplication.profileSourceRegistry().registerProfileSource(self.profile_source)
+            QgsMessageLog.logMessage(
+                "Swiss profile source has been registered!",
+                "Swiss locator",
+                Qgis.Info
+            )
 
     def unload(self):
         for locator_filter in self.locator_filters:
@@ -84,6 +89,11 @@ class SwissLocatorPlugin:
 
         if Qgis.QGIS_VERSION_INT >= 33700:
             QgsApplication.profileSourceRegistry().unregisterProfileSource(self.profile_source)
+            QgsMessageLog.logMessage(
+                "Swiss profile source has been unregistered!",
+                "Swiss locator",
+                Qgis.Info
+            )
 
     def show_message(
         self, title: str, msg: str, level: Qgis.MessageLevel, widget: QWidget = None
