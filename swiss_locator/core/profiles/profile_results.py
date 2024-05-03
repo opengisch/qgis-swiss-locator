@@ -4,9 +4,14 @@ from qgis.core import (
     Qgis,
     QgsAbstractProfileResults,
     QgsDoubleRange,
+    QgsFillSymbol,
+    QgsLineSymbol,
     QgsMarkerSymbol,
     QgsProfileRenderContext,
 )
+
+PROFILE_SYMBOLOGY = Qgis.ProfileSurfaceSymbology.FillBelow
+INCLUDE_PROFILE_MARKERS = False
 
 
 class SwissProfileResults(QgsAbstractProfileResults):
@@ -15,17 +20,27 @@ class SwissProfileResults(QgsAbstractProfileResults):
 
         self.__profile_curve = None
         self.raw_points = []  # QgsPointSequence
-        self.__symbology = None
-
         self.distance_to_height = {}
         self.geometries = []
         self.cross_section_geometries = []
         self.min_z = 4500
         self.max_z = -100
 
-        self.marker_symbol = QgsMarkerSymbol.createSimple(
-            {'name': 'square', 'size': 2, 'color': '#00ff00',
-             'outline_style': 'no'})
+        self.marker_symbol = QgsMarkerSymbol.createSimple({
+            'name': 'square',
+            'size': 1,
+            'color': '#aeaeae',
+            'outline_style': 'no'
+        })
+        self.line_symbol = QgsLineSymbol.createSimple({'color': '#ff0000',
+                                                       'width': 0.6})
+        self.line_symbol.setOpacity(0.5)
+        self.fill_symbol = QgsFillSymbol.createSimple({
+            'color': '#ff0000',
+            'style': 'solid',
+            'outline_style': 'no'
+        })
+        self.fill_symbol.setOpacity(0.5)
 
     def asFeatures(self, type, feedback):
         result = []
@@ -72,6 +87,75 @@ class SwissProfileResults(QgsAbstractProfileResults):
         return "swiss-profile-web-service"
 
     def renderResults(self, context: QgsProfileRenderContext):
+        self.__render_continuous_surface(context)
+        if INCLUDE_PROFILE_MARKERS:
+            self.__render_markers(context)
+
+    def __render_continuous_surface(self, context):
+        painter = context.renderContext().painter()
+        if not painter:
+            return
+
+        painter.setBrush(Qt.NoBrush)
+        painter.setPen(Qt.NoPen)
+
+        min_distance = context.distanceRange().lower()
+        max_distance = context.distanceRange().upper()
+        min_z = context.elevationRange().lower()
+        max_z = context.elevationRange().upper()
+
+        visible_region = QRectF(min_distance, min_z, max_distance - min_distance, max_z - min_z)
+        clip_path = QPainterPath()
+        clip_path.addPolygon(context.worldTransform().map(QPolygonF(visible_region)))
+        painter.setClipPath(clip_path, Qt.ClipOperation.IntersectClip)
+
+        if PROFILE_SYMBOLOGY == Qgis.ProfileSurfaceSymbology.Line:
+            self.line_symbol.startRender(context.renderContext())
+        elif PROFILE_SYMBOLOGY == Qgis.ProfileSurfaceSymbology.FillBelow:
+            self.fill_symbol.startRender(context.renderContext())
+
+        def check_line(
+            current_line: QPolygonF,
+            context: QgsProfileRenderContext,
+            min_z: float,
+            max_z: float,
+            prev_distance: float,
+            current_part_start_distance: float
+        ):
+            if len(current_line) > 1:
+                if PROFILE_SYMBOLOGY == Qgis.ProfileSurfaceSymbology.Line:
+                    self.line_symbol.renderPolyline(current_line, None, context.renderContext())
+                elif PROFILE_SYMBOLOGY == Qgis.ProfileSurfaceSymbology.FillBelow:
+                    current_line.append(context.worldTransform().map(QPointF(prev_distance, min_z)))
+                    current_line.append(context.worldTransform().map(QPointF(current_part_start_distance, min_z)))
+                    current_line.append(current_line.at(0))
+                    self.fill_symbol.renderPolygon(current_line, None, None, context.renderContext())
+
+        current_line = QPolygonF()
+        prev_distance = None
+        current_part_start_distance = 0
+        for k, v in self.distance_to_height.items():
+            if not len(current_line):  # new part
+                if not v:  # skip emptiness
+                    continue
+
+                current_part_start_distance = k
+
+            if not v:
+                check_line(current_line, context, min_z, max_z, prev_distance, current_part_start_distance)
+                current_line.clear()
+            else:
+                current_line.append(context.worldTransform().map(QPointF(k, v)))
+                prev_distance = k
+
+        check_line(current_line, context, min_z, max_z, prev_distance, current_part_start_distance)
+
+        if PROFILE_SYMBOLOGY == Qgis.ProfileSurfaceSymbology.Line:
+            self.line_symbol.stopRender(context.renderContext())
+        elif PROFILE_SYMBOLOGY == Qgis.ProfileSurfaceSymbology.FillBelow:
+            self.fill_symbol.stopRender(context.renderContext())
+
+    def __render_markers(self, context):
         painter = context.renderContext().painter()
         if not painter:
             return
