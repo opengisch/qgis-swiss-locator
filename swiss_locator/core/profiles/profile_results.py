@@ -7,7 +7,9 @@ from qgis.core import (
     QgsFillSymbol,
     QgsLineSymbol,
     QgsMarkerSymbol,
+    QgsProfilePoint,
     QgsProfileRenderContext,
+    QgsProfileSnapResult
 )
 
 PROFILE_SYMBOLOGY = Qgis.ProfileSurfaceSymbology.FillBelow
@@ -85,6 +87,29 @@ class SwissProfileResults(QgsAbstractProfileResults):
 
     def type(self):
         return "swiss-profile-web-service"
+
+    def snapPoint(self, point, context):
+        result = QgsProfileSnapResult()
+
+        prev_distance = float('inf')
+        prev_elevation = 0
+        for k, v in self.distance_to_height.items():
+            # find segment which corresponds to the given distance along curve
+            if k != 0 and prev_distance <= point.distance() <= k:
+                dx = k - prev_distance
+                dy = v - prev_elevation
+                snapped_z = (dy / dx) * (point.distance() - prev_distance) + prev_elevation
+
+                if abs(point.elevation() - snapped_z) > context.maximumSurfaceElevationDelta:
+                    return QgsProfileSnapResult()
+
+                result.snappedPoint = QgsProfilePoint(point.distance(), snapped_z)
+                break
+
+            prev_distance = k
+            prev_elevation = v
+
+        return result
 
     def renderResults(self, context: QgsProfileRenderContext):
         self.__render_continuous_surface(context)
