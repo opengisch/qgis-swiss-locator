@@ -76,6 +76,14 @@ class Settings(SettingManager):
         self.add_setting(Integer(f"{FilterType.WMTS.value}_limit", Scope.Global, 8))
         self.add_setting(
             Enum(
+                f"{FilterType.VectorTiles.value}_priority",
+                Scope.Global,
+                QgsLocatorFilter.Medium,
+            )
+        )
+        self.add_setting(Integer(f"{FilterType.VectorTiles.value}_limit", Scope.Global, 8))
+        self.add_setting(
+            Enum(
                 f"{FilterType.Feature.value}_priority",
                 Scope.Global,
                 QgsLocatorFilter.Medium,

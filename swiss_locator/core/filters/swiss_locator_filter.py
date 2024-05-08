@@ -43,6 +43,7 @@ from qgis.core import (
     QgsLocatorContext,
     QgsFeedback,
     QgsRasterLayer,
+    QgsVectorTileLayer,
 )
 from qgis.gui import QgsRubberBand, QgisInterface
 
@@ -53,6 +54,7 @@ from swiss_locator.core.results import (
     WMSLayerResult,
     LocationResult,
     FeatureResult,
+    VectorTilesLayerResult,
     NoResult,
 )
 from swiss_locator.core.settings import Settings
@@ -74,6 +76,8 @@ def result_from_data(result: QgsLocatorResult):
         return LocationResult.from_dict(dict_data)
     if dict_data["type"] == "FeatureResult":
         return FeatureResult.from_dict(dict_data)
+    if dict_data["type"] == "VectorTilesLayerResult":
+        return VectorTilesLayerResult.from_dict(dict_data)
     return NoResult()
 
 
@@ -384,7 +388,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             url_with_params = "&".join([f"{k}={v}" for (k, v) in params.items()])
 
             self.info(f"Loading layer: {url_with_params}")
-            wms_layer = QgsRasterLayer(url_with_params, result.displayString, "wms")
+            vt_layer = QgsRasterLayer(url_with_params, result.displayString, "wms")
             label = QLabel()
             label.setTextFormat(Qt.RichText)
             label.setTextInteractionFlags(Qt.TextBrowserInteraction)
@@ -399,7 +403,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     )
                 )
 
-            if not wms_layer.isValid():
+            if not vt_layer.isValid():
                 msg = self.tr(
                     "Cannot load Layers layer: {} ({})".format(
                         swiss_result.title, swiss_result.layer
@@ -415,7 +419,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 )
                 level = Qgis.Info
 
-                QgsProject.instance().addMapLayer(wms_layer)
+                QgsProject.instance().addMapLayer(vt_layer)
 
             self.message_emitted.emit(self.displayName(), msg, level, label)
 
@@ -426,6 +430,38 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.highlight(point)
             if self.settings.value("show_map_tip"):
                 self.show_map_tip(swiss_result.layer, swiss_result.feature_id, point)
+
+        # Vector tiles
+        elif type(swiss_result) == VectorTilesLayerResult:
+            params = dict()
+            params["styleUrl"] = swiss_result.style or ""
+            params["url"] = swiss_result.url
+            params["type"] = "xyz"
+            params["zmax"] = "14"
+            params["zmin"] = "0"
+            
+            url_with_params = "&".join([f"{k}={v}" for (k, v) in params.items()])
+
+            self.info(f"Loading layer: {url_with_params}")
+            vt_layer = QgsVectorTileLayer(url_with_params, result.displayString)
+
+            if not vt_layer.isValid():
+                msg = self.tr(
+                    "Cannot load Vector Tiles layer: {}".format(
+                        swiss_result.title
+                    )
+                )
+                level = Qgis.Warning
+                self.info(msg, level)
+            else:
+                msg = self.tr(
+                    "Layer added to the map: {}".format(
+                        swiss_result.title
+                    )
+                )
+                level = Qgis.Info
+
+                QgsProject.instance().addMapLayer(vt_layer)
 
         # Location
         else:

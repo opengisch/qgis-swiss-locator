@@ -33,6 +33,9 @@ from swiss_locator.core.filters.swiss_locator_filter_location import (
     SwissLocatorFilterLocation,
 )
 from swiss_locator.core.filters.swiss_locator_filter_wmts import SwissLocatorFilterWMTS
+from swiss_locator.core.filters.swiss_locator_filter_vector_tiles import (
+    SwissLocatorFilterVectorTiles,
+)
 
 
 class SwissLocatorPlugin:
@@ -55,6 +58,7 @@ class SwissLocatorPlugin:
             SwissLocatorFilterLocation,
             SwissLocatorFilterWMTS,
             SwissLocatorFilterLayer,
+            SwissLocatorFilterVectorTiles,
             SwissLocatorFilterFeature,
         ):
             self.locator_filters.append(_filter(self.iface))
