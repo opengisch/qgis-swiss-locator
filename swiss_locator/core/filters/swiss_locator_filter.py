@@ -439,7 +439,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             params["type"] = "xyz"
             params["zmax"] = "14"
             params["zmin"] = "0"
-            
+
             url_with_params = "&".join([f"{k}={v}" for (k, v) in params.items()])
 
             self.info(f"Loading layer: {url_with_params}")
@@ -454,14 +454,55 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 level = Qgis.Warning
                 self.info(msg, level)
             else:
+                vt_layer.setLabelsEnabled(True)
+                vt_layer.loadDefaultMetadata()
+
+                error, warnings = '', []
+                res, sublayers = vt_layer.loadDefaultStyleAndSubLayers(error, warnings)
+
+                if sublayers:
+                    msg = self.tr(
+                        "Sublayers found ({}): {}".format(
+                            swiss_result.title,
+                            "; ".join([sublayer.name() for sublayer in sublayers])
+                        )
+                    )
+                    level = Qgis.Info
+                    self.info(msg, level)
+                if error or warnings:
+                    msg = self.tr(
+                        "Error/warning found while loading default styles and sublayers for layer {}. Error: {} Warning: {}".format(
+                            swiss_result.title,
+                            error,
+                            "; ".join(warnings)
+                        )
+                    )
+                    level = Qgis.Warning
+                    self.info(msg, level)
+
                 msg = self.tr(
                     "Layer added to the map: {}".format(
                         swiss_result.title
                     )
                 )
                 level = Qgis.Info
+                self.info(msg, level)
 
-                QgsProject.instance().addMapLayer(vt_layer)
+                root = QgsProject.instance().layerTreeRoot()
+                if sublayers:
+                    # Sublayers should load on top of the vector tiles layer
+                    # We group them to keep them all together
+                    group = root.insertGroup(-1, vt_layer.name())
+                    for sublayer in sublayers:
+                        QgsProject.instance().addMapLayer(sublayer, False)
+                        group.addLayer(sublayer)
+
+                    QgsProject.instance().addMapLayer(vt_layer, False)
+                    group.addLayer(vt_layer)
+                else:
+                    QgsProject.instance().addMapLayer(vt_layer, False)
+                    root.insertLayer(-1, vt_layer)
+
 
         # Location
         else:
