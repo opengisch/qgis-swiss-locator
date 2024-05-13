@@ -62,7 +62,7 @@ class SwissLocatorFilterVectorTiles(SwissLocatorFilter):
         for keyword in list(data.keys()):
             results = {}
             score = 1
-            if search in keyword:
+            if search.lower() in keyword:
                 result = QgsLocatorResult()
                 result.filter = self
                 result.icon = QgsApplication.getThemeIcon("/mActionAddVectorTileLayer.svg")
