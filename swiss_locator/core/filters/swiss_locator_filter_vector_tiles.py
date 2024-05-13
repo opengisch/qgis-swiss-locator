@@ -1,6 +1,3 @@
-from qgis.PyQt.QtCore import QUrl
-from qgis.PyQt.QtNetwork import QNetworkRequest
-
 from qgis.gui import QgisInterface
 from qgis.core import (
     QgsApplication,
@@ -14,9 +11,6 @@ from swiss_locator.core.filters.swiss_locator_filter import (
 )
 from swiss_locator.core.filters.filter_type import FilterType
 from swiss_locator.core.results import VectorTilesLayerResult
-
-import xml.etree.ElementTree as ET
-import urllib.parse
 
 
 class SwissLocatorFilterVectorTiles(SwissLocatorFilter):
@@ -71,7 +65,7 @@ class SwissLocatorFilterVectorTiles(SwissLocatorFilter):
             if search in keyword:
                 result = QgsLocatorResult()
                 result.filter = self
-                #result.icon = QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
+                result.icon = QgsApplication.getThemeIcon("/mActionAddVectorTileLayer.svg")
 
                 result.displayString = data[keyword]["title"]
                 result.description = data[keyword]["description"]

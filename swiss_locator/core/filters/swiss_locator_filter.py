@@ -488,6 +488,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 level = Qgis.Info
                 self.info(msg, level)
 
+                # Load basemap layers at the bottom of the layer tree
                 root = QgsProject.instance().layerTreeRoot()
                 if sublayers:
                     # Sublayers should load on top of the vector tiles layer
@@ -502,7 +503,6 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 else:
                     QgsProject.instance().addMapLayer(vt_layer, False)
                     root.insertLayer(-1, vt_layer)
-
 
         # Location
         else:
