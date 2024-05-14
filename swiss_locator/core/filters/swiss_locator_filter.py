@@ -388,7 +388,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             url_with_params = "&".join([f"{k}={v}" for (k, v) in params.items()])
 
             self.info(f"Loading layer: {url_with_params}")
-            vt_layer = QgsRasterLayer(url_with_params, result.displayString, "wms")
+            ch_layer = QgsRasterLayer(url_with_params, result.displayString, "wms")
             label = QLabel()
             label.setTextFormat(Qt.RichText)
             label.setTextInteractionFlags(Qt.TextBrowserInteraction)
@@ -403,7 +403,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     )
                 )
 
-            if not vt_layer.isValid():
+            if not ch_layer.isValid():
                 msg = self.tr(
                     "Cannot load Layers layer: {} ({})".format(
                         swiss_result.title, swiss_result.layer
@@ -419,7 +419,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 )
                 level = Qgis.Info
 
-                QgsProject.instance().addMapLayer(vt_layer)
+                QgsProject.instance().addMapLayer(ch_layer)
 
             self.message_emitted.emit(self.displayName(), msg, level, label)
 
@@ -443,9 +443,9 @@ class SwissLocatorFilter(QgsLocatorFilter):
             url_with_params = "&".join([f"{k}={v}" for (k, v) in params.items()])
 
             self.info(f"Loading layer: {url_with_params}")
-            vt_layer = QgsVectorTileLayer(url_with_params, result.displayString)
+            ch_layer = QgsVectorTileLayer(url_with_params, result.displayString)
 
-            if not vt_layer.isValid():
+            if not ch_layer.isValid():
                 msg = self.tr(
                     "Cannot load Vector Tiles layer: {}".format(
                         swiss_result.title
@@ -454,11 +454,11 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 level = Qgis.Warning
                 self.info(msg, level)
             else:
-                vt_layer.setLabelsEnabled(True)
-                vt_layer.loadDefaultMetadata()
+                ch_layer.setLabelsEnabled(True)
+                ch_layer.loadDefaultMetadata()
 
                 error, warnings = '', []
-                res, sublayers = vt_layer.loadDefaultStyleAndSubLayers(error, warnings)
+                res, sublayers = ch_layer.loadDefaultStyleAndSubLayers(error, warnings)
 
                 if sublayers:
                     msg = self.tr(
@@ -493,16 +493,16 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 if sublayers:
                     # Sublayers should load on top of the vector tiles layer
                     # We group them to keep them all together
-                    group = root.insertGroup(-1, vt_layer.name())
+                    group = root.insertGroup(-1, ch_layer.name())
                     for sublayer in sublayers:
                         QgsProject.instance().addMapLayer(sublayer, False)
                         group.addLayer(sublayer)
 
-                    QgsProject.instance().addMapLayer(vt_layer, False)
-                    group.addLayer(vt_layer)
+                    QgsProject.instance().addMapLayer(ch_layer, False)
+                    group.addLayer(ch_layer)
                 else:
-                    QgsProject.instance().addMapLayer(vt_layer, False)
-                    root.insertLayer(-1, vt_layer)
+                    QgsProject.instance().addMapLayer(ch_layer, False)
+                    root.insertLayer(-1, ch_layer)
 
         # Location
         else:

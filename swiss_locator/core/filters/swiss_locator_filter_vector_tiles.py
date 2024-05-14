@@ -21,7 +21,7 @@ class SwissLocatorFilterVectorTiles(SwissLocatorFilter):
         return SwissLocatorFilterVectorTiles(crs=self.crs)
 
     def displayName(self):
-        return self.tr("Swiss Geoportal Vector Tile Layers")
+        return self.tr("Swiss Geoportal Vector Tile Base Map Layers")
 
     def prefix(self):
         return "chb"

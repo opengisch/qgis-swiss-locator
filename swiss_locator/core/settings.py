@@ -86,7 +86,7 @@ class Settings(SettingManager):
             Enum(
                 f"{FilterType.Feature.value}_priority",
                 Scope.Global,
-                QgsLocatorFilter.Medium,
+                QgsLocatorFilter.Highest,
             )
         )
         self.add_setting(Integer(f"{FilterType.Feature.value}_limit", Scope.Global, 8))
