@@ -437,6 +437,9 @@ class SwissLocatorFilter(QgsLocatorFilter):
             params["styleUrl"] = swiss_result.style or ""
             params["url"] = swiss_result.url
             params["type"] = "xyz"
+            # Max and min zoom levels cound be retrieved from metadata JSON files like:
+            # https://vectortiles.geo.admin.ch/tiles/ch.swisstopo.base.vt/v1.0.0/tiles.json
+            # All Swiss services use 0-14 levels (level 14 goes up to buildings)
             params["zmax"] = "14"
             params["zmin"] = "0"
 
@@ -491,15 +494,13 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 # Load basemap layers at the bottom of the layer tree
                 root = QgsProject.instance().layerTreeRoot()
                 if sublayers:
-                    # Sublayers should load on top of the vector tiles layer
-                    # We group them to keep them all together
+                    # Sublayers should be loaded on top of the vector tile
+                    # layer. We group them to keep them all together.
                     group = root.insertGroup(-1, ch_layer.name())
-                    for sublayer in sublayers:
-                        QgsProject.instance().addMapLayer(sublayer, False)
-                        group.addLayer(sublayer)
-
-                    QgsProject.instance().addMapLayer(ch_layer, False)
-                    group.addLayer(ch_layer)
+                    all_layers = sublayers + [ch_layer]
+                    QgsProject.instance().addMapLayers(all_layers, False)
+                    for _layer in all_layers:
+                        group.addLayer(_layer)
                 else:
                     QgsProject.instance().addMapLayer(ch_layer, False)
                     root.insertLayer(-1, ch_layer)
