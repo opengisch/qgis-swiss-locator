@@ -17,6 +17,9 @@ class SwissLocatorFilterVectorTiles(SwissLocatorFilter):
     def __init__(self, iface: QgisInterface = None, crs: str = None):
         super().__init__(FilterType.VectorTiles, iface, crs)
 
+        # Show all available base maps without requiring a search
+        self.minimum_search_length = 0
+
     def clone(self):
         return SwissLocatorFilterVectorTiles(crs=self.crs)
 
@@ -62,7 +65,7 @@ class SwissLocatorFilterVectorTiles(SwissLocatorFilter):
         for keyword in list(data.keys()):
             results = {}
             score = 1
-            if search.lower() in keyword:
+            if not search or search.lower() in keyword:
                 result = QgsLocatorResult()
                 result.filter = self
                 result.icon = QgsApplication.getThemeIcon("/mActionAddVectorTileLayer.svg")
