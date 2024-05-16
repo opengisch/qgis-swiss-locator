@@ -127,6 +127,39 @@ class FeatureResult:
         return json.dumps(definition)
 
 
+class VectorTilesLayerResult:
+    def __init__(
+        self,
+        layer,
+        title,
+        url,
+        style: str = None,
+    ):
+        self.title = title
+        self.layer = layer
+        self.url = url
+        self.style = style
+
+    @staticmethod
+    def from_dict(dict_data: dict):
+        return VectorTilesLayerResult(
+            dict_data["layer"],
+            dict_data["title"],
+            dict_data["url"],
+            style=dict_data.get("style"),
+        )
+
+    def as_definition(self):
+        definition = {
+            "type": "VectorTilesLayerResult",
+            "title": self.title,
+            "layer": self.layer,
+            "url": self.url,
+            "style": self.style,
+        }
+        return json.dumps(definition)
+
+
 class NoResult:
     def __init__(self):
         pass

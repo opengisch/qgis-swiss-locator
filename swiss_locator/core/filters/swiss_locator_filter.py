@@ -43,6 +43,7 @@ from qgis.core import (
     QgsLocatorContext,
     QgsFeedback,
     QgsRasterLayer,
+    QgsVectorTileLayer,
 )
 from qgis.gui import QgsRubberBand, QgisInterface
 
@@ -53,6 +54,7 @@ from swiss_locator.core.results import (
     WMSLayerResult,
     LocationResult,
     FeatureResult,
+    VectorTilesLayerResult,
     NoResult,
 )
 from swiss_locator.core.settings import Settings
@@ -74,6 +76,8 @@ def result_from_data(result: QgsLocatorResult):
         return LocationResult.from_dict(dict_data)
     if dict_data["type"] == "FeatureResult":
         return FeatureResult.from_dict(dict_data)
+    if dict_data["type"] == "VectorTilesLayerResult":
+        return VectorTilesLayerResult.from_dict(dict_data)
     return NoResult()
 
 
@@ -384,7 +388,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             url_with_params = "&".join([f"{k}={v}" for (k, v) in params.items()])
 
             self.info(f"Loading layer: {url_with_params}")
-            wms_layer = QgsRasterLayer(url_with_params, result.displayString, "wms")
+            ch_layer = QgsRasterLayer(url_with_params, result.displayString, "wms")
             label = QLabel()
             label.setTextFormat(Qt.RichText)
             label.setTextInteractionFlags(Qt.TextBrowserInteraction)
@@ -399,7 +403,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     )
                 )
 
-            if not wms_layer.isValid():
+            if not ch_layer.isValid():
                 msg = self.tr(
                     "Cannot load Layers layer: {} ({})".format(
                         swiss_result.title, swiss_result.layer
@@ -415,7 +419,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 )
                 level = Qgis.Info
 
-                QgsProject.instance().addMapLayer(wms_layer)
+                QgsProject.instance().addMapLayer(ch_layer)
 
             self.message_emitted.emit(self.displayName(), msg, level, label)
 
@@ -426,6 +430,80 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.highlight(point)
             if self.settings.value("show_map_tip"):
                 self.show_map_tip(swiss_result.layer, swiss_result.feature_id, point)
+
+        # Vector tiles
+        elif type(swiss_result) == VectorTilesLayerResult:
+            params = dict()
+            params["styleUrl"] = swiss_result.style or ""
+            params["url"] = swiss_result.url
+            params["type"] = "xyz"
+            # Max and min zoom levels cound be retrieved from metadata JSON files like:
+            # https://vectortiles.geo.admin.ch/tiles/ch.swisstopo.base.vt/v1.0.0/tiles.json
+            # All Swiss services use 0-14 levels (level 14 goes up to buildings)
+            params["zmax"] = "14"
+            params["zmin"] = "0"
+
+            url_with_params = "&".join([f"{k}={v}" for (k, v) in params.items()])
+
+            self.info(f"Loading layer: {url_with_params}")
+            ch_layer = QgsVectorTileLayer(url_with_params, result.displayString)
+
+            if not ch_layer.isValid():
+                msg = self.tr(
+                    "Cannot load Vector Tiles layer: {}".format(
+                        swiss_result.title
+                    )
+                )
+                level = Qgis.Warning
+                self.info(msg, level)
+            else:
+                ch_layer.setLabelsEnabled(True)
+                ch_layer.loadDefaultMetadata()
+
+                error, warnings = '', []
+                res, sublayers = ch_layer.loadDefaultStyleAndSubLayers(error, warnings)
+
+                if sublayers:
+                    msg = self.tr(
+                        "Sublayers found ({}): {}".format(
+                            swiss_result.title,
+                            "; ".join([sublayer.name() for sublayer in sublayers])
+                        )
+                    )
+                    level = Qgis.Info
+                    self.info(msg, level)
+                if error or warnings:
+                    msg = self.tr(
+                        "Error/warning found while loading default styles and sublayers for layer {}. Error: {} Warning: {}".format(
+                            swiss_result.title,
+                            error,
+                            "; ".join(warnings)
+                        )
+                    )
+                    level = Qgis.Warning
+                    self.info(msg, level)
+
+                msg = self.tr(
+                    "Layer added to the map: {}".format(
+                        swiss_result.title
+                    )
+                )
+                level = Qgis.Info
+                self.info(msg, level)
+
+                # Load basemap layers at the bottom of the layer tree
+                root = QgsProject.instance().layerTreeRoot()
+                if sublayers:
+                    # Sublayers should be loaded on top of the vector tile
+                    # layer. We group them to keep them all together.
+                    group = root.insertGroup(-1, ch_layer.name())
+                    all_layers = sublayers + [ch_layer]
+                    QgsProject.instance().addMapLayers(all_layers, False)
+                    for _layer in all_layers:
+                        group.addLayer(_layer)
+                else:
+                    QgsProject.instance().addMapLayer(ch_layer, False)
+                    root.insertLayer(-1, ch_layer)
 
         # Location
         else:
