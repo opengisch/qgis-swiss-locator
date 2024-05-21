@@ -22,14 +22,16 @@
 """
 
 from PyQt5.QtCore import Qt, QPoint, pyqtSignal
-from PyQt5.QtWebKit import QWebSettings
-from PyQt5.QtWebKitWidgets import QWebView, QWebPage
 from PyQt5.QtWidgets import QSizePolicy, QDockWidget
 from PyQt5.QtGui import QPalette, QDesktopServices, QCloseEvent
 from qgis.core import Qgis, QgsPointXY, QgsMessageLog
 from qgis.gui import QgisInterface
 
 from swiss_locator import DEBUG
+from swiss_locator.gui.qtwebkit_conf import with_qt_web_kit
+if with_qt_web_kit():
+    from PyQt5.QtWebKit import QWebSettings
+    from PyQt5.QtWebKitWidgets import QWebView, QWebPage
 
 
 class MapTip(QDockWidget):

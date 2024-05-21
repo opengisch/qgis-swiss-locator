@@ -61,6 +61,7 @@ from swiss_locator.core.settings import Settings
 from swiss_locator.core.language import get_language
 from swiss_locator.gui.config_dialog import ConfigDialog
 from swiss_locator.gui.maptip import MapTip
+from swiss_locator.gui.qtwebkit_conf import with_qt_web_kit
 
 
 def result_from_data(result: QgsLocatorResult):
@@ -428,7 +429,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             point = QgsGeometry.fromPointXY(swiss_result.point)
             point.transform(self.transform_4326)
             self.highlight(point)
-            if self.settings.value("show_map_tip"):
+            if self.settings.value("show_map_tip") and with_qt_web_kit():
                 self.show_map_tip(swiss_result.layer, swiss_result.feature_id, point)
 
         # Vector tiles
@@ -525,7 +526,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             if layer and feature_id:
                 self.fetch_feature(layer, feature_id)
 
-                if self.settings.value("show_map_tip"):
+                if self.settings.value("show_map_tip") and with_qt_web_kit():
                     self.show_map_tip(layer, feature_id, point)
             else:
                 self.current_timer = QTimer()
