@@ -31,6 +31,7 @@ from ..qgissettingmanager.setting_dialog import SettingDialog, UpdateMode
 from ..core.settings import Settings
 from ..core.language import get_language
 from ..map_geo_admin.layers import searchable_layers
+from .qtwebkit_conf import with_qt_web_kit
 
 DialogUi, _ = loadUiType(os.path.join(os.path.dirname(__file__), "../ui/config.ui"))
 
@@ -54,11 +55,12 @@ class ConfigDialog(QDialog, DialogUi, SettingDialog):
             self.lang.addItem(key, val)
         for filter_type in FilterType:
             cb = self.findChild(QComboBox, "{}_priority".format(filter_type.value))
-            cb.addItem(self.tr("Highest"), QgsLocatorFilter.Highest)
-            cb.addItem(self.tr("High"), QgsLocatorFilter.High)
-            cb.addItem(self.tr("Medium"), QgsLocatorFilter.Medium)
-            cb.addItem(self.tr("Low"), QgsLocatorFilter.Low)
-            cb.addItem(self.tr("Lowest"), QgsLocatorFilter.Lowest)
+            if cb is not None:  # Some filters might not have a config dialog
+                cb.addItem(self.tr("Highest"), QgsLocatorFilter.Highest)
+                cb.addItem(self.tr("High"), QgsLocatorFilter.High)
+                cb.addItem(self.tr("Medium"), QgsLocatorFilter.Medium)
+                cb.addItem(self.tr("Low"), QgsLocatorFilter.Low)
+                cb.addItem(self.tr("Lowest"), QgsLocatorFilter.Lowest)
 
         self.crs.addItem(
             self.tr("Use map CRS if possible, defaults to CH1903+"), "project"
@@ -96,6 +98,11 @@ class ConfigDialog(QDialog, DialogUi, SettingDialog):
 
         self.settings = settings
         self.init_widgets()
+
+        if not with_qt_web_kit():
+            map_tip = self.setting_widget("show_map_tip")
+            map_tip.widget.setEnabled(False)
+            map_tip.widget.setToolTip(self.tr("You need to install QtWebKit to use map tips."))
 
     def select_all(self, select: bool = True):
         for r in range(self.feature_search_layers_list.rowCount()):
