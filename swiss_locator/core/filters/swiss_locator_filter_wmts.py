@@ -55,7 +55,7 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
 
             self.info(self.content.status())
 
-            if self.content.status() == QgsFetchedContent.ContentStatus.Finished:
+            if self.content.status() == QgsFetchedContent.ContentStatus.Finished and self.content.filePath():
                 file_path = self.content.filePath()
                 self.info(
                     f"Swisstopo capabilities already downloaded. Reading from {file_path}"
@@ -91,7 +91,7 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
         return "chw"
 
     def handle_capabilities_response(self):
-        if self.content.status() == QgsFetchedContent.ContentStatus.Finished:
+        if self.content.status() == QgsFetchedContent.ContentStatus.Finished and self.content.filePath():
             self.info(
                 f"Swisstopo capabilities has been downloaded. Reading from {self.content.filePath()}"
             )
