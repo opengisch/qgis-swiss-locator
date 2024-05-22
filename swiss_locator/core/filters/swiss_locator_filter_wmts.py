@@ -22,6 +22,7 @@ from qgis.PyQt.QtNetwork import QNetworkRequest
 
 from qgis.gui import QgisInterface
 from qgis.core import (
+    Qgis,
     QgsApplication,
     QgsBlockingNetworkRequest,
     QgsFetchedContent,
@@ -55,7 +56,7 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
 
             self.info(self.content.status())
 
-            if self.content.status() == QgsFetchedContent.ContentStatus.Finished:
+            if self.content.status() == QgsFetchedContent.ContentStatus.Finished and self.content.filePath():
                 file_path = self.content.filePath()
                 self.info(
                     f"Swisstopo capabilities already downloaded. Reading from {file_path}"
@@ -91,11 +92,16 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
         return "chw"
 
     def handle_capabilities_response(self):
-        if self.content.status() == QgsFetchedContent.ContentStatus.Finished:
+        if self.content.status() == QgsFetchedContent.ContentStatus.Finished and self.content.filePath():
             self.info(
                 f"Swisstopo capabilities has been downloaded. Reading from {self.content.filePath()}"
             )
             self.capabilities = ET.parse(self.content.filePath()).getroot()
+        else:
+            self.info(
+                "The Swiss Locator filter for WMTS layers could not fetch capabilities",
+                Qgis.Critical
+            )
 
     def perform_fetch_results(self, search: str, feedback: QgsFeedback):
         namespaces = {
