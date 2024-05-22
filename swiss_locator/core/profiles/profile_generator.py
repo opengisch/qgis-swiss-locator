@@ -1,6 +1,6 @@
 import json
 
-from qgis.PyQt.QtCore import QUrl, QUrlQuery
+from qgis.PyQt.QtCore import QUrl
 from qgis.PyQt.QtNetwork import QNetworkRequest
 from qgis.core import (
     Qgis,
@@ -18,6 +18,7 @@ from qgis.core import (
 
 from swiss_locator.core.profiles.profile_results import  SwissProfileResults
 from swiss_locator.core.profiles.profile_url import profile_url
+from swiss_locator.utils.utils import url_with_param
 
 
 class SwissProfileGenerator(QgsAbstractProfileGenerator):
@@ -42,14 +43,6 @@ class SwissProfileGenerator(QgsAbstractProfileGenerator):
         return "swiss-profile"
 
     def __get_profile_from_rest_api(self):
-        def url_with_param(url, params) -> str:
-            url = QUrl(url)
-            q = QUrlQuery(url)
-            for key, value in params.items():
-                q.addQueryItem(key, value)
-            url.setQuery(q)
-            return url
-
         result = {}
         geojson = self.__transformed_curve.asJson(3)
         base_url, base_params = profile_url(geojson)

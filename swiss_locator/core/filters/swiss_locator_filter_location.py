@@ -41,6 +41,7 @@ from swiss_locator.core.filters.filter_type import FilterType
 from swiss_locator.core.filters.map_geo_admin import map_geo_admin_url
 from swiss_locator.core.results import LocationResult
 from swiss_locator.utils.html_stripper import strip_tags
+from swiss_locator.utils.utils import url_with_param
 
 
 class SwissLocatorFilterLocation(SwissLocatorFilter):
@@ -114,7 +115,7 @@ class SwissLocatorFilterLocation(SwissLocatorFilter):
         # Try to get more info
         url = f"https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}"
         params = {"lang": self.lang, "sr": self.crs}
-        url = self.url_with_param(url, params)
+        url = url_with_param(url, params)
         request = QNetworkRequest(QUrl(url))
         self.fetch_request(request, QgsFeedback(), self.parse_feature_response)
 

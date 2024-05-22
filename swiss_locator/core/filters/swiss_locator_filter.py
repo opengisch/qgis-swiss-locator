@@ -27,7 +27,7 @@ import traceback
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QLabel, QWidget, QTabWidget
-from PyQt5.QtCore import QUrl, QUrlQuery, pyqtSignal, QEventLoop
+from PyQt5.QtCore import QUrl, pyqtSignal, QEventLoop
 from PyQt5.QtNetwork import QNetworkRequest, QNetworkReply, QNetworkAccessManager
 
 from qgis.core import (
@@ -62,6 +62,7 @@ from swiss_locator.core.language import get_language
 from swiss_locator.gui.config_dialog import ConfigDialog
 from swiss_locator.gui.maptip import MapTip
 from swiss_locator.gui.qtwebkit_conf import with_qt_web_kit
+from swiss_locator.utils.utils import url_with_param
 
 
 def result_from_data(result: QgsLocatorResult):
@@ -236,17 +237,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
         )
 
     @staticmethod
-    def url_with_param(url, params) -> str:
-        url = QUrl(url)
-        q = QUrlQuery(url)
-        for key, value in params.items():
-            q.addQueryItem(key, value)
-        url.setQuery(q)
-        return url
-
-    @staticmethod
     def request_for_url(url, params, headers) -> QNetworkRequest:
-        url = SwissLocatorFilter.url_with_param(url, params)
+        url = url_with_param(url, params)
         request = QNetworkRequest(url)
         for k, v in list(headers.items()):
             request.setRawHeader(k, v)
@@ -540,7 +532,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 layer=layer, feature_id=feature_id
             )
             params = {"lang": self.lang, "sr": self.crs}
-            url = self.url_with_param(url, params)
+            url = url_with_param(url, params)
             self.dbg_info(url)
             request = QNetworkRequest(QUrl(url))
             self.fetch_request(
