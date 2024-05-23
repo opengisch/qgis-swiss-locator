@@ -22,9 +22,11 @@ class SwissProfileResults(QgsAbstractProfileResults):
 
         self.__profile_curve = None
         self.raw_points = []  # QgsPointSequence
-        self.distance_to_height = {}
+        self.cartesian_distance_to_height = {}
+        self.ellipsoidal_distance_to_height = {}
         self.geometries = []
-        self.cross_section_geometries = []
+        self.cartesian_cross_section_geometries = []
+        self.ellipsoidal_cross_section_geometries = []
         self.min_z = 4500
         self.max_z = -100
 
@@ -55,7 +57,7 @@ class SwissProfileResults(QgsAbstractProfileResults):
                 result.append(feature)
 
         elif type == Qgis.ProfileExportType.Profile2D:
-            for geom in self.cross_section_geometries:
+            for geom in self.cartesian_cross_section_geometries:
                 feature = QgsAbstractProfileResults.Feature()
                 feature.geometry = geom
                 feature.layerIdentifier = self.type()
@@ -70,7 +72,7 @@ class SwissProfileResults(QgsAbstractProfileResults):
                 # Since we've got distance/elevation pairs as
                 # x,y for cross-section geometries, and since
                 # both point arrays have the same length:
-                p = self.cross_section_geometries[i].asPoint()
+                p = self.cartesian_cross_section_geometries[i].asPoint()
                 feature.attributes = {"distance": p.x(), "elevation": p.y()}
                 result.append(feature)
 
@@ -93,7 +95,7 @@ class SwissProfileResults(QgsAbstractProfileResults):
 
         prev_distance = float('inf')
         prev_elevation = 0
-        for k, v in self.distance_to_height.items():
+        for k, v in self.cartesian_distance_to_height.items():
             # find segment which corresponds to the given distance along curve
             if k != 0 and prev_distance <= point.distance() <= k:
                 dx = k - prev_distance
@@ -159,7 +161,7 @@ class SwissProfileResults(QgsAbstractProfileResults):
         current_line = QPolygonF()
         prev_distance = None
         current_part_start_distance = 0
-        for k, v in self.distance_to_height.items():
+        for k, v in self.cartesian_distance_to_height.items():
             if not len(current_line):  # new part
                 if not v:  # skip emptiness
                     continue
@@ -200,7 +202,7 @@ class SwissProfileResults(QgsAbstractProfileResults):
 
         self.marker_symbol.startRender(context.renderContext())
 
-        for k, v in self.distance_to_height.items():
+        for k, v in self.cartesian_distance_to_height.items():
             if not v:
                 continue
 
