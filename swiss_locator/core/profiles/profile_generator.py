@@ -11,6 +11,7 @@ from qgis.core import (
     QgsCsException,
     QgsFeedback,
     QgsGeometry,
+    QgsGeometryUtils,
     QgsMessageLog,
     QgsNetworkAccessManager,
     QgsPoint,
@@ -96,16 +97,29 @@ class SwissProfileGenerator(QgsAbstractProfileGenerator):
             QgsMessageLog.logMessage(result["error"], "Swiss locator", Qgis.Critical)
             return False
 
+        cartesian_d = 0
         for point in result:
             if self.__feedback.isCanceled():
                 return False
 
+            # Note: d is ellipsoidal from the API
             x, y, z, d = self.__parse_response_point(point)
             point_z = QgsPoint(x, y, z)
             point_z.transform(self.__transformation, Qgis.TransformDirection.Reverse)
 
+            self.__results.ellipsoidal_distance_to_height[d] = z
+            self.__results.ellipsoidal_cross_section_geometries.append(QgsGeometry(QgsPoint(d, z)))
+
+            if d != 0:
+                # QGIS elevation profile won't calculate distances
+                # using 3d, so let's stick to 2d to avoid getting
+                # displaced markers or lines in the profile canvas
+                cartesian_d += QgsGeometryUtils.distance2D(point_z, self.__results.raw_points[-1])
+
             self.__results.raw_points.append(point_z)
-            self.__results.distance_to_height[d] = z
+            self.__results.cartesian_distance_to_height[cartesian_d] = z
+            self.__results.cartesian_cross_section_geometries.append(QgsGeometry(QgsPoint(cartesian_d, z)))
+
             if z < self.__results.min_z:
                 self.__results.min_z = z
 
@@ -113,7 +127,6 @@ class SwissProfileGenerator(QgsAbstractProfileGenerator):
                 self.__results.max_z = z
 
             self.__results.geometries.append(QgsGeometry(point_z))
-            self.__results.cross_section_geometries.append(QgsGeometry(QgsPoint(d, z)))
 
         return not self.__feedback.isCanceled()
 
