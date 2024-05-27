@@ -118,12 +118,12 @@ class SwissLocatorFilterLayer(SwissLocatorFilter):
                         ):
                             self.dbg_info(f"get_cap: {url_components.netloc} {url}")
                             visited_capabilities.append(url_components.netloc)
-                        self.fetch_request(
-                            QNetworkRequest(QUrl(url)),
-                            feedback,
-                            slot=self.handle_capabilities_response,
-                            data=(search, wms_url),
-                        )
+                            self.fetch_request(
+                                QNetworkRequest(QUrl(url)),
+                                feedback,
+                                slot=self.handle_capabilities_response,
+                                data=(search, wms_url),
+                            )
 
         else:
             for loc in data["results"]:
