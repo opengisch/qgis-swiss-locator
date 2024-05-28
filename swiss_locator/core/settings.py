@@ -62,7 +62,7 @@ class Settings(SettingManager):
             Enum(
                 f"{FilterType.Location.value}_priority",
                 Scope.Global,
-                QgsLocatorFilter.Highest,
+                QgsLocatorFilter.Priority.Highest,
             )
         )
         self.add_setting(Integer(f"{FilterType.Location.value}_limit", Scope.Global, 8))
@@ -70,7 +70,7 @@ class Settings(SettingManager):
             Enum(
                 f"{FilterType.WMTS.value}_priority",
                 Scope.Global,
-                QgsLocatorFilter.Highest,
+                QgsLocatorFilter.Priority.Highest,
             )
         )
         self.add_setting(Integer(f"{FilterType.WMTS.value}_limit", Scope.Global, 8))
@@ -78,7 +78,7 @@ class Settings(SettingManager):
             Enum(
                 f"{FilterType.VectorTiles.value}_priority",
                 Scope.Global,
-                QgsLocatorFilter.Medium,
+                QgsLocatorFilter.Priority.Medium,
             )
         )
         self.add_setting(Integer(f"{FilterType.VectorTiles.value}_limit", Scope.Global, 8))
@@ -86,7 +86,7 @@ class Settings(SettingManager):
             Enum(
                 f"{FilterType.Feature.value}_priority",
                 Scope.Global,
-                QgsLocatorFilter.Highest,
+                QgsLocatorFilter.Priority.Highest,
             )
         )
         self.add_setting(Integer(f"{FilterType.Feature.value}_limit", Scope.Global, 8))
@@ -94,7 +94,7 @@ class Settings(SettingManager):
             Enum(
                 f"{FilterType.Layers.value}_priority",
                 Scope.Global,
-                QgsLocatorFilter.High,
+                QgsLocatorFilter.Priority.High,
             )
         )
         self.add_setting(Integer(f"{FilterType.Layers.value}_limit", Scope.Global, 5))

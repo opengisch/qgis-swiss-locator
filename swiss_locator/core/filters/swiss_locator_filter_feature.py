@@ -19,7 +19,7 @@
 
 import json
 
-from PyQt5.QtGui import QIcon
+from qgis.PyQt.QtGui import QIcon
 
 from qgis.core import (
     Qgis,
@@ -72,7 +72,7 @@ class SwissLocatorFilterFeature(SwissLocatorFilter):
         except IOError:
             self.info(
                 "Layers data file not found. Please report an issue.",
-                Qgis.Critical,
+                Qgis.MessageLevel.Critical,
             )
         self.fetch_requests(requests, feedback, self.handle_content)
 
@@ -96,7 +96,7 @@ class SwissLocatorFilterFeature(SwissLocatorFilter):
                         f"Layer {layer} is not in the list of searchable layers."
                         " Please report issue."
                     ),
-                    Qgis.Warning,
+                    Qgis.MessageLevel.Warning,
                 )
                 layer_display = layer
             result.group = layer_display

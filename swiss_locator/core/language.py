@@ -24,7 +24,7 @@
 #
 # ---------------------------------------------------------------------
 
-from PyQt5.QtCore import QLocale, QSettings
+from qgis.PyQt.QtCore import QLocale, QSettings
 from .settings import Settings
 from qgis.core import NULL
 

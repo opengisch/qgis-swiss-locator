@@ -24,11 +24,11 @@ import re
 import sys
 import traceback
 
-from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QLabel, QWidget, QTabWidget
-from PyQt5.QtCore import QUrl, pyqtSignal, QEventLoop
-from PyQt5.QtNetwork import QNetworkRequest, QNetworkReply, QNetworkAccessManager
+from qgis.PyQt.QtCore import Qt, QTimer
+from qgis.PyQt.QtGui import QColor
+from qgis.PyQt.QtWidgets import QLabel, QWidget, QTabWidget
+from qgis.PyQt.QtCore import QUrl, pyqtSignal, QEventLoop
+from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply, QNetworkAccessManager
 
 from qgis.core import (
     Qgis,
@@ -120,7 +120,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         self.minimum_search_length = 2
 
         self.nam = QNetworkAccessManager()
-        self.nam.setRedirectPolicy(QNetworkRequest.NoLessSafeRedirectPolicy)
+        self.nam.setRedirectPolicy(QNetworkRequest.RedirectPolicy.NoLessSafeRedirectPolicy)
         self.network_replies = dict()
 
         if crs:
@@ -133,20 +133,20 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.map_canvas = iface.mapCanvas()
             self.map_canvas.destinationCrsChanged.connect(self.create_transforms)
 
-            self.rubber_band = QgsRubberBand(self.map_canvas, QgsWkbTypes.PointGeometry)
+            self.rubber_band = QgsRubberBand(self.map_canvas, QgsWkbTypes.GeometryType.PointGeometry)
             self.rubber_band.setColor(QColor(255, 255, 50, 200))
             self.rubber_band.setIcon(self.rubber_band.ICON_CIRCLE)
             self.rubber_band.setIconSize(15)
             self.rubber_band.setWidth(4)
-            self.rubber_band.setBrushStyle(Qt.NoBrush)
+            self.rubber_band.setBrushStyle(Qt.BrushStyle.NoBrush)
 
             self.feature_rubber_band = QgsRubberBand(
-                self.map_canvas, QgsWkbTypes.PolygonGeometry
+                self.map_canvas, QgsWkbTypes.GeometryType.PolygonGeometry
             )
             self.feature_rubber_band.setColor(QColor(255, 50, 50, 200))
             self.feature_rubber_band.setFillColor(QColor(255, 255, 50, 160))
-            self.feature_rubber_band.setBrushStyle(Qt.SolidPattern)
-            self.feature_rubber_band.setLineStyle(Qt.SolidLine)
+            self.feature_rubber_band.setBrushStyle(Qt.BrushStyle.SolidPattern)
+            self.feature_rubber_band.setLineStyle(Qt.PenStyle.SolidLine)
             self.feature_rubber_band.setWidth(4)
 
             self.create_transforms()
@@ -170,8 +170,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
         )
 
     def clearPreviousResults(self):
-        self.rubber_band.reset(QgsWkbTypes.PointGeometry)
-        self.feature_rubber_band.reset(QgsWkbTypes.PolygonGeometry)
+        self.rubber_band.reset(QgsWkbTypes.GeometryType.PointGeometry)
+        self.feature_rubber_band.reset(QgsWkbTypes.GeometryType.PolygonGeometry)
         if self.map_tip is not None:
             del self.map_tip
             self.map_tip = None
@@ -185,10 +185,10 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
     def openConfigWidget(self, parent=None):
         dlg = ConfigDialog(parent)
-        wid = dlg.findChild(QTabWidget, "tabWidget", Qt.FindDirectChildrenOnly)
+        wid = dlg.findChild(QTabWidget, "tabWidget", Qt.FindChildOption.FindDirectChildrenOnly)
         tab = wid.findChild(QWidget, self.type.value)
         wid.setCurrentWidget(tab)
-        dlg.exec_()
+        dlg.exec()
 
     def create_transforms(self):
         # this should happen in the main thread
@@ -249,7 +249,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         reply = self.network_replies[url]
 
         try:
-            if reply.error() != QNetworkReply.NoError:
+            if reply.error() != QNetworkReply.NetworkError.NoError:
                 self.info(f"could not load url: {reply.errorString()}")
             else:
                 content = reply.readAll().data().decode("utf-8")
@@ -259,16 +259,16 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     slot(content, feedback)
 
         except Exception as e:
-            self.info(e, Qgis.Critical)
+            self.info(e, Qgis.MessageLevel.Critical)
             exc_type, exc_obj, exc_traceback = sys.exc_info()
             filename = os.path.split(exc_traceback.tb_frame.f_code.co_filename)[1]
             self.info(
                 "{} {} {}".format(exc_type, filename, exc_traceback.tb_lineno),
-                Qgis.Critical,
+                Qgis.MessageLevel.Critical,
             )
             self.info(
                 traceback.print_exception(exc_type, exc_obj, exc_traceback),
-                Qgis.Critical,
+                Qgis.MessageLevel.Critical,
             )
 
         # clean nam
@@ -306,7 +306,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
         # Let the requests end and catch all exceptions (and clean up requests)
         if len(self.network_replies) > 0:
-            self.event_loop.exec_(QEventLoop.ExcludeUserInputEvents)
+            self.event_loop.exec(QEventLoop.ProcessEventsFlag.ExcludeUserInputEvents)
 
     def fetchResults(
         self, search: str, context: QgsLocatorContext, feedback: QgsFeedback
@@ -327,16 +327,16 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 self.resultFetched.emit(result)
 
         except Exception as e:
-            self.info(e, Qgis.Critical)
+            self.info(e, Qgis.MessageLevel.Critical)
             exc_type, exc_obj, exc_traceback = sys.exc_info()
             filename = os.path.split(exc_traceback.tb_frame.f_code.co_filename)[1]
             self.info(
                 "{} {} {}".format(exc_type, filename, exc_traceback.tb_lineno),
-                Qgis.Critical,
+                Qgis.MessageLevel.Critical,
             )
             self.info(
                 traceback.print_exception(exc_type, exc_obj, exc_traceback),
-                Qgis.Critical,
+                Qgis.MessageLevel.Critical,
             )
 
     def triggerResult(self, result: QgsLocatorResult):
@@ -354,7 +354,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 self.tr(
                     "QGIS Swiss Locator encountered an error. Please <b>update to QGIS 3.16.2</b> or newer."
                 ),
-                Qgis.Warning,
+                Qgis.MessageLevel.Warning,
                 None,
             )
             return
@@ -383,8 +383,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.info(f"Loading layer: {url_with_params}")
             ch_layer = QgsRasterLayer(url_with_params, result.displayString, "wms")
             label = QLabel()
-            label.setTextFormat(Qt.RichText)
-            label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+            label.setTextFormat(Qt.TextFormat.RichText)
+            label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
             label.setOpenExternalLinks(True)
 
             if "geo.admin.ch" in swiss_result.url.lower():
@@ -402,7 +402,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                         swiss_result.title, swiss_result.layer
                     )
                 )
-                level = Qgis.Warning
+                level = Qgis.MessageLevel.Warning
                 self.info(msg, level)
             else:
                 msg = self.tr(
@@ -410,7 +410,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                         swiss_result.title, swiss_result.layer
                     )
                 )
-                level = Qgis.Info
+                level = Qgis.MessageLevel.Info
 
                 QgsProject.instance().addMapLayer(ch_layer)
 
@@ -447,7 +447,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                         swiss_result.title
                     )
                 )
-                level = Qgis.Warning
+                level = Qgis.MessageLevel.Warning
                 self.info(msg, level)
             else:
                 ch_layer.setLabelsEnabled(True)
@@ -463,7 +463,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                             "; ".join([sublayer.name() for sublayer in sublayers])
                         )
                     )
-                    level = Qgis.Info
+                    level = Qgis.MessageLevel.Info
                     self.info(msg, level)
                 if error or warnings:
                     msg = self.tr(
@@ -473,7 +473,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                             "; ".join(warnings)
                         )
                     )
-                    level = Qgis.Warning
+                    level = Qgis.MessageLevel.Warning
                     self.info(msg, level)
 
                 msg = self.tr(
@@ -481,7 +481,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                         swiss_result.title
                     )
                 )
-                level = Qgis.Info
+                level = Qgis.MessageLevel.Info
                 self.info(msg, level)
 
                 # Load basemap layers at the bottom of the layer tree
@@ -546,14 +546,14 @@ class SwissLocatorFilter(QgsLocatorFilter):
     def highlight(self, point, bbox=None):
         if bbox is None:
             bbox = point
-        self.rubber_band.reset(QgsWkbTypes.PointGeometry)
+        self.rubber_band.reset(QgsWkbTypes.GeometryType.PointGeometry)
         self.rubber_band.addGeometry(point, None)
         rect = bbox.boundingBox()
         rect.scale(1.1)
         self.map_canvas.setExtent(rect)
         self.map_canvas.refresh()
 
-    def info(self, msg="", level=Qgis.Info):
+    def info(self, msg="", level=Qgis.MessageLevel.Info):
         self.logMessage(str(msg), level)
 
     def dbg_info(self, msg=""):

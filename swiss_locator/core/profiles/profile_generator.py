@@ -64,7 +64,7 @@ class SwissProfileGenerator(QgsAbstractProfileGenerator):
                 QgsMessageLog.logMessage(
                     "Unable to parse results from Profile service. Details: {}".format(e.msg),
                     "Swiss locator",
-                    Qgis.Critical
+                    Qgis.MessageLevel.Critical
                 )
 
         return result
@@ -85,7 +85,7 @@ class SwissProfileGenerator(QgsAbstractProfileGenerator):
         except QgsCsException as e:
             QgsMessageLog.logMessage("Error transforming profile line to EPSG:2056.",
                                      "Swiss locator",
-                                     Qgis.Critical)
+                                     Qgis.MessageLevel.Critical)
             return False
 
         self.__results = SwissProfileResults()
@@ -94,7 +94,7 @@ class SwissProfileGenerator(QgsAbstractProfileGenerator):
         result = self.__get_profile_from_rest_api()
 
         if "error" in result:
-            QgsMessageLog.logMessage(result["error"], "Swiss locator", Qgis.Critical)
+            QgsMessageLog.logMessage(result["error"], "Swiss locator", Qgis.MessageLevel.Critical)
             return False
 
         cartesian_d = 0
