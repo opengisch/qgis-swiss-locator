@@ -65,6 +65,7 @@ jobs:
         VERSION=${{ github.ref_name }}
         qgis-plugin-ci release ${VERSION} \
           --github-token ${{ secrets.GITHUB_TOKEN }} \
+          --allow-uncommitted-changes \
           --osgeo-username ${{ secrets.OSGEO_PLUGIN_USERNAME }} \
           --osgeo-password ${{ secrets.OSGEO_PLUGIN_PASSWORD }} \
           --transifex-token "${{ secrets.TX_TOKEN }}"
