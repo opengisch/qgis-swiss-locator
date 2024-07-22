@@ -18,8 +18,8 @@
 """
 
 import os
-from PyQt5.QtCore import QCoreApplication, QLocale, QSettings, QTranslator
-from PyQt5.QtWidgets import QWidget
+from qgis.PyQt.QtCore import QCoreApplication, QLocale, QSettings, QTranslator
+from qgis.PyQt.QtWidgets import QWidget
 from qgis.core import Qgis, QgsApplication, QgsMessageLog, NULL
 from qgis.gui import QgisInterface, QgsMessageBarItem
 
@@ -79,7 +79,7 @@ class SwissLocatorPlugin:
             QgsMessageLog.logMessage(
                 "Swiss profile source has been registered!",
                 "Swiss locator",
-                Qgis.Info
+                Qgis.MessageLevel.Info
             )
 
     def unload(self):
@@ -92,7 +92,7 @@ class SwissLocatorPlugin:
             QgsMessageLog.logMessage(
                 "Swiss profile source has been unregistered!",
                 "Swiss locator",
-                Qgis.Info
+                Qgis.MessageLevel.Info
             )
 
     def show_message(

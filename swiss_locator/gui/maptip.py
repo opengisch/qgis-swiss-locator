@@ -21,17 +21,17 @@
  ***************************************************************************/
 """
 
-from PyQt5.QtCore import Qt, QPoint, pyqtSignal
-from PyQt5.QtWidgets import QSizePolicy, QDockWidget
-from PyQt5.QtGui import QPalette, QDesktopServices, QCloseEvent
+from qgis.PyQt.QtCore import Qt, QPoint, pyqtSignal
+from qgis.PyQt.QtWidgets import QSizePolicy, QDockWidget
+from qgis.PyQt.QtGui import QPalette, QDesktopServices, QCloseEvent
 from qgis.core import Qgis, QgsPointXY, QgsMessageLog
 from qgis.gui import QgisInterface
 
 from swiss_locator import DEBUG
 from swiss_locator.gui.qtwebkit_conf import with_qt_web_kit
 if with_qt_web_kit():
-    from PyQt5.QtWebKit import QWebSettings
-    from PyQt5.QtWebKitWidgets import QWebView, QWebPage
+    from qgis.PyQt.QtWebKit import QWebSettings
+    from qgis.PyQt.QtWebKitWidgets import QWebView, QWebPage
 
 
 class MapTip(QDockWidget):
@@ -50,7 +50,7 @@ class MapTip(QDockWidget):
             QWebPage.DelegateAllLinks
         )  # Handle link clicks by yourself
         self.web_view.setContextMenuPolicy(
-            Qt.NoContextMenu
+            Qt.ContextMenuPolicy.NoContextMenu
         )  # No context menu is allowed if you don't need it
         self.web_view.linkClicked.connect(self.on_link_clicked)
 
@@ -61,7 +61,7 @@ class MapTip(QDockWidget):
             QWebSettings.JavascriptEnabled, True
         )
 
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.setWidget(self.web_view)
 
         # assure the map tip is never larger than half the map canvas
@@ -82,10 +82,10 @@ class MapTip(QDockWidget):
         #                                  bg=background_color.name(QColor.HexArgb)))
 
         palette = self.web_view.palette()
-        palette.setBrush(QPalette.Base, Qt.transparent)
-        palette.setBrush(QPalette.Base, background_color)
+        palette.setBrush(QPalette.ColorRole.Base, Qt.GlobalColor.transparent)
+        palette.setBrush(QPalette.ColorRole.Base, background_color)
         self.web_view.page().setPalette(palette)
-        self.web_view.setAttribute(Qt.WA_OpaquePaintEvent, False)
+        self.web_view.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent, False)
 
         body_style = "background-color: {bg}; margin: 0".format(bg=background_color)
         container_style = "display: inline-block; margin: 0px"
@@ -114,7 +114,7 @@ class MapTip(QDockWidget):
 
         # self.resize(width, height)
 
-        iface.addDockWidget(Qt.RightDockWidgetArea, self)
+        iface.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self)
         self.setFeatures(QDockWidget.AllDockWidgetFeatures)
         self.setFloating(True)
         self.setWindowOpacity(0.9)
@@ -135,7 +135,7 @@ class MapTip(QDockWidget):
     def closeEvent(self, event: QCloseEvent):
         self.closed.emit()
 
-    def info(self, msg="", level=Qgis.Info):
+    def info(self, msg="", level=Qgis.MessageLevel.Info):
         QgsMessageLog.logMessage(
             "{} {}".format(self.__class__.__name__, msg), "Locator bar", level
         )

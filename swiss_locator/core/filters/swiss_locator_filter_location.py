@@ -99,16 +99,16 @@ class SwissLocatorFilterLocation(SwissLocatorFilter):
                 self.resultFetched.emit(result)
 
         except Exception as e:
-            self.info(str(e), Qgis.Critical)
+            self.info(str(e), Qgis.MessageLevel.Critical)
             exc_type, exc_obj, exc_traceback = sys.exc_info()
             filename = os.path.split(exc_traceback.tb_frame.f_code.co_filename)[1]
             self.info(
                 f"{exc_type} {filename} {exc_traceback.tb_lineno}",
-                Qgis.Critical,
+                Qgis.MessageLevel.Critical,
             )
             self.info(
                 traceback.print_exception(exc_type, exc_obj, exc_traceback),
-                Qgis.Critical,
+                Qgis.MessageLevel.Critical,
             )
 
     def fetch_feature(self, layer, feature_id):
@@ -135,7 +135,7 @@ class SwissLocatorFilterLocation(SwissLocatorFilter):
             geometry = QgsGeometry.fromPolygonXY(rings)
             geometry.transform(self.transform_ch)
 
-            self.feature_rubber_band.reset(QgsWkbTypes.PolygonGeometry)
+            self.feature_rubber_band.reset(QgsWkbTypes.GeometryType.PolygonGeometry)
             self.feature_rubber_band.addGeometry(geometry, None)
 
     def group_info(self, group: str) -> (str, str):

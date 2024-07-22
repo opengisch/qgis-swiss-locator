@@ -123,8 +123,8 @@ class SwissProfileResults(QgsAbstractProfileResults):
         if not painter:
             return
 
-        painter.setBrush(Qt.NoBrush)
-        painter.setPen(Qt.NoPen)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.setPen(Qt.PenStyle.NoPen)
 
         min_distance = context.distanceRange().lower()
         max_distance = context.distanceRange().upper()
@@ -187,8 +187,8 @@ class SwissProfileResults(QgsAbstractProfileResults):
         if not painter:
             return
 
-        painter.setBrush(Qt.NoBrush)
-        painter.setPen(Qt.NoPen)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.setPen(Qt.PenStyle.NoPen)
 
         minDistance = context.distanceRange().lower()
         maxDistance = context.distanceRange().upper()

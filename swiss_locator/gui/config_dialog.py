@@ -22,8 +22,8 @@
 """
 
 import os
-from PyQt5.QtCore import Qt, pyqtSlot
-from PyQt5.QtWidgets import QDialog, QTableWidgetItem, QAbstractItemView, QComboBox
+from qgis.PyQt.QtCore import Qt, pyqtSlot
+from qgis.PyQt.QtWidgets import QDialog, QTableWidgetItem, QAbstractItemView, QComboBox
 from qgis.PyQt.uic import loadUiType
 from qgis.core import QgsLocatorFilter
 
@@ -56,11 +56,11 @@ class ConfigDialog(QDialog, DialogUi, SettingDialog):
         for filter_type in FilterType:
             cb = self.findChild(QComboBox, "{}_priority".format(filter_type.value))
             if cb is not None:  # Some filters might not have a config dialog
-                cb.addItem(self.tr("Highest"), QgsLocatorFilter.Highest)
-                cb.addItem(self.tr("High"), QgsLocatorFilter.High)
-                cb.addItem(self.tr("Medium"), QgsLocatorFilter.Medium)
-                cb.addItem(self.tr("Low"), QgsLocatorFilter.Low)
-                cb.addItem(self.tr("Lowest"), QgsLocatorFilter.Lowest)
+                cb.addItem(self.tr("Highest"), QgsLocatorFilter.Priority.Highest)
+                cb.addItem(self.tr("High"), QgsLocatorFilter.Priority.High)
+                cb.addItem(self.tr("Medium"), QgsLocatorFilter.Priority.Medium)
+                cb.addItem(self.tr("Low"), QgsLocatorFilter.Priority.Low)
+                cb.addItem(self.tr("Lowest"), QgsLocatorFilter.Priority.Lowest)
 
         self.crs.addItem(
             self.tr("Use map CRS if possible, defaults to CH1903+"), "project"
@@ -80,15 +80,15 @@ class ConfigDialog(QDialog, DialogUi, SettingDialog):
             (self.tr("Layer"), self.tr("Description"))
         )
         self.feature_search_layers_list.setSelectionBehavior(
-            QAbstractItemView.SelectRows
+            QAbstractItemView.SelectionBehavior.SelectRows
         )
         self.feature_search_layers_list.setSelectionMode(
-            QAbstractItemView.SingleSelection
+            QAbstractItemView.SelectionMode.SingleSelection
         )
         r = 0
         for layer, description in layers.items():
             item = QTableWidgetItem(layer)
-            item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsUserCheckable)
+            item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
             # item.setCheckState(Qt.Unchecked)
             self.feature_search_layers_list.setItem(r, 0, item)
             self.feature_search_layers_list.setItem(r, 1, QTableWidgetItem(description))
@@ -107,12 +107,12 @@ class ConfigDialog(QDialog, DialogUi, SettingDialog):
     def select_all(self, select: bool = True):
         for r in range(self.feature_search_layers_list.rowCount()):
             item = self.feature_search_layers_list.item(r, 0)
-            item.setCheckState(Qt.Checked if select else Qt.Unchecked)
+            item.setCheckState(Qt.CheckState.Checked if select else Qt.CheckState.Unchecked)
 
     @pyqtSlot(str)
     def filter_rows(self, text: str):
         if text:
-            items = self.feature_search_layers_list.findItems(text, Qt.MatchContains)
+            items = self.feature_search_layers_list.findItems(text, Qt.MatchFlag.MatchContains)
             print(text)
             print(len(items))
             shown_rows = []

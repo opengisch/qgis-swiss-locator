@@ -73,7 +73,7 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
             nam.get(request, forceRefresh=True)
             reply = nam.reply()
             if (
-                reply.attribute(QNetworkRequest.HttpStatusCodeAttribute) == 200
+                reply.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute) == 200
             ):  # other codes are handled by NetworkAccessManager
                 self.capabilities = ET.fromstring(reply.content().data().decode("utf8"))
             else:
@@ -100,7 +100,7 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
         else:
             self.info(
                 "The Swiss Locator filter for WMTS layers could not fetch capabilities",
-                Qgis.Critical
+                Qgis.MessageLevel.Critical
             )
 
     def perform_fetch_results(self, search: str, feedback: QgsFeedback):
