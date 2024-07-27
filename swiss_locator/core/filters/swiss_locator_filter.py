@@ -443,9 +443,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
             if not ch_layer.isValid():
                 msg = self.tr(
-                    "Cannot load Vector Tiles layer: {}".format(
-                        swiss_result.title
-                    )
+                    "Cannot load Vector Tiles layer: {}".format(swiss_result.title)
                 )
                 level = Qgis.MessageLevel.Warning
                 self.info(msg, level)
@@ -453,14 +451,14 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 ch_layer.setLabelsEnabled(True)
                 ch_layer.loadDefaultMetadata()
 
-                error, warnings = '', []
+                error, warnings = "", []
                 res, sublayers = ch_layer.loadDefaultStyleAndSubLayers(error, warnings)
 
                 if sublayers:
                     msg = self.tr(
                         "Sublayers found ({}): {}".format(
                             swiss_result.title,
-                            "; ".join([sublayer.name() for sublayer in sublayers])
+                            "; ".join([sublayer.name() for sublayer in sublayers]),
                         )
                     )
                     level = Qgis.MessageLevel.Info
@@ -468,24 +466,27 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 if error or warnings:
                     msg = self.tr(
                         "Error/warning found while loading default styles and sublayers for layer {}. Error: {} Warning: {}".format(
-                            swiss_result.title,
-                            error,
-                            "; ".join(warnings)
+                            swiss_result.title, error, "; ".join(warnings)
                         )
                     )
                     level = Qgis.MessageLevel.Warning
                     self.info(msg, level)
 
-                msg = self.tr(
-                    "Layer added to the map: {}".format(
-                        swiss_result.title
-                    )
-                )
+                msg = self.tr("Layer added to the map: {}".format(swiss_result.title))
                 level = Qgis.MessageLevel.Info
                 self.info(msg, level)
 
                 # Load basemap layers at the bottom of the layer tree
                 root = QgsProject.instance().layerTreeRoot()
+                empty_project = not QgsProject.instance().mapLayers()
+
+                if empty_project:
+                    # Set the Swiss extent in EPSG:3857 (VT's CRS)
+                    extent = QgsRectangle(624991, 5725825, 1209826, 6089033)
+                    ch_layer.setExtent(extent)
+                    for _layer in sublayers:
+                        _layer.setExtent(extent)
+
                 if sublayers:
                     # Sublayers should be loaded on top of the vector tile
                     # layer. We group them to keep them all together.
