@@ -43,8 +43,8 @@ def searchable_layers(lang: str, restrict: bool = False) -> dict:
     assert lang in AVAILABLE_LANGUAGES.values()
 
     settings = Settings()
-    restrict_enabled_by_user = settings.value("feature_search_restrict")
-    restrict_layer_list = settings.value("feature_search_layers_list")
+    restrict_enabled_by_user = settings.feature_search_restrict.value()
+    restrict_layer_list = settings.feature_search_layers_list.value()
 
     layers = {}
 

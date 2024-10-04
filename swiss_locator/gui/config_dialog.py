@@ -26,33 +26,35 @@ from qgis.PyQt.QtCore import Qt, pyqtSlot
 from qgis.PyQt.QtWidgets import QDialog, QTableWidgetItem, QAbstractItemView, QComboBox
 from qgis.PyQt.uic import loadUiType
 from qgis.core import QgsLocatorFilter
+from qgis.gui import QgsSettingsStringComboBoxWrapper
 
-from ..qgissettingmanager.setting_dialog import SettingDialog, UpdateMode
 from ..core.settings import Settings
 from ..core.language import get_language
 from ..map_geo_admin.layers import searchable_layers
 from .qtwebkit_conf import with_qt_web_kit
+from ..core.filters.filter_type import FilterType
+from ..core.parameters import AVAILABLE_LANGUAGES
 
 DialogUi, _ = loadUiType(os.path.join(os.path.dirname(__file__), "../ui/config.ui"))
 
 
-class ConfigDialog(QDialog, DialogUi, SettingDialog):
+class ConfigDialog(QDialog, DialogUi):
     def __init__(self, parent=None):
-        settings = Settings()
+        self.settings = Settings()
         QDialog.__init__(self, parent)
-        SettingDialog.__init__(
-            self, setting_manager=settings, mode=UpdateMode.DialogAccept
-        )
+
         self.setupUi(self)
 
         self.lang.addItem(
             self.tr("use the application locale, defaults to English"), ""
         )
-        from ..core.filters.filter_type import FilterType
-        from ..core.parameters import AVAILABLE_LANGUAGES
-
         for key, val in AVAILABLE_LANGUAGES.items():
             self.lang.addItem(key, val)
+
+        self.lang_wrapper = QgsSettingsStringComboBoxWrapper(
+            self.lang, self.settings.lang
+        )
+
         for filter_type in FilterType:
             cb = self.findChild(QComboBox, "{}_priority".format(filter_type.value))
             if cb is not None:  # Some filters might not have a config dialog
@@ -96,23 +98,25 @@ class ConfigDialog(QDialog, DialogUi, SettingDialog):
         self.feature_search_layers_list.horizontalHeader().setStretchLastSection(True)
         self.feature_search_layers_list.resizeColumnsToContents()
 
-        self.settings = settings
-        self.init_widgets()
-
         if not with_qt_web_kit():
-            map_tip = self.setting_widget("show_map_tip")
-            map_tip.widget.setEnabled(False)
-            map_tip.widget.setToolTip(self.tr("You need to install QtWebKit to use map tips."))
+            self.show_map_tip.setEnabled(False)
+            self.show_map_tip.setToolTip(
+                self.tr("You need to install QtWebKit to use map tips.")
+            )
 
     def select_all(self, select: bool = True):
         for r in range(self.feature_search_layers_list.rowCount()):
             item = self.feature_search_layers_list.item(r, 0)
-            item.setCheckState(Qt.CheckState.Checked if select else Qt.CheckState.Unchecked)
+            item.setCheckState(
+                Qt.CheckState.Checked if select else Qt.CheckState.Unchecked
+            )
 
     @pyqtSlot(str)
     def filter_rows(self, text: str):
         if text:
-            items = self.feature_search_layers_list.findItems(text, Qt.MatchFlag.MatchContains)
+            items = self.feature_search_layers_list.findItems(
+                text, Qt.MatchFlag.MatchContains
+            )
             print(text)
             print(len(items))
             shown_rows = []

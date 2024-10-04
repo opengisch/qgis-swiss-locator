@@ -52,8 +52,11 @@ class SwissLocatorFilterLayer(SwissLocatorFilter):
     def prefix(self):
         return "chl"
 
+    def priority(self):
+        return self.settings.filter_layers_priority.value()
+
     def perform_fetch_results(self, search: str, feedback: QgsFeedback):
-        limit = self.settings.value(f"{FilterType.Location.value}_limit")
+        limit = self.settings.filter_layers_limit.value()
         urls = [
             map_geo_admin_url(search, self.type.value, self.crs, self.lang, limit),
             opendata_swiss_url(search),

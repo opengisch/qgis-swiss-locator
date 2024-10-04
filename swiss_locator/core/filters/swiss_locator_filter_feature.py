@@ -53,12 +53,15 @@ class SwissLocatorFilterFeature(SwissLocatorFilter):
     def prefix(self):
         return "chf"
 
+    def priority(self):
+        return self.settings.filter_feature_priority.value()
+
     def perform_fetch_results(self, search: str, feedback: QgsFeedback):
         # Feature search is split in several requests
         # otherwise URL is too long
         requests = []
         try:
-            limit = self.settings.value(f"{FilterType.Feature.value}_limit")
+            limit = self.settings.filter_feature_limit.value()
             layers = list(self.searchable_layers.keys())
             assert len(layers) > 0
             step = 20

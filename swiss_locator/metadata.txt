@@ -8,6 +8,9 @@ version=dev
 author=OPENGIS.ch
 email=info@opengis.ch
 
+supportsQt6=yes
+
+
 # Tags are comma separated with spaces allowed
 tags=swiss, suisse, schweiz, locator, geoadmin, geoportal, opendata.swiss
 

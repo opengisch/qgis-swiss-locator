@@ -24,82 +24,86 @@
 #
 # ---------------------------------------------------------------------
 
-
-from qgis.core import QgsLocatorFilter
-from swiss_locator.qgissettingmanager import (
-    SettingManager,
-    Scope,
-    Bool,
-    String,
-    Stringlist,
-    Integer,
-    Enum,
+from qgis.core import (
+    QgsLocatorFilter,
+    QgsSettingsTree,
+    QgsSettingsEntryBool,
+    QgsSettingsEntryString,
+    QgsSettingsEntryEnumFlag,
+    QgsSettingsEntryInteger,
+    QgsSettingsEntryStringList,
 )
 from swiss_locator.core.filters.filter_type import FilterType
 
-pluginName = "swiss_locator_plugin"
+PLUGIN_NAME = "swiss_locator_plugin"
 
 
-class Settings(SettingManager):
-    def __init__(self):
-        SettingManager.__init__(self, pluginName)
+class Settings(object):
+    instance = None
 
-        # lang of the service
-        # possible values are de, fr, it , rm, en
-        # if left empty or NULL, try to use locale and defaults to en
-        self.add_setting(String("lang", Scope.Global, ""))
-        self.add_setting(
-            String(
-                "crs",
-                Scope.Global,
-                "project",
-                allowed_values=("2056", "21781", "project"),
+    def __new__(cls):
+        if cls.instance is None:
+            cls.instance = super(Settings, cls).__new__(cls)
+
+            settings_node = QgsSettingsTree.createPluginTreeNode(pluginName=PLUGIN_NAME)
+
+            cls.lang = QgsSettingsEntryString("lang", settings_node, "lang")
+            cls.show_map_tip = QgsSettingsEntryBool(
+                "show_map_tip", settings_node, False
             )
-        )
-        self.add_setting(Bool("show_map_tip", Scope.Global, False))
+            cls.feature_search_restrict = QgsSettingsEntryBool(
+                "feature_search_restrict", settings_node, False
+            )
+            cls.layers_include_opendataswiss = QgsSettingsEntryBool(
+                "layers_include_opendataswiss", settings_node, True
+            )
+            cls.feature_search_layers_list = QgsSettingsEntryStringList(
+                "feature_search_layers_list", settings_node, []
+            )
 
-        self.add_setting(
-            Enum(
+            cls.filter_location_priority = QgsSettingsEntryEnumFlag(
                 f"{FilterType.Location.value}_priority",
-                Scope.Global,
+                settings_node,
                 QgsLocatorFilter.Priority.Highest,
             )
-        )
-        self.add_setting(Integer(f"{FilterType.Location.value}_limit", Scope.Global, 8))
-        self.add_setting(
-            Enum(
+            cls.filter_location_limit = QgsSettingsEntryInteger(
+                f"{FilterType.Location.value}_limit", settings_node, 8
+            )
+
+            cls.filter_wmts_priority = QgsSettingsEntryEnumFlag(
                 f"{FilterType.WMTS.value}_priority",
-                Scope.Global,
-                QgsLocatorFilter.Priority.Highest,
-            )
-        )
-        self.add_setting(Integer(f"{FilterType.WMTS.value}_limit", Scope.Global, 8))
-        self.add_setting(
-            Enum(
-                f"{FilterType.VectorTiles.value}_priority",
-                Scope.Global,
+                settings_node,
                 QgsLocatorFilter.Priority.Medium,
             )
-        )
-        self.add_setting(Integer(f"{FilterType.VectorTiles.value}_limit", Scope.Global, 8))
-        self.add_setting(
-            Enum(
-                f"{FilterType.Feature.value}_priority",
-                Scope.Global,
+            cls.filter_wmts_limit = QgsSettingsEntryInteger(
+                f"{FilterType.WMTS.value}_limit", settings_node, 8
+            )
+
+            cls.filter_vt_priority = QgsSettingsEntryEnumFlag(
+                f"{FilterType.VectorTiles.value}_priority",
+                settings_node,
                 QgsLocatorFilter.Priority.Highest,
             )
-        )
-        self.add_setting(Integer(f"{FilterType.Feature.value}_limit", Scope.Global, 8))
-        self.add_setting(
-            Enum(
-                f"{FilterType.Layers.value}_priority",
-                Scope.Global,
+            cls.filter_vt_limit = QgsSettingsEntryInteger(
+                f"{FilterType.VectorTiles.value}_limit", settings_node, 8
+            )
+
+            cls.filter_feature_priority = QgsSettingsEntryEnumFlag(
+                f"{FilterType.Feature.value}_priority",
+                settings_node,
                 QgsLocatorFilter.Priority.High,
             )
-        )
-        self.add_setting(Integer(f"{FilterType.Layers.value}_limit", Scope.Global, 5))
+            cls.filter_feature_limit = QgsSettingsEntryInteger(
+                f"{FilterType.Feature.value}_limit", settings_node, 8
+            )
 
-        self.add_setting(Bool("feature_search_restrict", Scope.Global, False))
-        self.add_setting(Stringlist("feature_search_layers_list", Scope.Global, None))
+            cls.filter_layers_priority = QgsSettingsEntryEnumFlag(
+                f"{FilterType.Layers.value}_priority",
+                settings_node,
+                QgsLocatorFilter.Priority.High,
+            )
+            cls.filter_layers_limit = QgsSettingsEntryInteger(
+                f"{FilterType.Layers.value}_limit", settings_node, 5
+            )
 
-        self.add_setting(Bool("layers_include_opendataswiss", Scope.Global, True))
+        return cls.instance
