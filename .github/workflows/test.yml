@@ -22,4 +22,4 @@ jobs:
 
       - name: docker test
         run: |
-          docker run -v $(pwd):/usr/src -w /usr/src opengisch/qgis:${QGIS_TEST_VERSION} sh -c 'xvfb-run pytest-3'
+          docker run -v $(pwd):/usr/src -w /usr/src qgis/qgis:${QGIS_TEST_VERSION} sh -c 'xvfb-run pytest-3'
