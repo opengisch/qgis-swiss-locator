@@ -132,7 +132,7 @@ class VectorTilesLayerResult:
         self,
         layer,
         title,
-        url,
+        url: str = None,
         style: str = None,
     ):
         self.title = title
