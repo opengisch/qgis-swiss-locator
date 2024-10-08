@@ -31,6 +31,7 @@ from qgis.PyQt.QtCore import QUrl, pyqtSignal, QEventLoop
 from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply, QNetworkAccessManager
 
 from qgis.core import (
+    metaEnumFromType,
     Qgis,
     QgsLocatorFilter,
     QgsLocatorResult,
@@ -59,6 +60,7 @@ from swiss_locator.core.results import (
 )
 from swiss_locator.core.settings import Settings
 from swiss_locator.core.language import get_language
+
 from swiss_locator.gui.config_dialog import ConfigDialog
 from swiss_locator.gui.maptip import MapTip
 from swiss_locator.gui.qtwebkit_conf import with_qt_web_kit
@@ -118,9 +120,12 @@ class SwissLocatorFilter(QgsLocatorFilter):
         self.result_found = False
         self.access_managers = {}
         self.minimum_search_length = 2
+        self.me = metaEnumFromType(QgsLocatorFilter.Priority)
 
         self.nam = QNetworkAccessManager()
-        self.nam.setRedirectPolicy(QNetworkRequest.RedirectPolicy.NoLessSafeRedirectPolicy)
+        self.nam.setRedirectPolicy(
+            QNetworkRequest.RedirectPolicy.NoLessSafeRedirectPolicy
+        )
         self.network_replies = dict()
 
         if crs:
@@ -133,7 +138,9 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.map_canvas = iface.mapCanvas()
             self.map_canvas.destinationCrsChanged.connect(self.create_transforms)
 
-            self.rubber_band = QgsRubberBand(self.map_canvas, QgsWkbTypes.GeometryType.PointGeometry)
+            self.rubber_band = QgsRubberBand(
+                self.map_canvas, QgsWkbTypes.GeometryType.PointGeometry
+            )
             self.rubber_band.setColor(QColor(255, 255, 50, 200))
             self.rubber_band.setIcon(self.rubber_band.ICON_CIRCLE)
             self.rubber_band.setIconSize(15)
@@ -155,7 +162,13 @@ class SwissLocatorFilter(QgsLocatorFilter):
         return self.__class__.__name__
 
     def priority(self):
-        return self.settings.value(f"{self.type.value}_priority")
+        (value, ok) = self.me.keyToValue(
+            self.settings.filters[self.type.value]["priority"].value()
+        )
+        if ok:
+            return QgsLocatorFilter.Priority(value)
+        else:
+            return QgsLocatorFilter.Priority.Medium
 
     def displayName(self):
         # this should be re-implemented
@@ -185,20 +198,20 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
     def openConfigWidget(self, parent=None):
         dlg = ConfigDialog(parent)
-        wid = dlg.findChild(QTabWidget, "tabWidget", Qt.FindChildOption.FindDirectChildrenOnly)
+        wid = dlg.findChild(
+            QTabWidget, "tabWidget", Qt.FindChildOption.FindDirectChildrenOnly
+        )
         tab = wid.findChild(QWidget, self.type.value)
         wid.setCurrentWidget(tab)
         dlg.exec()
 
     def create_transforms(self):
         # this should happen in the main thread
-        self.crs = self.settings.value("crs")
-        if self.crs == "project":
-            map_crs = self.map_canvas.mapSettings().destinationCrs()
-            if map_crs.isValid() and ":" in map_crs.authid():
-                self.crs = map_crs.authid().split(":")[1]
-            if self.crs not in AVAILABLE_CRS:
-                self.crs = "2056"
+        map_crs = self.map_canvas.mapSettings().destinationCrs()
+        if map_crs.isValid() and ":" in map_crs.authid():
+            self.crs = map_crs.authid().split(":")[1]
+        if self.crs not in AVAILABLE_CRS:
+            self.crs = "2056"
         assert self.crs in AVAILABLE_CRS
         src_crs_ch = QgsCoordinateReferenceSystem("EPSG:{}".format(self.crs))
         assert src_crs_ch.isValid()
@@ -421,7 +434,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             point = QgsGeometry.fromPointXY(swiss_result.point)
             point.transform(self.transform_4326)
             self.highlight(point)
-            if self.settings.value("show_map_tip") and with_qt_web_kit():
+            if self.settings.show_map_tip.value() and with_qt_web_kit():
                 self.show_map_tip(swiss_result.layer, swiss_result.feature_id, point)
 
         # Vector tiles
@@ -519,7 +532,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             if layer and feature_id:
                 self.fetch_feature(layer, feature_id)
 
-                if self.settings.value("show_map_tip") and with_qt_web_kit():
+                if self.settings.show_map_tip.value() and with_qt_web_kit():
                     self.show_map_tip(layer, feature_id, point)
             else:
                 self.current_timer = QTimer()

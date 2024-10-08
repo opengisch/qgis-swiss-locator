@@ -1,3 +1,0 @@
-[submodule "swiss_locator/qgissettingmanager"]
-	path = swiss_locator/qgissettingmanager
-	url = git@github.com:opengisch/qgis_setting_manager.git

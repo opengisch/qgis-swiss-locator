@@ -56,7 +56,10 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
 
             self.info(self.content.status())
 
-            if self.content.status() == QgsFetchedContent.ContentStatus.Finished and self.content.filePath():
+            if (
+                self.content.status() == QgsFetchedContent.ContentStatus.Finished
+                and self.content.filePath()
+            ):
                 file_path = self.content.filePath()
                 self.info(
                     f"Swisstopo capabilities already downloaded. Reading from {file_path}"
@@ -73,7 +76,8 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
             nam.get(request, forceRefresh=True)
             reply = nam.reply()
             if (
-                reply.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute) == 200
+                reply.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute)
+                == 200
             ):  # other codes are handled by NetworkAccessManager
                 self.capabilities = ET.fromstring(reply.content().data().decode("utf8"))
             else:
@@ -92,7 +96,10 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
         return "chw"
 
     def handle_capabilities_response(self):
-        if self.content.status() == QgsFetchedContent.ContentStatus.Finished and self.content.filePath():
+        if (
+            self.content.status() == QgsFetchedContent.ContentStatus.Finished
+            and self.content.filePath()
+        ):
             self.info(
                 f"Swisstopo capabilities has been downloaded. Reading from {self.content.filePath()}"
             )
@@ -100,7 +107,7 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
         else:
             self.info(
                 "The Swiss Locator filter for WMTS layers could not fetch capabilities",
-                Qgis.MessageLevel.Critical
+                Qgis.MessageLevel.Critical,
             )
 
     def perform_fetch_results(self, search: str, feedback: QgsFeedback):
@@ -170,6 +177,6 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
             # sort the results with score
             results = sorted([result for (result, score) in results.items()])
 
-            for result in results[0 : self.settings.value("wmts_limit")]:
+            for result in results[0 : self.settings.filter_wmts_limit.value()]:
                 self.resultFetched.emit(result)
                 self.result_found = True

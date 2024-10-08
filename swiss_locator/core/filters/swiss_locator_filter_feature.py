@@ -58,7 +58,7 @@ class SwissLocatorFilterFeature(SwissLocatorFilter):
         # otherwise URL is too long
         requests = []
         try:
-            limit = self.settings.value(f"{FilterType.Feature.value}_limit")
+            limit = self.settings.filter_feature_limit.value()
             layers = list(self.searchable_layers.keys())
             assert len(layers) > 0
             step = 20

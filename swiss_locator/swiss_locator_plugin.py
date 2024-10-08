@@ -20,7 +20,7 @@
 import os
 from qgis.PyQt.QtCore import QCoreApplication, QLocale, QSettings, QTranslator
 from qgis.PyQt.QtWidgets import QWidget
-from qgis.core import Qgis, QgsApplication, QgsMessageLog, NULL
+from qgis.core import Qgis, QgsApplication, QgsMessageLog, NULL, QgsSettingsTree
 from qgis.gui import QgisInterface, QgsMessageBarItem
 
 from swiss_locator.core.filters.swiss_locator_filter_feature import (
@@ -36,11 +36,14 @@ from swiss_locator.core.filters.swiss_locator_filter_wmts import SwissLocatorFil
 from swiss_locator.core.filters.swiss_locator_filter_vector_tiles import (
     SwissLocatorFilterVectorTiles,
 )
+
 try:
     from swiss_locator.core.profiles.profile_generator import SwissProfileSource
 except ImportError:
     # Should fail only for QGIS < 3.26, where profiles weren't available
     SwissProfileSource = None
+
+from swiss_locator.core.settings import PLUGIN_NAME
 
 
 class SwissLocatorPlugin:
@@ -75,11 +78,13 @@ class SwissLocatorPlugin:
             self.locator_filters[-1].message_emitted.connect(self.show_message)
 
         if Qgis.QGIS_VERSION_INT >= 33700:
-            QgsApplication.profileSourceRegistry().registerProfileSource(self.profile_source)
+            QgsApplication.profileSourceRegistry().registerProfileSource(
+                self.profile_source
+            )
             QgsMessageLog.logMessage(
                 "Swiss profile source has been registered!",
                 "Swiss locator",
-                Qgis.MessageLevel.Info
+                Qgis.MessageLevel.Info,
             )
 
     def unload(self):
@@ -88,12 +93,16 @@ class SwissLocatorPlugin:
             self.iface.deregisterLocatorFilter(locator_filter)
 
         if Qgis.QGIS_VERSION_INT >= 33700:
-            QgsApplication.profileSourceRegistry().unregisterProfileSource(self.profile_source)
+            QgsApplication.profileSourceRegistry().unregisterProfileSource(
+                self.profile_source
+            )
             QgsMessageLog.logMessage(
                 "Swiss profile source has been unregistered!",
                 "Swiss locator",
-                Qgis.MessageLevel.Info
+                Qgis.MessageLevel.Info,
             )
+
+        QgsSettingsTree.unregisterPluginTreeNode(PLUGIN_NAME)
 
     def show_message(
         self, title: str, msg: str, level: Qgis.MessageLevel, widget: QWidget = None

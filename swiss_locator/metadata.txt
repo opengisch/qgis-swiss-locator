@@ -1,12 +1,15 @@
 
 [general]
 name=Swiss Locator
-qgisMinimumVersion=3.16
+qgisMinimumVersion=3.40
 description=A locator filter for Swiss Geoportal (geo.admin.ch) and opendata.swiss resources
 about=Search for locations, WMS layers of features in the whole Swiss Geoportal catalog as well as in opendata.swiss
 version=dev
 author=OPENGIS.ch
 email=info@opengis.ch
+
+supportsQt6=yes
+
 
 # Tags are comma separated with spaces allowed
 tags=swiss, suisse, schweiz, locator, geoadmin, geoportal, opendata.swiss

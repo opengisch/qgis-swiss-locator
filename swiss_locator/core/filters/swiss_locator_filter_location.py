@@ -58,7 +58,7 @@ class SwissLocatorFilterLocation(SwissLocatorFilter):
         return "chs"
 
     def perform_fetch_results(self, search: str, feedback: QgsFeedback):
-        limit = self.settings.value(f"{FilterType.Location.value}_limit")
+        limit = self.settings.filter_location_limit.value()
         url, params = map_geo_admin_url(
             search, self.type.value, self.crs, self.lang, limit
         )
