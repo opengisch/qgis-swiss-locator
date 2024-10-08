@@ -57,9 +57,6 @@ class SwissLocatorFilterLocation(SwissLocatorFilter):
     def prefix(self):
         return "chs"
 
-    def priority(self):
-        return self.settings.filter_location_priority.value()
-
     def perform_fetch_results(self, search: str, feedback: QgsFeedback):
         limit = self.settings.filter_location_limit.value()
         url, params = map_geo_admin_url(

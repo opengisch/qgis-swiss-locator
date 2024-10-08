@@ -53,9 +53,6 @@ class SwissLocatorFilterFeature(SwissLocatorFilter):
     def prefix(self):
         return "chf"
 
-    def priority(self):
-        return self.settings.filter_feature_priority.value()
-
     def perform_fetch_results(self, search: str, feedback: QgsFeedback):
         # Feature search is split in several requests
         # otherwise URL is too long

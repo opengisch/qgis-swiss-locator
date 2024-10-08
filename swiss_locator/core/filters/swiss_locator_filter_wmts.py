@@ -95,9 +95,6 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
     def prefix(self):
         return "chw"
 
-    def priority(self):
-        return self.settings.filter_wmts_priority.value()
-
     def handle_capabilities_response(self):
         if (
             self.content.status() == QgsFetchedContent.ContentStatus.Finished

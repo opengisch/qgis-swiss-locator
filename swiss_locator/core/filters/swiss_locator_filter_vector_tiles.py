@@ -27,9 +27,6 @@ class SwissLocatorFilterVectorTiles(SwissLocatorFilter):
     def prefix(self):
         return "chb"
 
-    def priority(self):
-        return self.settings.filter_vt_priority.value()
-
     def hasConfigWidget(self):
         return False
 

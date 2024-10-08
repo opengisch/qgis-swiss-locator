@@ -38,7 +38,7 @@ from swiss_locator.core.filters.filter_type import FilterType
 PLUGIN_NAME = "swiss_locator_plugin"
 
 
-class Settings(object):
+class Settings:
     instance = None
 
     def __new__(cls):
