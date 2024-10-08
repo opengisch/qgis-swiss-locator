@@ -61,8 +61,7 @@ from swiss_locator.core.results import (
 from swiss_locator.core.settings import Settings
 from swiss_locator.core.language import get_language
 
-if Qgis.QGIS_VERSION_INT >= 33900:
-    from swiss_locator.gui.config_dialog import ConfigDialog
+from swiss_locator.gui.config_dialog import ConfigDialog
 from swiss_locator.gui.maptip import MapTip
 from swiss_locator.gui.qtwebkit_conf import with_qt_web_kit
 from swiss_locator.utils.utils import url_with_param
@@ -195,7 +194,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.current_timer = None
 
     def hasConfigWidget(self):
-        return Qgis.QGIS_VERSION_INT >= 33900
+        return True
 
     def openConfigWidget(self, parent=None):
         dlg = ConfigDialog(parent)
