@@ -45,6 +45,7 @@ from qgis.core import (
     QgsFeedback,
     QgsRasterLayer,
     QgsVectorTileLayer,
+    QgsVectorTileUtils,
 )
 from qgis.gui import QgsRubberBand, QgisInterface
 
@@ -440,8 +441,9 @@ class SwissLocatorFilter(QgsLocatorFilter):
         # Vector tiles
         elif type(swiss_result) == VectorTilesLayerResult:
             params = dict()
-            params["styleUrl"] = swiss_result.style or ""
-            params["url"] = swiss_result.url
+            params["styleUrl"] = swiss_result.style
+            if Qgis.QGIS_VERSION_INT < 33900:
+                params["url"] = swiss_result.url
             params["type"] = "xyz"
             # Max and min zoom levels cound be retrieved from metadata JSON files like:
             # https://vectortiles.geo.admin.ch/tiles/ch.swisstopo.base.vt/v1.0.0/tiles.json
@@ -450,6 +452,11 @@ class SwissLocatorFilter(QgsLocatorFilter):
             params["zmin"] = "0"
 
             url_with_params = "&".join([f"{k}={v}" for (k, v) in params.items()])
+
+            if Qgis.QGIS_VERSION_INT >= 33900:
+                url_with_params = QgsVectorTileUtils.updateUriSources(
+                    url_with_params, True
+                )
 
             self.info(f"Loading layer: {url_with_params}")
             ch_layer = QgsVectorTileLayer(url_with_params, result.displayString)
