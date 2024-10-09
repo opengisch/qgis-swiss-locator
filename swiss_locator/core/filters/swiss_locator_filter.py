@@ -31,7 +31,6 @@ from qgis.PyQt.QtCore import QUrl, pyqtSignal, QEventLoop
 from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply, QNetworkAccessManager
 
 from qgis.core import (
-    metaEnumFromType,
     Qgis,
     QgsLocatorFilter,
     QgsLocatorResult,
@@ -121,7 +120,6 @@ class SwissLocatorFilter(QgsLocatorFilter):
         self.result_found = False
         self.access_managers = {}
         self.minimum_search_length = 2
-        self.me = metaEnumFromType(QgsLocatorFilter.Priority)
 
         self.nam = QNetworkAccessManager()
         self.nam.setRedirectPolicy(
@@ -163,13 +161,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         return self.__class__.__name__
 
     def priority(self):
-        (value, ok) = self.me.keyToValue(
-            self.settings.filters[self.type.value]["priority"].value()
-        )
-        if ok:
-            return QgsLocatorFilter.Priority(value)
-        else:
-            return QgsLocatorFilter.Priority.Medium
+        return self.settings.filters[self.type.value]["priority"].value()
 
     def displayName(self):
         # this should be re-implemented
