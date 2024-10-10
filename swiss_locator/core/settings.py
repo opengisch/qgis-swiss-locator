@@ -25,10 +25,10 @@
 # ---------------------------------------------------------------------
 
 from qgis.core import (
-    metaEnumFromType,
     QgsLocatorFilter,
     QgsSettingsTree,
     QgsSettingsEntryBool,
+    QgsSettingsEntryEnumFlag,
     QgsSettingsEntryString,
     QgsSettingsEntryInteger,
     QgsSettingsEntryStringList,
@@ -61,59 +61,58 @@ class Settings:
                 "feature_search_layers_list", settings_node, []
             )
 
-            me = metaEnumFromType(QgsLocatorFilter.Priority)
-
-            cls.filters = {
+            filters = {
                 FilterType.Location.value: {
-                    "priority": QgsSettingsEntryString(
+                    "priority": QgsSettingsEntryEnumFlag(
                         f"{FilterType.Location.value}_priority",
                         settings_node,
-                        me.valueToKey(QgsLocatorFilter.Priority.Highest),
+                        QgsLocatorFilter.Priority.Highest,
                     ),
                     "limit": QgsSettingsEntryInteger(
                         f"{FilterType.Location.value}_limit", settings_node, 8
                     ),
                 },
                 FilterType.WMTS.value: {
-                    "priority": QgsSettingsEntryString(
+                    "priority": QgsSettingsEntryEnumFlag(
                         f"{FilterType.WMTS.value}_priority",
                         settings_node,
-                        me.valueToKey(QgsLocatorFilter.Priority.Medium),
+                        QgsLocatorFilter.Priority.Medium,
                     ),
                     "limit": QgsSettingsEntryInteger(
                         f"{FilterType.WMTS.value}_limit", settings_node, 8
                     ),
                 },
                 FilterType.VectorTiles.value: {
-                    "priority": QgsSettingsEntryString(
+                    "priority": QgsSettingsEntryEnumFlag(
                         f"{FilterType.VectorTiles.value}_priority",
                         settings_node,
-                        me.valueToKey(QgsLocatorFilter.Priority.Highest),
+                        QgsLocatorFilter.Priority.Highest,
                     ),
                     "limit": QgsSettingsEntryInteger(
                         f"{FilterType.VectorTiles.value}_limit", settings_node, 8
                     ),
                 },
                 FilterType.Feature.value: {
-                    "priority": QgsSettingsEntryString(
+                    "priority": QgsSettingsEntryEnumFlag(
                         f"{FilterType.Feature.value}_priority",
                         settings_node,
-                        me.valueToKey(QgsLocatorFilter.Priority.High),
+                        QgsLocatorFilter.Priority.High,
                     ),
                     "limit": QgsSettingsEntryInteger(
                         f"{FilterType.Feature.value}_limit", settings_node, 8
                     ),
                 },
                 FilterType.Layers.value: {
-                    "priority": QgsSettingsEntryString(
+                    "priority": QgsSettingsEntryEnumFlag(
                         f"{FilterType.Layers.value}_priority",
                         settings_node,
-                        me.valueToKey(QgsLocatorFilter.Priority.High),
+                        QgsLocatorFilter.Priority.High,
                     ),
                     "limit": QgsSettingsEntryInteger(
                         f"{FilterType.Layers.value}_limit", settings_node, 5
                     ),
                 },
             }
+            cls.filters = filters
 
         return cls.instance

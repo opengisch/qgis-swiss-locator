@@ -25,11 +25,12 @@ import os
 from qgis.PyQt.QtCore import Qt, pyqtSlot
 from qgis.PyQt.QtWidgets import QDialog, QTableWidgetItem, QAbstractItemView, QComboBox
 from qgis.PyQt.uic import loadUiType
-from qgis.core import QgsLocatorFilter, metaEnumFromType
+from qgis.core import QgsLocatorFilter
 from qgis.gui import (
-    QgsSettingsEditorWidgetWrapper,
     QgsSettingsStringComboBoxWrapper,
     QgsSettingsBoolCheckBoxWrapper,
+    QgsSettingsEnumEditorWidgetWrapper,
+    QgsSettingsEditorWidgetWrapper,
 )
 
 from ..core.settings import Settings
@@ -87,31 +88,23 @@ class ConfigDialog(QDialog, DialogUi):
             )
         )
 
-        me = metaEnumFromType(QgsLocatorFilter.Priority)
+        display_strings = {
+            QgsLocatorFilter.Priority.Highest: self.tr("Highest"),
+            QgsLocatorFilter.Priority.High: self.tr("High"),
+            QgsLocatorFilter.Priority.Medium: self.tr("Medium"),
+            QgsLocatorFilter.Priority.Low: self.tr("Low"),
+            QgsLocatorFilter.Priority.Lowest: self.tr("Lowest"),
+        }
+
         for filter_type in FilterType:
             cb = self.findChild(QComboBox, "{}_priority".format(filter_type.value))
             if cb is not None:  # Some filters might not have a config dialog
-                cb.addItem(
-                    self.tr("Highest"), me.valueToKey(QgsLocatorFilter.Priority.Highest)
+                ew = QgsSettingsEnumEditorWidgetWrapper(
+                    editor=cb,
+                    setting=self.settings.filters[filter_type.value]["priority"],
+                    displayStrings=display_strings,
                 )
-                cb.addItem(
-                    self.tr("High"), me.valueToKey(QgsLocatorFilter.Priority.High)
-                )
-                cb.addItem(
-                    self.tr("Medium"), me.valueToKey(QgsLocatorFilter.Priority.Medium)
-                )
-                cb.addItem(self.tr("Low"), me.valueToKey(QgsLocatorFilter.Priority.Low))
-                cb.addItem(
-                    self.tr("Lowest"), me.valueToKey(QgsLocatorFilter.Priority.Lowest)
-                )
-
-                self.wrappers.append(
-                    QgsSettingsStringComboBoxWrapper(
-                        cb,
-                        self.settings.filters[filter_type.value]["priority"],
-                        QgsSettingsStringComboBoxWrapper.Mode.Data,
-                    )
-                )
+                self.wrappers.append(ew)
 
         self.search_line_edit.textChanged.connect(self.filter_rows)
         self.select_all_button.pressed.connect(self.select_all)
