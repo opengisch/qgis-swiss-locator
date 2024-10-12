@@ -177,6 +177,7 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
             # sort the results with score
             results = sorted([result for (result, score) in results.items()])
 
-            for result in results[0 : self.settings.filter_wmts_limit.value()]:
+            limit = self.settings.filters[self.type.value]["limit"].value()
+            for result in results[0:limit]:
                 self.resultFetched.emit(result)
                 self.result_found = True
