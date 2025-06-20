@@ -136,6 +136,9 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
             for dim in layer.findall(".//wmts:Dimension", namespaces):
                 identifier = dim.find("./ows:Identifier", namespaces).text
                 default = dim.find("./wmts:Default", namespaces).text
+                dimension_values = dim.findall(".//wmts:Value", namespaces)
+                if len(dimension_values) > 1 and identifier.lower() == "time":
+                    continue  # Let the temporal controller take care of it
                 dimensions[identifier] = default
             dimensions = "&".join([f"{k}={v}" for (k, v) in dimensions.items()])
             dimensions = urllib.parse.quote(dimensions)
