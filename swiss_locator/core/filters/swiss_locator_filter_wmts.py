@@ -132,12 +132,14 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
             layer_title = layer.find(".//ows:Title", namespaces).text
             layer_abstract = layer.find(".//ows:Abstract", namespaces).text
             layer_identifier = layer.find(".//ows:Identifier", namespaces).text
+            temporal_wmts = False
             dimensions = dict()
             for dim in layer.findall(".//wmts:Dimension", namespaces):
                 identifier = dim.find("./ows:Identifier", namespaces).text
                 default = dim.find("./wmts:Default", namespaces).text
                 dimension_values = dim.findall(".//wmts:Value", namespaces)
                 if len(dimension_values) > 1 and identifier.lower() == "time":
+                    temporal_wmts = True
                     continue  # Let the temporal controller take care of it
                 dimensions[identifier] = default
             dimensions = "&".join([f"{k}={v}" for (k, v) in dimensions.items()])
@@ -161,7 +163,7 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
 
                 result = QgsLocatorResult()
                 result.filter = self
-                result.icon = QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
+                result.icon = QgsApplication.getThemeIcon("/mIconTemporalRaster.svg") if temporal_wmts else QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
 
                 result.displayString = layer_title
                 result.description = layer_abstract
