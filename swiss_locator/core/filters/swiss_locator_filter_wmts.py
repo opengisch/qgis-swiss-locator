@@ -143,11 +143,11 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
             results = {}
 
             if layer_identifier:
-                if search in layer_identifier.lower():
+                if search.lower() in layer_identifier.lower():
                     score = 1
-                elif search in layer_title.lower():
+                elif search.lower() in layer_title.lower():
                     score = 2
-                elif search in layer_abstract.lower():
+                elif search.lower() in layer_abstract.lower():
                     score = 3
                 else:
                     continue
