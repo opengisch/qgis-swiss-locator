@@ -24,12 +24,14 @@ import re
 import sys
 import traceback
 
-from qgis.PyQt.QtCore import Qt, QTimer
+from qgis.PyQt.QtCore import Qt, QTimer, QUrl, pyqtSignal, QEventLoop
 from qgis.PyQt.QtGui import QColor
+from qgis.PyQt.QtNetwork import (
+    QNetworkRequest,
+    QNetworkReply,
+    QNetworkAccessManager
+)
 from qgis.PyQt.QtWidgets import QLabel, QWidget, QTabWidget
-from qgis.PyQt.QtCore import QUrl, pyqtSignal, QEventLoop
-from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply, QNetworkAccessManager
-
 from qgis.core import (
     Qgis,
     QgsLocatorFilter,
@@ -50,6 +52,7 @@ from qgis.gui import QgsRubberBand, QgisInterface
 
 from swiss_locator import DEBUG
 from swiss_locator.core.filters.filter_type import FilterType
+from swiss_locator.core.language import get_language
 from swiss_locator.core.parameters import AVAILABLE_CRS
 from swiss_locator.core.results import (
     WMSLayerResult,
@@ -57,10 +60,9 @@ from swiss_locator.core.results import (
     FeatureResult,
     VectorTilesLayerResult,
     NoResult,
+    STACResult,
 )
 from swiss_locator.core.settings import Settings
-from swiss_locator.core.language import get_language
-
 from swiss_locator.gui.config_dialog import ConfigDialog
 from swiss_locator.gui.maptip import MapTip
 from swiss_locator.gui.qtwebkit_conf import with_qt_web_kit
@@ -82,6 +84,8 @@ def result_from_data(result: QgsLocatorResult):
         return FeatureResult.from_dict(dict_data)
     if dict_data["type"] == "VectorTilesLayerResult":
         return VectorTilesLayerResult.from_dict(dict_data)
+    if dict_data["type"] == "STACResult":
+        return STACResult.from_dict(dict_data)
     return NoResult()
 
 
@@ -510,7 +514,14 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 else:
                     QgsProject.instance().addMapLayer(ch_layer, False)
                     root.insertLayer(-1, ch_layer)
-
+        
+        elif type(swiss_result) == STACResult:
+            if swiss_result.is_downloadable_file:
+                self.fetch_asset(swiss_result)
+            else:
+                # TODO: Open filter dialog
+                pass
+        
         # Location
         else:
             point = QgsGeometry.fromPointXY(swiss_result.point)

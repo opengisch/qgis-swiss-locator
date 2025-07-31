@@ -33,6 +33,7 @@ from qgis.core import (
     QgsSettingsEntryInteger,
     QgsSettingsEntryStringList,
 )
+
 from swiss_locator.core.filters.filter_type import FilterType
 
 PLUGIN_NAME = "swiss_locator_plugin"
@@ -110,6 +111,17 @@ class Settings:
                     ),
                     "limit": QgsSettingsEntryInteger(
                         f"{FilterType.Layers.value}_limit", settings_node, 5
+                    ),
+                },
+                FilterType.STAC.value: {
+                    "priority": QgsSettingsEntryEnumFlag(
+                            f"{FilterType.STAC.value}_priority",
+                            settings_node,
+                            # TODO: What is appropriate?
+                            QgsLocatorFilter.Priority.High,
+                    ),
+                    "limit": QgsSettingsEntryInteger(
+                            f"{FilterType.STAC.value}_limit", settings_node, 5
                     ),
                 },
             }
