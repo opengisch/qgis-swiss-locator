@@ -43,7 +43,7 @@ def get_language() -> str:
         locale_lang = QLocale.languageToString(QLocale(locale).language())
         if locale_lang in AVAILABLE_LANGUAGES:
             lang = AVAILABLE_LANGUAGES[locale_lang]
-    if lang not in AVAILABLE_LANGUAGES:
+    if lang not in AVAILABLE_LANGUAGES.values():
         lang = "en"
 
     return lang

@@ -46,8 +46,8 @@ class Settings:
             cls.instance = super(Settings, cls).__new__(cls)
 
             settings_node = QgsSettingsTree.createPluginTreeNode(pluginName=PLUGIN_NAME)
-
-            cls.lang = QgsSettingsEntryString("lang", settings_node, "lang")
+            
+            cls.lang = QgsSettingsEntryString("lang", settings_node, "")
             cls.show_map_tip = QgsSettingsEntryBool(
                 "show_map_tip", settings_node, False
             )
