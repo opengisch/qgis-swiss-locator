@@ -20,7 +20,6 @@
 import json
 
 from qgis.PyQt.QtGui import QIcon
-
 from qgis.core import (
     Qgis,
     QgsFeedback,
@@ -29,12 +28,12 @@ from qgis.core import (
 )
 from qgis.gui import QgisInterface
 
+from swiss_locator.core.filters.filter_type import FilterType
+from swiss_locator.core.filters.map_geo_admin import map_geo_admin_url
 from swiss_locator.core.filters.swiss_locator_filter import (
     SwissLocatorFilter,
 )
-from swiss_locator.core.filters.filter_type import FilterType
 from swiss_locator.core.results import FeatureResult
-from swiss_locator.core.filters.map_geo_admin import map_geo_admin_url
 from swiss_locator.map_geo_admin.layers import searchable_layers
 
 
@@ -58,7 +57,7 @@ class SwissLocatorFilterFeature(SwissLocatorFilter):
         # otherwise URL is too long
         requests = []
         try:
-            limit = self.settings.filter_feature_limit.value()
+            limit = self.settings.filters[self.type.value]["limit"].value()
             layers = list(self.searchable_layers.keys())
             assert len(layers) > 0
             step = 20

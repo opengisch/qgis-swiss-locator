@@ -25,6 +25,7 @@
 # ---------------------------------------------------------------------
 
 import json
+
 from qgis.core import QgsGeometry, QgsRectangle
 
 
@@ -158,6 +159,56 @@ class VectorTilesLayerResult:
             "style": self.style,
         }
         return json.dumps(definition)
+
+
+class STACResult:
+    
+    def __init__(self, collection_id: str, collection_name: str, asset_id: str,
+                 description: str, media_type: str, href: str):
+        self.collection_id = collection_id
+        self.collection_name = collection_name
+        self.asset_id = asset_id
+        self.description = description
+        self.media_type = media_type
+        self.href = href
+        self.simple_file_type = self._simple_file_type()
+    
+    def as_definition(self):
+        definition = {
+            "type": "STACResult",
+            "collection_id": self.collection_id,
+            "collection_name": self.collection_name,
+            "asset_id": self.asset_id,
+            "description": self.description,
+            "mediaType": self.media_type,
+            "href": self.href,
+        }
+        return json.dumps(definition)
+    
+    @staticmethod
+    def from_dict(dict_data: dict):
+        return STACResult(
+                dict_data["collection_id"],
+                dict_data["collection_name"],
+                dict_data["asset_id"],
+                dict_data["description"],
+                dict_data["mediaType"],
+                dict_data["href"],
+        )
+    
+    @property
+    def is_downloadable_file(self):
+        return self.asset_id and self.href
+    
+    def _simple_file_type(self):
+        try:
+            main_type = self.media_type.split(';')[0]
+        except IndexError:
+            return self.media_type
+        try:
+            return main_type.split('/')[-1]
+        except IndexError:
+            return main_type
 
 
 class NoResult:

@@ -7,3 +7,4 @@ class FilterType(Enum):
     Feature = "featuresearch"  # this is used in map.geo.admin as the search type
     WMTS = "wmts"
     VectorTiles = "vectortiles"
+    STAC = "stac"

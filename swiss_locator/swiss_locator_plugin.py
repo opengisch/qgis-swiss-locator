@@ -18,9 +18,16 @@
 """
 
 import os
+
 from qgis.PyQt.QtCore import QCoreApplication, QLocale, QSettings, QTranslator
 from qgis.PyQt.QtWidgets import QWidget
-from qgis.core import Qgis, QgsApplication, QgsMessageLog, NULL, QgsSettingsTree
+from qgis.core import (
+    Qgis,
+    QgsApplication,
+    QgsMessageLog,
+    NULL,
+    QgsSettingsTree
+)
 from qgis.gui import QgisInterface, QgsMessageBarItem
 
 from swiss_locator.core.filters.swiss_locator_filter_feature import (
@@ -32,9 +39,14 @@ from swiss_locator.core.filters.swiss_locator_filter_layer import (
 from swiss_locator.core.filters.swiss_locator_filter_location import (
     SwissLocatorFilterLocation,
 )
-from swiss_locator.core.filters.swiss_locator_filter_wmts import SwissLocatorFilterWMTS
+from swiss_locator.core.filters.swiss_locator_filter_stac import (
+    SwissLocatorFilterSTAC
+)
 from swiss_locator.core.filters.swiss_locator_filter_vector_tiles import (
     SwissLocatorFilterVectorTiles,
+)
+from swiss_locator.core.filters.swiss_locator_filter_wmts import (
+    SwissLocatorFilterWMTS
 )
 
 try:
@@ -72,6 +84,7 @@ class SwissLocatorPlugin:
             SwissLocatorFilterLayer,
             SwissLocatorFilterVectorTiles,
             SwissLocatorFilterFeature,
+                SwissLocatorFilterSTAC
         ):
             self.locator_filters.append(_filter(self.iface))
             self.iface.registerLocatorFilter(self.locator_filters[-1])
