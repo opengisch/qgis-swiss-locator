@@ -94,7 +94,7 @@ class SwissLocatorPlugin:
 
         if Qgis.QGIS_VERSION_INT >= 33700:
             QgsApplication.profileSourceRegistry().unregisterProfileSource(
-                self.profile_source
+                "swiss-profile"
             )
             QgsMessageLog.logMessage(
                 "Swiss profile source has been unregistered!",
