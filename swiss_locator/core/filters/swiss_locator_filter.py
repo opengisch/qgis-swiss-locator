@@ -516,8 +516,10 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     root.insertLayer(-1, ch_layer)
         
         elif type(swiss_result) == STACResult:
-            if swiss_result.is_downloadable_file:
-                self.fetch_asset(swiss_result)
+            if swiss_result.is_streamed:
+                self.add_asset_to_qgis(swiss_result)
+            elif swiss_result.is_downloadable:
+                self.download_asset(swiss_result)
             else:
                 # TODO: Open filter dialog
                 pass
