@@ -1,4 +1,5 @@
 import json
+import re
 import urllib.request
 
 from qgis._core import QgsStacCollection
@@ -8,13 +9,11 @@ from swiss_locator.core.stac.stac_client import StacClient
 BASE_URL = "https://data.geo.admin.ch/api/stac/v1"
 
 
-def fetchStacCollections(lang):
-    # TODO: Make both calls async
-    
+def fetch_stac_collections(_task, lang):
     stac_client = StacClient(BASE_URL)
     collections = stac_client.fetchCollections()
     
-    data_geo_admin_metadata = getGeoAdminMetadata(lang)
+    data_geo_admin_metadata = fetch_geo_admin_metadata(lang)
     
     stacCollections = {}
     
@@ -31,7 +30,7 @@ def fetchStacCollections(lang):
     return stacCollections
 
 
-def getGeoAdminMetadata(lang):
+def fetch_geo_admin_metadata(lang):
     """ Calls geoadmin API and retrieves translated titles and
     descriptions."""
     url = f"https://api3.geo.admin.ch/rest/services/api/MapServer?lang={lang}"
@@ -63,20 +62,23 @@ def getGeoAdminMetadata(lang):
     return metadata
 
 
-def collectionsToSearchStrings(collections: dict[str, QgsStacCollection]):
-    collectionIds = []
-    collectionSearchStrings = []
-    for (collId, collection) in collections.items():
-        collectionIds.append(collId)
-        parsedCollectionId = collId.lower().replace('.', ' ')
-        parsedCollectionTitle = collection.title().lower()
-        collectionSearchStrings.append(
-                f"{parsedCollectionId} {parsedCollectionTitle}")
-    return collectionSearchStrings, collectionIds
+def collections_to_searchable_strings(
+        collections: dict[str, QgsStacCollection]):
+    collection_ids = []
+    collection_search_strings = []
+    for (coll_id, collection) in collections.items():
+        collection_ids.append(coll_id)
+        # Clean up strings by replacing any non-alphanumeric characters with spaces
+        parsed_collection_id = re.sub(r'[.,-–_/\\()]', ' ', coll_id.lower())
+        parsed_collection_title = re.sub(r'[.,-–_/\\()]', ' ',
+                                         collection.title().lower())
+        collection_search_strings.append(
+                " ".join([parsed_collection_id, parsed_collection_title]))
+    return collection_search_strings, collection_ids
 
 
-def map_geo_admin_stac_items_url(id: str, limit: int):
-    base_url = f"https://data.geo.admin.ch/api/stac/v1/collections/{id}/items"
+def map_geo_admin_stac_items_url(collection_id: str, limit: int):
+    base_url = f"{BASE_URL}/collections/{collection_id}/items"
     base_params = {
         "limit": str(limit)
     }

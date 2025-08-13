@@ -15,8 +15,7 @@ class StacClient:
     
     def fetchCollections(self, params: dict = None
                          ) -> list[QgsStacCollection]:
-        """Get a list of all available collections and read out title,
-        description and other properties."""
+        """Get a list of all available collections."""
         
         url = self._createUrl(f"{self.url}/collections", params)
         errorMsg = ""
