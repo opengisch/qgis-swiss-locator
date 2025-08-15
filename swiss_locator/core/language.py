@@ -41,7 +41,7 @@ def get_language() -> str:
     if not lang:
         locale = str(QSettings().value("locale/userLocale")).replace(str(NULL), "en_CH")
         locale_lang = QLocale.languageToString(QLocale(locale).language())
-        if locale_lang in AVAILABLE_LANGUAGES:
+        if locale_lang in AVAILABLE_LANGUAGES.keys():
             lang = AVAILABLE_LANGUAGES[locale_lang]
     if lang not in AVAILABLE_LANGUAGES.values():
         lang = "en"
