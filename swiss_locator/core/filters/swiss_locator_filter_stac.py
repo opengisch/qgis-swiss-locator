@@ -23,7 +23,9 @@ from swiss_locator.core.filters.map_geo_admin_stac import (
     fetch_stac_collections,
     map_geo_admin_stac_items_url
 )
-from swiss_locator.core.filters.swiss_locator_filter import SwissLocatorFilter
+from swiss_locator.core.filters.swiss_locator_filter import (
+    SwissLocatorFilter
+)
 from swiss_locator.core.results import STACResult
 from swiss_locator.utils.utils import url_with_param, get_save_location
 
@@ -124,14 +126,18 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
         return [self.collection_ids[idx] for idx, _ in sorted_matches]
     
     def perform_fetch_results(self, search: str, feedback: QgsFeedback):
-        limit = self.settings.filters[self.type.value]["limit"].value()
-        matching_collections = self.perform_local_search(search)[:limit]
+        result_limit = self.settings.filters[self.type.value]["limit"].value()
+        files_per_result_limit = self.settings.filters[self.type.value][
+            "limit_files_per_result"].value()
+        
+        matching_collections = self.perform_local_search(search)[:result_limit]
         
         # For each collection, request a few items to decide whether assets can
         # be downloaded directly from the locator or a filter dialog is necessary
         requests = []
         for collection_id in matching_collections:
-            url, params = map_geo_admin_stac_items_url(collection_id, 5)
+            url, params = map_geo_admin_stac_items_url(collection_id,
+                                                       files_per_result_limit)
             requests.append(
                     self.request_for_url(url, params, self.HEADERS))
         
@@ -150,11 +156,12 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
         except KeyError:
             return
         
-        max_files_per_collection = 5
+        files_per_collection_limit = self.settings.filters[self.type.value][
+            "limit_files_per_result"].value()
         file_count = sum([len(item["assets"].values()) for item in
                              response["features"]])
         
-        if file_count <= max_files_per_collection:
+        if file_count <= files_per_collection_limit:
             results = []
             # Analyse response and create stac result objects
             for item in response["features"]:

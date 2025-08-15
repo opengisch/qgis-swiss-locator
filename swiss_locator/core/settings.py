@@ -117,15 +117,14 @@ class Settings:
                     "priority": QgsSettingsEntryEnumFlag(
                             f"{FilterType.STAC.value}_priority",
                             settings_node,
-                            # TODO: What is appropriate?
                             QgsLocatorFilter.Priority.High,
                     ),
                     "limit": QgsSettingsEntryInteger(
                             f"{FilterType.STAC.value}_limit", settings_node, 5
                     ),
-                    "max_files_per_result": QgsSettingsEntryInteger(
-                            f"{FilterType.STAC.value}_max_files_per_result",
-                            settings_node, 4
+                    "limit_files_per_result": QgsSettingsEntryInteger(
+                            f"{FilterType.STAC.value}limit_files_per_result",
+                            settings_node, 5
                     ),
                 },
             }

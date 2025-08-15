@@ -22,8 +22,15 @@
 """
 
 import os
+
 from qgis.PyQt.QtCore import Qt, pyqtSlot
-from qgis.PyQt.QtWidgets import QDialog, QTableWidgetItem, QAbstractItemView, QComboBox
+from qgis.PyQt.QtWidgets import (
+    QDialog,
+    QTableWidgetItem,
+    QAbstractItemView,
+    QComboBox,
+    QSpinBox
+)
 from qgis.PyQt.uic import loadUiType
 from qgis.core import QgsLocatorFilter
 from qgis.gui import (
@@ -31,14 +38,15 @@ from qgis.gui import (
     QgsSettingsBoolCheckBoxWrapper,
     QgsSettingsEnumEditorWidgetWrapper,
     QgsSettingsEditorWidgetWrapper,
+    QgsSettingsIntegerSpinBoxWrapper,
 )
 
-from ..core.settings import Settings
-from ..core.language import get_language
-from ..map_geo_admin.layers import searchable_layers
 from .qtwebkit_conf import with_qt_web_kit
 from ..core.filters.filter_type import FilterType
+from ..core.language import get_language
 from ..core.parameters import AVAILABLE_LANGUAGES
+from ..core.settings import Settings
+from ..map_geo_admin.layers import searchable_layers
 
 DialogUi, _ = loadUiType(os.path.join(os.path.dirname(__file__), "../ui/config.ui"))
 
@@ -105,6 +113,19 @@ class ConfigDialog(QDialog, DialogUi):
                     displayStrings=display_strings,
                 )
                 self.wrappers.append(ew)
+            
+            sb = self.findChild(QSpinBox, "{}_limit".format(filter_type.value))
+            if sb is not None:
+                sbw = QgsSettingsIntegerSpinBoxWrapper(
+                        sb, self.settings.filters[filter_type.value]["limit"])
+                self.wrappers.append(sbw)
+        
+        sb_stac = self.findChild(QSpinBox, "stac_limit_files_per_result")
+        if sb_stac is not None:
+            sbw_stac = QgsSettingsIntegerSpinBoxWrapper(
+                    sb_stac, self.settings.filters[filter_type.value][
+                        "limit_files_per_result"])
+            self.wrappers.append(sbw_stac)
 
         self.search_line_edit.textChanged.connect(self.filter_rows)
         self.select_all_button.pressed.connect(self.select_all)
