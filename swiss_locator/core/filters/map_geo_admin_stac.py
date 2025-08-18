@@ -1,15 +1,15 @@
 import json
-import re
 import urllib.request
 
-from qgis._core import QgsStacCollection
+from qgis.core import QgsStacCollection
 
 from swiss_locator.core.stac.stac_client import StacClient
 
 BASE_URL = "https://data.geo.admin.ch/api/stac/v1"
+METADATA_URL = "https://api3.geo.admin.ch/rest/services/api/MapServer"
 
 
-def fetch_stac_collections(_task, lang):
+def fetch_stac_collections_with_metadata(_task, lang):
     stac_client = StacClient(BASE_URL)
     collections = stac_client.fetchCollections()
     
@@ -33,7 +33,7 @@ def fetch_stac_collections(_task, lang):
 def fetch_geo_admin_metadata(lang):
     """ Calls geoadmin API and retrieves translated titles and
     descriptions."""
-    url = f"https://api3.geo.admin.ch/rest/services/api/MapServer?lang={lang}"
+    url = f"{METADATA_URL}?lang={lang}"
     contents = (
         urllib.request.urlopen(url)
         .read()
@@ -74,8 +74,8 @@ def collections_to_searchable_strings(
 
 
 def map_geo_admin_stac_items_url(collection_id: str, limit: int):
-    base_url = f"{BASE_URL}/collections/{collection_id}/items"
+    url = f"{BASE_URL}/collections/{collection_id}/items"
     base_params = {
         "limit": str(limit)
     }
-    return base_url, base_params
+    return url, base_params
