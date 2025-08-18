@@ -20,7 +20,7 @@ from qgis.gui import QgisInterface
 from swiss_locator.core.filters.filter_type import FilterType
 from swiss_locator.core.filters.map_geo_admin_stac import (
     collections_to_searchable_strings,
-    fetch_stac_collections,
+    fetch_stac_collections_with_metadata,
     map_geo_admin_stac_items_url
 )
 from swiss_locator.core.filters.swiss_locator_filter import (
@@ -84,7 +84,7 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
     def fetch_stac_collections(self):
         self.stac_fetch_task = QgsTask.fromFunction(
                 self.tr('Fetch Swisstopo STAC collections'),
-                fetch_stac_collections,
+                fetch_stac_collections_with_metadata,
                 self.lang,
                 on_finished=self.receive_stac_collections)
         
@@ -111,7 +111,7 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
         return self.tr("Swiss Geoportal STAC file download")
     
     def prefix(self):
-        return "chc"
+        return "chd"
     
     def perform_local_search(self, search_term: str):
         """ Perform search on a list of strings containing the STAC collection
@@ -201,8 +201,7 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
                                 '', '')
             
             self.create_locator_result(result.collection_name,
-                                       self.tr(
-                                               '[click] to open filter dialog'),
+                                       self.tr('open filter dialog'),
                                        '',
                                        result.as_definition(),
                                        'filter')
