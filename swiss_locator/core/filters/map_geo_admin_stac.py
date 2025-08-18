@@ -68,12 +68,8 @@ def collections_to_searchable_strings(
     collection_search_strings = []
     for (coll_id, collection) in collections.items():
         collection_ids.append(coll_id)
-        # Clean up strings by replacing any non-alphanumeric characters with spaces
-        parsed_collection_id = re.sub(r'[.,-–_/\\()]', ' ', coll_id.lower())
-        parsed_collection_title = re.sub(r'[.,-–_/\\()]', ' ',
-                                         collection.title().lower())
         collection_search_strings.append(
-                " ".join([parsed_collection_id, parsed_collection_title]))
+            (" ".join([collection.title(), coll_id])).lower())
     return collection_search_strings, collection_ids
 
 
