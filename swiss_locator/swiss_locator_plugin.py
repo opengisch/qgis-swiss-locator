@@ -84,7 +84,7 @@ class SwissLocatorPlugin:
             SwissLocatorFilterLayer,
             SwissLocatorFilterVectorTiles,
             SwissLocatorFilterFeature,
-                SwissLocatorFilterSTAC
+            SwissLocatorFilterSTAC
         ):
             self.locator_filters.append(_filter(self.iface))
             self.iface.registerLocatorFilter(self.locator_filters[-1])

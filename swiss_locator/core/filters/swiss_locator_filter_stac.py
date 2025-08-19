@@ -82,8 +82,9 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
             self.collection_ids = data[2]
     
     def fetch_stac_collections(self):
+        self.info(self.tr('Fetching Swisstopo STAC collections'))
         self.stac_fetch_task = QgsTask.fromFunction(
-                self.tr('Fetch Swisstopo STAC collections'),
+                self.tr('Fetching Swisstopo STAC collections'),
                 fetch_stac_collections_with_metadata,
                 self.lang,
                 on_finished=self.receive_stac_collections)
@@ -93,8 +94,9 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
     def receive_stac_collections(self, exception=None,
                                  stac_collections: dict[
                                      str, QgsStacCollection] = None):
-        if exception:
-            self.info(str(exception), Qgis.MessageLevel.Critical)
+        if exception or not stac_collections:
+            self.info(f"{self.tr("Not able to download Swisstopo STAC collections")}: {str(exception)}",
+                      Qgis.MessageLevel.Critical)
             return
         self.available_collections = stac_collections
         self.search_strings, self.collection_ids = collections_to_searchable_strings(
@@ -141,10 +143,9 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
             requests.append(
                     self.request_for_url(url, params, self.HEADERS))
         
-        self.fetch_requests(requests, feedback, slot=self.handle_content,
-                            data=matching_collections)
+        self.fetch_requests(requests, feedback, self.handle_content)
     
-    def handle_content(self, content, feedback: QgsFeedback, data):
+    def handle_content(self, content, feedback: QgsFeedback):
         response = json.loads(content)
         
         if len(response.get("features", [])) == 0:

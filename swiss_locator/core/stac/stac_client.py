@@ -6,7 +6,7 @@ from qgis.core import (
 )
 
 
-class StacClient:
+class STACClient:
     
     def __init__(self, url):
         self.url = url

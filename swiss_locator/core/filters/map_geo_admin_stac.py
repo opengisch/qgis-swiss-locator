@@ -3,14 +3,14 @@ import urllib.request
 
 from qgis.core import QgsStacCollection
 
-from swiss_locator.core.stac.stac_client import StacClient
+from swiss_locator.core.stac.stac_client import STACClient
 
 BASE_URL = "https://data.geo.admin.ch/api/stac/v1"
 METADATA_URL = "https://api3.geo.admin.ch/rest/services/api/MapServer"
 
 
 def fetch_stac_collections_with_metadata(_task, lang):
-    stac_client = StacClient(BASE_URL)
+    stac_client = STACClient(BASE_URL)
     collections = stac_client.fetchCollections()
     
     data_geo_admin_metadata = fetch_geo_admin_metadata(lang)

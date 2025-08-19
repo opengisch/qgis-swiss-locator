@@ -123,7 +123,7 @@ class Settings:
                             f"{FilterType.STAC.value}_limit", settings_node, 5
                     ),
                     "limit_files_per_result": QgsSettingsEntryInteger(
-                            f"{FilterType.STAC.value}limit_files_per_result",
+                            f"{FilterType.STAC.value}_limit_files_per_result",
                             settings_node, 5
                     ),
                 },
