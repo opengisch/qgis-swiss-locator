@@ -2,7 +2,7 @@ import json
 import os
 from copy import deepcopy
 
-from qgis.PyQt.QtCore import QEventLoop
+from qgis.PyQt.QtCore import QEventLoop, pyqtSignal
 from qgis.core import (
     QgsTask,
     QgsProject,
@@ -20,13 +20,13 @@ from qgis.gui import QgisInterface
 from swiss_locator.core.filters.filter_type import FilterType
 from swiss_locator.core.filters.map_geo_admin_stac import (
     collections_to_searchable_strings,
-    fetch_stac_collections_with_metadata,
     map_geo_admin_stac_items_url
 )
 from swiss_locator.core.filters.swiss_locator_filter import (
     SwissLocatorFilter
 )
 from swiss_locator.core.results import STACResult
+from swiss_locator.swissgeodownloader.api.datageoadmin import ApiDataGeoAdmin
 from swiss_locator.utils.utils import url_with_param, get_save_location
 
 FILE_TYPE_ICONS = {
@@ -64,6 +64,8 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
     fetching all collections and storing titles and ids in a searchable list.
     """
     HEADERS = {b"User-Agent": b"Mozilla/5.0 QGIS Swiss Geoportal Stac Filter"}
+    
+    show_filter_widget = pyqtSignal(str)
     
     def __init__(self, iface: QgisInterface = None, crs: str = None,
                  data=None):
@@ -305,3 +307,6 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
             self.info(msg, level)
         
         self.message_emitted.emit(self.displayName(), msg, level)
+    
+    def open_filter_widget(self, collection: STACResult):
+        self.show_filter_widget.emit(collection.collection_id)

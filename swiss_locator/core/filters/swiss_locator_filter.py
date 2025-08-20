@@ -521,8 +521,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             elif swiss_result.is_downloadable:
                 self.download_asset(swiss_result)
             else:
-                # TODO: Open filter dialog
-                pass
+                self.open_filter_widget(swiss_result)
         
         # Location
         else:
