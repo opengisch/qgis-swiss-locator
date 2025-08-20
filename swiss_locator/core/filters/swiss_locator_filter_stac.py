@@ -258,7 +258,7 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
             self.message_emitted.emit(self.displayName(), msg, level)
             self.info(msg, level)
         
-        fetcher = QgsFileDownloader(url, asset.href)
+        fetcher = QgsFileDownloader(url, asset.asset_id)
         fetcher.downloadError.connect(on_download_error)
         fetcher.downloadCanceled.connect(event_loop.quit)
         fetcher.downloadCompleted.connect(
