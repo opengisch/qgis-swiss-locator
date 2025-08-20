@@ -72,6 +72,7 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
         super().__init__(FilterType.STAC, iface, crs)
         
         self.stac_fetch_task: QgsTask | None = None
+        self.stac_api_data_geo_admin = ApiDataGeoAdmin(self.lang)
         self.available_collections: dict[str, QgsStacCollection] = {}
         self.search_strings = []
         self.collection_ids = []
@@ -87,8 +88,7 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
         self.info(self.tr('Fetching Swisstopo STAC collections'))
         self.stac_fetch_task = QgsTask.fromFunction(
                 self.tr('Fetching Swisstopo STAC collections'),
-                fetch_stac_collections_with_metadata,
-                self.lang,
+                self.stac_api_data_geo_admin.getCollections,
                 on_finished=self.receive_stac_collections)
         
         QgsApplication.taskManager().addTask(self.stac_fetch_task)
