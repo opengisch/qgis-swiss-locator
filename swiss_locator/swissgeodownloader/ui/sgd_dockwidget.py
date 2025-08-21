@@ -206,9 +206,6 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
         # Finally, initialize apis and request available collections
         self.apiDGA = ApiDataGeoAdmin(self.locale)
         self.loadCollectionList()
-        
-        # Collapse collection list for use with swiss-locator
-        self.guiGroupDataset.setCollapsed(True)
     
     def setCurrentCollection(self, collectionId: str):
         self.onUnselectCollection()
