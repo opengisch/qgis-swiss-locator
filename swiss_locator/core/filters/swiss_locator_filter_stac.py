@@ -208,11 +208,10 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
                                 '', stac_collection.description(),
                                 '', '')
             
-            self.create_locator_result(result.collection_name,
-                                       self.tr('open filter dialog'),
-                                       '',
-                                       result.as_definition(),
-                                       'filter')
+            self.create_locator_result(
+                    result.collection_name,
+                    self.tr('open filter dialog to choose files'),
+                    '', result.as_definition(), 'filter')
     
     def create_locator_result(self, group, title, description, user_data,
                               icon):
@@ -255,8 +254,7 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
         
         def on_download_error():
             level = Qgis.MessageLevel.Warning
-            msg = f"{self.tr('Unable to download file')}: {asset.asset_id}"
-            self.message_emitted.emit(self.displayName(), msg, level)
+            msg = self.tr('Unable to download file {}').format(asset.asset_id)
             self.info(msg, level)
         
         self.stac_download_task = DownloadFilesTask(
@@ -277,8 +275,9 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
             return
         
         if 'zip' in asset.path:
-            msg = f"{self.tr('File download finished')}: {asset.asset_id}"
-            self.message_emitted.emit(self.displayName(), msg, level)
+            msg = self.tr('Download completed: {}').format(asset.asset_id)
+            level = Qgis.MessageLevel.Success
+            self.message_emitted.emit(self.displayName(), msg, level, None)
             self.info(msg, level)
             return
         
