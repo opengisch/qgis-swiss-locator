@@ -159,6 +159,14 @@ class SwissLocatorPlugin:
             self.stac_filter_widget.closingPlugin.connect(
                     self.close_stac_filter_widget)
             self.stac_filter_widget.show()
+            
+            # Hide some filter widget Ui elements for use with swiss-locator
+            self.stac_filter_widget.guiGroupDataset.setCollapsed(True)
+            self.stac_filter_widget.guiInfoBtn.setVisible(False)
+            self.stac_filter_widget.guiRefreshDatasetsBtn.setVisible(False)
+            title = QCoreApplication.translate('SGD',
+                                               'Swiss Locator: Filter files to download')
+            self.stac_filter_widget.setWindowTitle(title)
         
         if not self.stac_filter_widget.isUserVisible():
             self.stac_filter_widget.setUserVisible(True)
