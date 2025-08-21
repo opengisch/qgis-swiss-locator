@@ -108,9 +108,9 @@ class SwissLocatorPlugin:
                 self.profile_source
             )
             QgsMessageLog.logMessage(
-                "Swiss profile source has been registered!",
-                "Swiss locator",
-                Qgis.MessageLevel.Info,
+                    "Swiss profile source has been registered!",
+                    "Locator bar",
+                    Qgis.MessageLevel.Info,
             )
 
     def unload(self):
@@ -126,9 +126,9 @@ class SwissLocatorPlugin:
                 self.profile_source
             )
             QgsMessageLog.logMessage(
-                "Swiss profile source has been unregistered!",
-                "Swiss locator",
-                Qgis.MessageLevel.Info,
+                    "Swiss profile source has been unregistered!",
+                    "Locator bar",
+                    Qgis.MessageLevel.Info,
             )
         
         if self.stac_filter_widget:

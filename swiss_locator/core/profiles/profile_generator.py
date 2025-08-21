@@ -17,7 +17,7 @@ from qgis.core import (
     QgsPoint,
 )
 
-from swiss_locator.core.profiles.profile_results import  SwissProfileResults
+from swiss_locator.core.profiles.profile_results import SwissProfileResults
 from swiss_locator.core.profiles.profile_url import profile_url
 from swiss_locator.utils.utils import url_with_param
 
@@ -62,9 +62,10 @@ class SwissProfileGenerator(QgsAbstractProfileGenerator):
                 result = json.loads(str(content, 'utf-8'))
             except json.decoder.JSONDecodeError as e:
                 QgsMessageLog.logMessage(
-                    "Unable to parse results from Profile service. Details: {}".format(e.msg),
-                    "Swiss locator",
-                    Qgis.MessageLevel.Critical
+                        "Unable to parse results from Profile service. Details: {}".format(
+                            e.msg),
+                        "Locator bar",
+                        Qgis.MessageLevel.Critical
                 )
 
         return result
@@ -84,7 +85,7 @@ class SwissProfileGenerator(QgsAbstractProfileGenerator):
             self.__transformed_curve.transform(self.__transformation)
         except QgsCsException as e:
             QgsMessageLog.logMessage("Error transforming profile line to EPSG:2056.",
-                                     "Swiss locator",
+                                     "Locator bar",
                                      Qgis.MessageLevel.Critical)
             return False
 
@@ -94,7 +95,8 @@ class SwissProfileGenerator(QgsAbstractProfileGenerator):
         result = self.__get_profile_from_rest_api()
 
         if "error" in result:
-            QgsMessageLog.logMessage(result["error"], "Swiss locator", Qgis.MessageLevel.Critical)
+            QgsMessageLog.logMessage(result["error"], "Locator bar",
+                                     Qgis.MessageLevel.Critical)
             return False
 
         cartesian_d = 0
