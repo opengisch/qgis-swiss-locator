@@ -28,7 +28,6 @@ from qgis.core import (
     QgsVectorLayer
 )
 
-from swiss_locator.swissgeodownloader import DEBUG
 from swiss_locator.swissgeodownloader.api.responseObjects import SgdAsset
 from swiss_locator.swissgeodownloader.utils.utilities import translate
 
@@ -59,19 +58,6 @@ class QgisLayerCreatorTask(QgsTask):
         self.exception = None
     
     def run(self):
-        if DEBUG:
-            try:
-                # Add pydevd to path
-                import sys
-                sys.path.insert(0,
-                                '/snap/pycharm-professional/current/debug-eggs/pydevd-pycharm.egg')
-                import pydevd_pycharm
-                pydevd_pycharm.settrace('localhost', port=53100, suspend=False)
-            except ConnectionRefusedError:
-                pass
-            except ImportError:
-                pass
-        
         if not self.fileList or len(self.fileList) == 0:
             return True
         

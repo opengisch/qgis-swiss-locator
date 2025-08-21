@@ -20,7 +20,6 @@
 """
 from qgis.core import Qgis, QgsTask
 
-from swiss_locator.swissgeodownloader import DEBUG
 from swiss_locator.swissgeodownloader.utils.utilities import (
     MESSAGE_CATEGORY,
     log
@@ -40,20 +39,6 @@ class ApiCallerTask(QgsTask):
     
     def run(self):
         try:
-            if DEBUG:
-                try:
-                    # Add pydevd to path
-                    import sys
-                    sys.path.insert(0,
-                                    '/snap/pycharm-professional/current/debug-eggs/pydevd-pycharm.egg')
-                    import pydevd_pycharm
-                    pydevd_pycharm.settrace('localhost', port=53100,
-                                            suspend=False)
-                except ConnectionRefusedError:
-                    pass
-                except ImportError:
-                    pass
-            
             self.run_task()
             return True
         except Exception as e:
