@@ -173,6 +173,8 @@ class STACResult:
         self.media_type = media_type
         self.href = href
         self.path = path
+        # Necessary for Swiss Geo Downloader compatibility
+        self.id = asset_id
     
     def as_definition(self):
         definition = {
@@ -211,6 +213,11 @@ class STACResult:
     def is_streamed(self):
         return self.is_streamable and self.path.startswith(
                 self.STREAMED_SOURCE_PREFIX)
+    
+    @property
+    def isStreamable(self):
+        # Necessary for Swiss Geo Downloader compatibility
+        return self.is_streamed
     
     @property
     def simple_file_type(self):
