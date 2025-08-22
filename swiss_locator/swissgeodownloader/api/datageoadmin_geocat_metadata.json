@@ -1039,7 +1039,8 @@
     }
   },
   "ch.bafu.erosion-gruenland_bodenabtrag": {
-    "de": {}
+    "de": {},
+    "en": {}
   },
   "ch.bafu.fauna-steinbockkolonien": {
     "de": {
@@ -2439,7 +2440,8 @@
     }
   },
   "ch.bafu.niederschlagserosivitaet": {
-    "de": {}
+    "de": {},
+    "en": {}
   },
   "ch.bafu.oekomorphologie-f": {
     "de": {
@@ -3198,6 +3200,7 @@
       "description": "Mit dem Geobasisdatensatz «Topographische Einzugsgebiete Schweizer Gewässer» steht eine fein aufgelöste und schweizweit flächendeckende Datengrundlage zur Verfügung. Sie bildet zusammen mit dem digitalen Gewässernetz eine feste Einheit.\nDer Datensatz beinhaltet ein flächendeckendes Mosaik aus über 22'000 aus der Topographie abgeleiteten Teileinzugsgebieten. Er deckt die Schweiz sowie das angrenzende Ausland ab, wobei sämtliche Gewässer mit einer Einzugsgebietsfläche grösser 1-1.5 km² berücksichtigt sind. Die Teileinzugsgebiete sind hierarchisch strukturiert und ermöglichen rasch und einfach Auswertungen über Gesamteinzugsgebiete. \nDer Geobasisdatensatz ist eine Erhebung von gesamtschweizerischem Interesse über die hydrologischen Verhältnisse. Von ihm geht keinerlei Rechtswirkung aus und er stellt in keiner Art und Weise eine verbindliche Vorgabe dar bei der Definition von Einzugsgebieten.",
       "title": "Topographische Einzugsgebiete Schweizer Gewässer"
     },
+    "en": {},
     "fr": {
       "description": "Le jeu de géodonnées de base « Bassins versants topographiques des eaux suisses » fournit des données de référence à haute résolution et couvrant l'ensemble du pays.\nLe jeu de géodonnées se compose d'une mosaïque de 22 000 bassins versants partiels, déterminés sur la base de critères topographiques. Il couvre la Suisse et les régions limitrophes et prend en compte tous les bassins versants dont la superficie dépasse 1 à 1,5 km². La structure hiérarchique de ces bassins versants partiels accélère et simplifie les analyses sur les bassins versants entiers.\nLe jeu de géodonnées de base est un relevé de données hydrologiques d'intérêt national. Il n'a aucune force juridique et ne constitue en aucune manière une prescription contraignante dans le cadre de la délimitation des bassins versants.",
       "title": "Bassins versants topographiques des eaux suisses"
