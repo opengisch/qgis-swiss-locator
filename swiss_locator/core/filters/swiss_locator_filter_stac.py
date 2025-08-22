@@ -102,7 +102,8 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
                                  stac_collections: dict[
                                      str, QgsStacCollection] = None):
         if exception or not stac_collections:
-            self.info(f"{self.tr("Not able to download Swisstopo STAC collections")}: {str(exception)}",
+            self.info(self.tr(
+                    "Not able to download Swisstopo STAC collections") + f": {str(exception)}",
                       Qgis.MessageLevel.Critical)
             return
         self.available_collections = stac_collections
@@ -186,8 +187,10 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
                     if asset_result.is_streamable:
                         # Create a second, streamable asset object
                         asset_as_stream = deepcopy(asset_result)
-                        asset_as_stream.asset_id += f" ({self.tr('streamed')})"
-                        asset_as_stream.path = f"{STACResult.STREAMED_SOURCE_PREFIX}{asset.get("href")}"
+                        postfix = self.tr('streamed')
+                        asset_as_stream.asset_id += f" ({postfix})"
+                        asset_as_stream.path = STACResult.STREAMED_SOURCE_PREFIX + asset.get(
+                                "href")
                         results.append(asset_as_stream)
             
             # Create locator entries
