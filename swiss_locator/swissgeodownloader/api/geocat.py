@@ -53,7 +53,7 @@ class ApiGeoCat:
         self.loadPreSavedMetadata()
     
     def getMeta(self, task: QgsTask, collectionId: str, metadataUrl: str,
-                locale: str):
+                locale: str, saveInFile: bool = True):
         """Requests metadata for a collection Id. Since calling geocat several
         times on each plugin start is very slow, metadata is saved to a file
         and read from there. Only if there is no metadata for a specific
@@ -102,8 +102,9 @@ class ApiGeoCat:
                 if metadata.get(mapsTo):
                     break
         
-        # Save metadata to file so we don't have to call the API again
-        self.updatePreSavedMetadata(metadata, collectionId, locale)
+        if saveInFile:
+            # Save metadata to file so we don't have to call the API again
+            self.updatePreSavedMetadata(metadata, collectionId, locale)
         
         return metadata
     
