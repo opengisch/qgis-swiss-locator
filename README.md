@@ -17,6 +17,7 @@ Similarly to the online geoportal [https://map.geo.admin.ch](https://map.geo.adm
    * WMTS
    * Vector Tiles
 * Features (search through features descriptions)
+* Downloadable files from the Swisstopo STAC catalog
 
 ## How
 
@@ -39,6 +40,17 @@ double clicking it will add it to the map canvas as another background layer.
 
 ![Vector Tiles layer search](./doc/vector_tiles_search.png)
 
+If the result is a **file download** from the Swiss Geoportal STAC catalog,
+double clicking it will download the file and add it to the map.
+
+![Swiss Geoportal STAC file download](doc/stac_search.png)
+
+For topics with many files associated,
+double clicking opens a filter dialog to further narrow down the search.
+Users can do a spatial search, as well as filter file type, timestamp, raster
+resolution, and more.
+![File filter](doc/stac_filter_dialog.png)
+
 ## More
 
 The search is performed through the QGIS [locator bar](https://qgis.org/en/site/forusers/visualchangelog30/#feature-locator-bar).
@@ -57,4 +69,5 @@ In the configuration of the plugin, further customization can be achieved:
 
 ## Who
 
-This plugin has been developped by OPENGIS.ch with friendly support from the [Swiss QGIS User Group](https://qgis.ch).
+This plugin has been developed by OPENGIS.ch with friendly support from
+the [Swiss QGIS User Group](https://qgis.ch).
