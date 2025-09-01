@@ -68,7 +68,7 @@ class SwissLocatorPlugin:
         )
         locale_path = os.path.join(os.path.dirname(__file__), "i18n")
         self.translator = QTranslator()
-        self.translator.load(qgis_locale, "qgis-swiss-locator", "_", locale_path)
+        self.translator.load(qgis_locale, "swiss_locator", "_", locale_path)
         QCoreApplication.installTranslator(self.translator)
 
         self.locator_filters = []
