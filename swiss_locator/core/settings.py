@@ -117,7 +117,7 @@ class Settings:
                     "priority": QgsSettingsEntryEnumFlag(
                             f"{FilterType.STAC.value}_priority",
                             settings_node,
-                            QgsLocatorFilter.Priority.High,
+                            QgsLocatorFilter.Priority.Low,
                     ),
                     "limit": QgsSettingsEntryInteger(
                             f"{FilterType.STAC.value}_limit", settings_node, 5

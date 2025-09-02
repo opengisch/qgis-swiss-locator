@@ -33,6 +33,7 @@ from qgis.PyQt.QtNetwork import (
 )
 from qgis.PyQt.QtWidgets import QLabel, QWidget, QTabWidget
 from qgis.core import (
+    QgsMessageLog,
     Qgis,
     QgsLocatorFilter,
     QgsLocatorResult,
@@ -46,7 +47,7 @@ from qgis.core import (
     QgsFeedback,
     QgsRasterLayer,
     QgsVectorTileLayer,
-    QgsVectorTileUtils,
+    QgsVectorTileUtils
 )
 from qgis.gui import QgsRubberBand, QgisInterface
 
@@ -521,8 +522,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             elif swiss_result.is_downloadable:
                 self.download_asset(swiss_result)
             else:
-                # TODO: Open filter dialog
-                pass
+                self.open_filter_widget(swiss_result)
         
         # Location
         else:
@@ -580,7 +580,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         self.map_canvas.refresh()
 
     def info(self, msg="", level=Qgis.MessageLevel.Info):
-        self.logMessage(str(msg), level)
+        QgsMessageLog.logMessage(str(msg), "Swiss locator", level)
 
     def dbg_info(self, msg=""):
         if DEBUG:
