@@ -109,7 +109,7 @@ class SwissLocatorPlugin:
             )
             QgsMessageLog.logMessage(
                     "Swiss profile source has been registered!",
-                    "Locator bar",
+                    "Swiss locator",
                     Qgis.MessageLevel.Info,
             )
 
@@ -127,7 +127,7 @@ class SwissLocatorPlugin:
             )
             QgsMessageLog.logMessage(
                     "Swiss profile source has been unregistered!",
-                    "Locator bar",
+                    "Swiss locator",
                     Qgis.MessageLevel.Info,
             )
         

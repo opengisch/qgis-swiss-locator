@@ -137,7 +137,8 @@ class MapTip(QDockWidget):
 
     def info(self, msg="", level=Qgis.MessageLevel.Info):
         QgsMessageLog.logMessage(
-            "{} {}".format(self.__class__.__name__, msg), "Locator bar", level
+                "{} {}".format(self.__class__.__name__, msg), "Swiss locator",
+                level
         )
 
     def dbg_info(self, msg=""):
