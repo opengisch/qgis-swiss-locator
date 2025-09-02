@@ -24,7 +24,7 @@ import xml.etree.ElementTree as ET
 from qgis.core import QgsTask
 
 from swiss_locator.swissgeodownloader.api.network_request import fetch
-from swiss_locator.swissgeodownloader.utils.metadataHandler import (
+from swiss_locator.swissgeodownloader.utils.metadata_handler import (
     loadFromFile,
     saveToFile
 )

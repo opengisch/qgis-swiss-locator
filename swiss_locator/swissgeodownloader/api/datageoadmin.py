@@ -24,14 +24,14 @@ from qgis.core import QgsTask, Qgis, QgsStacItem
 from swiss_locator.swissgeodownloader import _AVAILABLE_LOCALES
 from swiss_locator.swissgeodownloader.api.geocat import ApiGeoCat
 from swiss_locator.swissgeodownloader.api.network_request import fetch
-from swiss_locator.swissgeodownloader.api.responseObjects import (
+from swiss_locator.swissgeodownloader.api.response_objects import (
     CURRENT_VALUE,
     FILETYPE_STREAMED,
     SgdAsset,
     SgdStacCollection
 )
 from swiss_locator.swissgeodownloader.api.stac_client import STACClient
-from swiss_locator.swissgeodownloader.utils.filterUtils import (
+from swiss_locator.swissgeodownloader.utils.filter_utils import (
     cleanupFilterItems,
     currentFileByBbox
 )
@@ -300,7 +300,7 @@ class ApiDataGeoAdmin:
         return {'files': fileList, 'filters': filterItems}
     
     def downloadFiles(self, task: QgsTask, fileList, outputDir):
-        self.stacClient.downloadFiles(task, fileList, outputDir)
+        return self.stacClient.downloadFiles(task, fileList, outputDir)
     
     def refreshAllMetadata(self, task: QgsTask):
         """Fetches metadata for all collections and saves it to a json file."""

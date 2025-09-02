@@ -38,7 +38,7 @@ from swiss_locator.swissgeodownloader.api.network_request import (
     createUrl,
     fetchFile
 )
-from swiss_locator.swissgeodownloader.api.responseObjects import SgdAsset
+from swiss_locator.swissgeodownloader.api.response_objects import SgdAsset
 
 
 class STACClient:

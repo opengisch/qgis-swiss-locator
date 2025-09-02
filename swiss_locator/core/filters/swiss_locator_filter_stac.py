@@ -25,10 +25,10 @@ from swiss_locator.core.filters.swiss_locator_filter import (
     SwissLocatorFilter
 )
 from swiss_locator.core.results import STACResult
-from swiss_locator.swissgeodownloader.api.apiCallerTask import \
+from swiss_locator.swissgeodownloader.api.api_caller_task import \
     DownloadFilesTask
 from swiss_locator.swissgeodownloader.api.datageoadmin import ApiDataGeoAdmin
-from swiss_locator.swissgeodownloader.utils.qgisLayerCreatorTask import \
+from swiss_locator.swissgeodownloader.utils.qgis_layer_creator_task import \
     createQgisLayersInTask
 from swiss_locator.utils.utils import get_save_location
 

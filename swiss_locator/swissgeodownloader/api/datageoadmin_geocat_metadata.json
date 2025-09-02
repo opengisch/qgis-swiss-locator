@@ -1130,6 +1130,10 @@
       "title": "Banca dati per il rilevamento del trasporto solido di fondo (Confederazione)"
     }
   },
+  "ch.bafu.fischerei-aeschen": {
+    "de": {},
+    "en": {}
+  },
   "ch.bafu.flora-schwingrasen": {
     "de": {
       "description": "Das Inventar der Schwingrasen der Schweiz enthält die im Felde aufgefundenen Vorkommen von primären Schwingrasen mit Übergangs- und Hochmoorcharakter (83 Objekte), die eine bestimmte Mindestgrösse erreichen. Das Inventar ist eine Verfeinerung gegenüber der Inventare der Hoch- und Übergangsmoore bzw. der Flachmoore und trägt den meist kleinflächig ausgebildeten Schwingrasen besser Rechnung. Es handelt sich um stark verfilzte, zusammenhängende Rasendecken, die auf wasserdurchtränkter Unterlage aufruhend oder auf dem Wasser schwimmend beim Auftreten deutlich in schwingende Bewegungen geraten.Die Objekte sind durch Verwendung ihrer Zentrumskoordinaten (Landeskoordinaten) aus der Datenbank als Punktcoverage generiert worden.",
@@ -2437,6 +2441,16 @@
     "it": {
       "description": "La Rete nazionale d'osservazione degli inquinanti atmosferici (NABEL) misura l'inquinamento dell'aria in Svizzera sulla base di dati rilevati in 16 località. Le stazioni sono distribuite sull'insieme del territorio e misurano il carico d'inquinanti in luoghi tipici (per es. strade del centro città, zone residenziali, campagna). Le stazioni della rete NABEL rappresentano, a seconda del tipo di ubicazione, diverse situazioni di inquinamento. La qualità dell'aria dovrebbe pertanto essere valutata principalmente in base al tipo di ubicazione e non secondo la posizione geografica della stazione.",
       "title": "Rete nazionale d'osservazione degli inquinanti atmosferici NABEL: stazioni"
+    }
+  },
+  "ch.bafu.neophyten": {
+    "de": {
+      "description": "Das Set Invasive gebietsfremde Pflanzen enthält die Karten der potentiellen Verbreitung von 56 in der Schweiz vorkommenden invasiven gebietsfremden Arten sowie solchen aus Nachbarländern mit dem Potential sich in die Schweiz auszudehnen. Die Karten sind das Ergebnis einer Modellierung der Uni Lausanne zur Vorhersage der Verbreitung von invasiven Pflanzen, welche in der Schwarzen Liste resp. der Watchliste aufgeführt sind. Das Modell basiert auf den verfügbaren Daten von GBIF (Global Biodiversity Information Facility), verknüpft mit aktuellen Klimadaten von Worldclim (1km Auflösung) sowie den verfügbaren Daten von InfoFlora verknüpft mit Klimadaten der WSL (100 m Auflösung). Die Karten mit 100 m Auflösung beinhalten weitere Variablen wie Landnutzung und Geologie.",
+      "title": "Invasive gebietsfremde Pflanzen"
+    },
+    "en": {
+      "description": "The set of invasive alien plants shows the maps of the potential areas of 56 alien plants species present in Switzerland as well as some invasive species present in neighboring countries with the potential to reach Switzerland. The maps are the result of model-based tool to anticipate the spread of invasive alien plants listed on the Swiss Black and Watch list. The model is using occurrence data from GBIF (Global Biodiversity Information Facility), current climate data from Worldclim(1 km resolution) and occurrence data from InfoFlora combined with climate data from the WSL (100 m resolution).The maps with 100 m resolution utilize additional necessary variables including landuse and geology.",
+      "title": "Invasive alien plants"
     }
   },
   "ch.bafu.niederschlagserosivitaet": {
@@ -7118,6 +7132,10 @@
       "description": "Questo set di dati mostra i siti di estrazione in funzione o dismessi dell'industria dei laterizi in Svizzera. L'argilla, la marna e talvolta anche l’arenaria, sono le materie prime più importanti per la fabbricazione di mattoni e tegole oppure per l'industria ceramica. Una panoramica dei depositi di queste materie prime è raffigurata in scala 1:500'000. Per informazioni geologiche dettagliate in scala 1:25’000, si rimanda al set di dati GeoCover. \nNel caso si auspichi allo sviluppo di un sito di estrazione di materie prime, è essenziale condurre un'indagine geologica dettagliata in loco. \nI perimetri dei siti di estrazione in attività sono da considerarsi come indicativi. Essi si basano sul Modello Topografico del Paesaggio (MTP) e immagini aeree SWISSIMAGE. Per dettagliate informazioni concernenti l'attività estrattiva, si prega di contattare le rispettive autorità cantonali.\nQuesto set di dati è periodicamente aggiornato e non pretende di essere completo.",
       "title": "Materie prime, siti di produzione e estrazione per la produzione di laterizi"
     }
+  },
+  "ch.swisstopo.geologie-swissbedrock": {
+    "de": {},
+    "en": {}
   },
   "ch.swisstopo.geologie-thermale_waesser": {
     "de": {
