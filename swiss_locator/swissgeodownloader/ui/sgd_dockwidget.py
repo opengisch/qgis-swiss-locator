@@ -36,7 +36,7 @@ from qgis.core import (
 )
 from qgis.gui import QgsDockWidget, QgisInterface, QgsExtentGroupBox
 
-from swiss_locator.swissgeodownloader.api.apiCallerTask import (
+from swiss_locator.swissgeodownloader.api.api_caller_task import (
     GetCollectionsTask,
     AnalyseCollectionTask,
     GetFileListTask,
@@ -46,15 +46,15 @@ from swiss_locator.swissgeodownloader.api.datageoadmin import (
     API_EPSG,
     ApiDataGeoAdmin
 )
-from swiss_locator.swissgeodownloader.api.responseObjects import (
+from swiss_locator.swissgeodownloader.api.response_objects import (
     ALL_VALUE, CURRENT_VALUE,
     STREAMED_SOURCE_PREFIX,
     SgdStacCollection, SgdAsset
 )
-from swiss_locator.swissgeodownloader.ui.bboxDrawer import BboxPainter
-from swiss_locator.swissgeodownloader.ui.datsetListTable import \
+from swiss_locator.swissgeodownloader.ui.bbox_drawer import BboxPainter
+from swiss_locator.swissgeodownloader.ui.collection_list_table import \
     CollectionListTable
-from swiss_locator.swissgeodownloader.ui.fileListTable import FileListTable
+from swiss_locator.swissgeodownloader.ui.file_list_table import FileListTable
 from swiss_locator.swissgeodownloader.ui.qgis_utilities import (
     RECOMMENDED_CRS,
     addLayersToQgis,
@@ -63,9 +63,9 @@ from swiss_locator.swissgeodownloader.ui.qgis_utilities import (
     transformBbox,
     validateBbox
 )
-from swiss_locator.swissgeodownloader.ui.waitingSpinnerWidget import \
+from swiss_locator.swissgeodownloader.ui.waiting_spinner_widget import \
     QtWaitingSpinner
-from swiss_locator.swissgeodownloader.utils.qgisLayerCreatorTask import \
+from swiss_locator.swissgeodownloader.utils.qgis_layer_creator_task import \
     createQgisLayersInTask
 from swiss_locator.swissgeodownloader.utils.utilities import (
     MESSAGE_CATEGORY,

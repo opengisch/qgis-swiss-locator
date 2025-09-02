@@ -2,7 +2,7 @@ import unittest
 
 from qgis.core import QgsStacAsset, QgsBox3D
 
-from swiss_locator.swissgeodownloader.api.responseObjects import (
+from swiss_locator.swissgeodownloader.api.response_objects import (
     SgdAsset,
     FILETYPE_STREAMED
 )

@@ -29,7 +29,7 @@ from qgis.PyQt.QtWidgets import (
     QTableView
 )
 
-from swiss_locator.swissgeodownloader.api.responseObjects import \
+from swiss_locator.swissgeodownloader.api.response_objects import \
     SgdStacCollection
 
 

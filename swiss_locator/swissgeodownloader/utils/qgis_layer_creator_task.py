@@ -28,7 +28,7 @@ from qgis.core import (
     QgsVectorLayer
 )
 
-from swiss_locator.swissgeodownloader.api.responseObjects import SgdAsset
+from swiss_locator.swissgeodownloader.api.response_objects import SgdAsset
 from swiss_locator.swissgeodownloader.utils.utilities import translate
 
 

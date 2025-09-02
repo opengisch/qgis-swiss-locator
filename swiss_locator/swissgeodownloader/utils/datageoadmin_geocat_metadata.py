@@ -1,6 +1,6 @@
 from qgis.core import QgsApplication
 
-from swiss_locator.swissgeodownloader.api.apiCallerTask import ApiCallerTask
+from swiss_locator.swissgeodownloader.api.api_caller_task import ApiCallerTask
 from swiss_locator.swissgeodownloader.api.datageoadmin import ApiDataGeoAdmin
 
 

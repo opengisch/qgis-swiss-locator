@@ -18,7 +18,7 @@
  *                                                                         *
  ***************************************************************************/
 """
-from swiss_locator.swissgeodownloader.api.responseObjects import (
+from swiss_locator.swissgeodownloader.api.response_objects import (
     ALL_VALUE,
     SgdAsset
 )
