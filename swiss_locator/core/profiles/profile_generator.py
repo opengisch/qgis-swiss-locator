@@ -110,11 +110,18 @@ class SwissProfileGenerator(QgsAbstractProfileGenerator):
             self.__results.ellipsoidal_distance_to_height[d] = z
             self.__results.ellipsoidal_cross_section_geometries.append(QgsGeometry(QgsPoint(d, z)))
 
-            if d != 0:
-                # QGIS elevation profile won't calculate distances
-                # using 3d, so let's stick to 2d to avoid getting
-                # displaced markers or lines in the profile canvas
-                cartesian_d += QgsGeometryUtils.distance2D(point_z, self.__results.raw_points[-1])
+            try:
+                if d != 0:
+                    # QGIS elevation profile won't calculate distances
+                    # using 3d, so let's stick to 2d to avoid getting
+                    # displaced markers or lines in the profile canvas
+                    cartesian_d += QgsGeometryUtils.distance2D(point_z, self.__results.raw_points[-1])
+            except IndexError as e:
+                QgsMessageLog.logMessage(result["error"], "Swiss locator", Qgis.MessageLevel.Critical)
+                QgsMessageLog.logMessage(f"\nError in SwissLocator Elevation Profile. Details: {e}",
+                                         "Swiss locator", Qgis.MessageLevel.Critical)
+                QgsMessageLog.logMessage(result, "Swiss locator", Qgis.MessageLevel.Critical)
+                return False
 
             self.__results.raw_points.append(point_z)
             self.__results.cartesian_distance_to_height[cartesian_d] = z
@@ -137,6 +144,12 @@ class SwissProfileGenerator(QgsAbstractProfileGenerator):
 class SwissProfileSource(QgsAbstractProfileSource):
     def __init__(self):
         QgsAbstractProfileSource.__init__(self)
+
+    def profileSourceId(self):
+        return "swiss-profile"
+
+    def profileSourceName(self):
+        return "Swiss Profile"
 
     def createProfileGenerator(self, request):
         return SwissProfileGenerator(request)
