@@ -96,12 +96,13 @@ class SwissLocatorPlugin:
             SwissLocatorFilterFeature,
             SwissLocatorFilterSTAC
         ):
-            self.locator_filters.append(_filter(self.iface))
-            self.iface.registerLocatorFilter(self.locator_filters[-1])
-            self.locator_filters[-1].message_emitted.connect(self.show_message)
-            if isinstance(self.locator_filters[-1], SwissLocatorFilterSTAC):
-                self.locator_filters[-1].show_filter_widget.connect(
-                        self.open_stac_filter_widget)
+            locatorFilter = _filter(self.iface)
+            self.iface.registerLocatorFilter(locatorFilter)
+            locatorFilter.message_emitted.connect(self.show_message)
+            if isinstance(locatorFilter, SwissLocatorFilterSTAC):
+                locatorFilter.show_filter_widget.connect(
+                    self.open_stac_filter_widget)
+            self.locator_filters.append(locatorFilter)
 
         if Qgis.QGIS_VERSION_INT >= 33700:
             QgsApplication.profileSourceRegistry().registerProfileSource(
