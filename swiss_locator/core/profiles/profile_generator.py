@@ -140,5 +140,11 @@ class SwissProfileSource(QgsAbstractProfileSource):
     def __init__(self):
         QgsAbstractProfileSource.__init__(self)
 
+    def profileSourceId(self):
+        return "swiss-profile"
+
+    def profileSourceName(self):
+        return "Swiss Profile"
+
     def createProfileGenerator(self, request):
         return SwissProfileGenerator(request)
