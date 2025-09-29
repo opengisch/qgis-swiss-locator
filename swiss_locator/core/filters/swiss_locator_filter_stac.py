@@ -2,14 +2,13 @@ import json
 import os
 from copy import deepcopy
 
-from qgis.PyQt.QtCore import QEventLoop
+from qgis.PyQt.QtCore import pyqtSignal
 from qgis.core import (
     QgsTask,
     QgsProject,
     QgsRasterLayer,
     QgsVectorLayer,
     Qgis,
-    QgsFileDownloader,
     QgsApplication,
     QgsFeedback,
     QgsLocatorResult,
@@ -20,14 +19,18 @@ from qgis.gui import QgisInterface
 from swiss_locator.core.filters.filter_type import FilterType
 from swiss_locator.core.filters.map_geo_admin_stac import (
     collections_to_searchable_strings,
-    fetch_stac_collections_with_metadata,
     map_geo_admin_stac_items_url
 )
 from swiss_locator.core.filters.swiss_locator_filter import (
     SwissLocatorFilter
 )
 from swiss_locator.core.results import STACResult
-from swiss_locator.utils.utils import url_with_param, get_save_location
+from swiss_locator.swissgeodownloader.api.api_caller_task import \
+    DownloadFilesTask
+from swiss_locator.swissgeodownloader.api.datageoadmin import ApiDataGeoAdmin
+from swiss_locator.swissgeodownloader.utils.qgis_layer_creator_task import \
+    createQgisLayersInTask
+from swiss_locator.utils.utils import get_save_location
 
 FILE_TYPE_ICONS = {
     'default': "/mActionAddLayer.svg",
@@ -65,11 +68,16 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
     """
     HEADERS = {b"User-Agent": b"Mozilla/5.0 QGIS Swiss Geoportal Stac Filter"}
     
+    show_filter_widget = pyqtSignal(str)
+    
     def __init__(self, iface: QgisInterface = None, crs: str = None,
                  data=None):
         super().__init__(FilterType.STAC, iface, crs)
         
         self.stac_fetch_task: QgsTask | None = None
+        self.stac_download_task: QgsTask | None = None
+        self.stac_layer_create_task: QgsTask | None = None
+        self.stac_api_data_geo_admin = ApiDataGeoAdmin(self.lang)
         self.available_collections: dict[str, QgsStacCollection] = {}
         self.search_strings = []
         self.collection_ids = []
@@ -85,8 +93,7 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
         self.info(self.tr('Fetching Swisstopo STAC collections'))
         self.stac_fetch_task = QgsTask.fromFunction(
                 self.tr('Fetching Swisstopo STAC collections'),
-                fetch_stac_collections_with_metadata,
-                self.lang,
+                self.stac_api_data_geo_admin.getCollections,
                 on_finished=self.receive_stac_collections)
         
         QgsApplication.taskManager().addTask(self.stac_fetch_task)
@@ -95,7 +102,8 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
                                  stac_collections: dict[
                                      str, QgsStacCollection] = None):
         if exception or not stac_collections:
-            self.info(f"{self.tr("Not able to download Swisstopo STAC collections")}: {str(exception)}",
+            self.info(self.tr(
+                    "Not able to download Swisstopo STAC collections") + f": {str(exception)}",
                       Qgis.MessageLevel.Critical)
             return
         self.available_collections = stac_collections
@@ -179,8 +187,10 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
                     if asset_result.is_streamable:
                         # Create a second, streamable asset object
                         asset_as_stream = deepcopy(asset_result)
-                        asset_as_stream.asset_id += f" ({self.tr('streamed')})"
-                        asset_as_stream.path = f"{STACResult.STREAMED_SOURCE_PREFIX}{asset.get("href")}"
+                        postfix = self.tr('streamed')
+                        asset_as_stream.asset_id += f" ({postfix})"
+                        asset_as_stream.path = STACResult.STREAMED_SOURCE_PREFIX + asset.get(
+                                "href")
                         results.append(asset_as_stream)
             
             # Create locator entries
@@ -201,11 +211,10 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
                                 '', stac_collection.description(),
                                 '', '')
             
-            self.create_locator_result(result.collection_name,
-                                       self.tr('open filter dialog'),
-                                       '',
-                                       result.as_definition(),
-                                       'filter')
+            self.create_locator_result(
+                    result.collection_name,
+                    self.tr('open filter dialog to choose files'),
+                    '', result.as_definition(), 'filter')
     
     def create_locator_result(self, group, title, description, user_data,
                               icon):
@@ -244,64 +253,58 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
         
         # Download the asset in a separate event loop
         asset.path = file_path
-        url = url_with_param(asset.href, {})
-        self.info(f"fetching {url}")
-        
-        event_loop = QEventLoop()
+        self.info(f"fetching {asset.href}")
         
         def on_download_error():
-            event_loop.quit()
             level = Qgis.MessageLevel.Warning
-            msg = f"{self.tr('Unable to download file')}: {asset.asset_id}"
-            self.message_emitted.emit(self.displayName(), msg, level)
+            msg = self.tr('Unable to download file {}').format(asset.asset_id)
             self.info(msg, level)
         
-        fetcher = QgsFileDownloader(url, asset.href)
-        fetcher.downloadError.connect(on_download_error)
-        fetcher.downloadCanceled.connect(event_loop.quit)
-        fetcher.downloadCompleted.connect(
+        self.stac_download_task = DownloadFilesTask(
+                self.stac_api_data_geo_admin,
+                self.iface.messageBar(),
+                self.tr('download {}').format(asset.asset_id),
+                fileList=[asset],
+                outputDir=folder_path)
+        # Listen for finished api call
+        self.stac_download_task.taskCompleted.connect(
                 lambda: self.add_asset_to_qgis(asset))
-        fetcher.downloadCompleted.connect(event_loop.quit)
-        event_loop.exec(QEventLoop.ProcessEventsFlag.ExcludeUserInputEvents)
+        self.stac_download_task.taskTerminated.connect(on_download_error)
+        # Add task to task manager
+        QgsApplication.taskManager().addTask(self.stac_download_task)
     
     def add_asset_to_qgis(self, asset: STACResult):
-        msg = ''
-        level = Qgis.MessageLevel.Info
-        
         if not os.path.exists(asset.path) and not asset.is_streamed:
             return
         
         if 'zip' in asset.path:
-            msg = f"{self.tr('File download finished')}: {asset.asset_id}"
-            self.message_emitted.emit(self.displayName(), msg, level)
+            msg = self.tr('Download completed: {}').format(asset.asset_id)
+            level = Qgis.MessageLevel.Success
+            self.message_emitted.emit(self.displayName(), msg, level, None)
             self.info(msg, level)
             return
         
-        layer = None
-        try:
-            vectorLyr = QgsVectorLayer(asset.path, asset.asset_id, "ogr")
-            if vectorLyr.isValid():
-                layer = vectorLyr
-            else:
-                del vectorLyr
-        except Exception as e:
-            msg = e
+        createQgisLayersInTask([asset], self.qgis_layer_created)
+    
+    def qgis_layer_created(
+            self,
+            layers: list[QgsRasterLayer | QgsVectorLayer] | None = None,
+            _alreadyAdded: int = 0,
+            exception=None):
         
-        if not layer:
-            try:
-                rasterLyr = QgsRasterLayer(asset.path, asset.asset_id)
-                if rasterLyr.isValid():
-                    layer = rasterLyr
-                else:
-                    del rasterLyr
-            except Exception as e:
-                msg = e
-        
-        if layer:
+        msg = ''
+        level = Qgis.MessageLevel.Info
+        if layers:
+            layer = layers[0]
             QgsProject.instance().addMapLayer(layer)
-        else:
-            msg = f"{self.tr('Unable to add downloaded file to QGIS')} ({asset.asset_id}): {msg}"
+            msg = self.tr('Added file {} to QGIS').format(layer.name())
+        if exception:
+            msg = self.tr('Unable to add layer to QGIS: {}').format(
+                    exception)
             level = Qgis.MessageLevel.Warning
-            self.info(msg, level)
+            self.message_emitted.emit(self.displayName(), msg, level, None)
         
-        self.message_emitted.emit(self.displayName(), msg, level)
+        self.info(msg, level)
+    
+    def open_filter_widget(self, collection: STACResult):
+        self.show_filter_widget.emit(collection.collection_id)
