@@ -122,7 +122,6 @@ class SwissLocatorPlugin:
                         self.open_stac_filter_widget)
             self.iface.deregisterLocatorFilter(locator_filter)
 
-
         if Qgis.QGIS_VERSION_INT >= 33700:
             if Qgis.QGIS_VERSION_INT >= 39900:  # Change to 40000 from QGIS 4.0 onwards
                 QgsApplication.profileSourceRegistry().unregisterProfileSource(
