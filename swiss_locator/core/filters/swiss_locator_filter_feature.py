@@ -18,6 +18,7 @@
 """
 
 import json
+import os
 
 from qgis.PyQt.QtGui import QIcon
 from qgis.core import (
@@ -28,6 +29,7 @@ from qgis.core import (
 )
 from qgis.gui import QgisInterface
 
+from swiss_locator import PLUGIN_PATH
 from swiss_locator.core.filters.filter_type import FilterType
 from swiss_locator.core.filters.map_geo_admin import map_geo_admin_url
 from swiss_locator.core.filters.swiss_locator_filter import (
@@ -105,6 +107,7 @@ class SwissLocatorFilterFeature(SwissLocatorFilter):
                 layer=layer,
                 feature_id=loc["attrs"]["feature_id"],
             ).as_definition()
-            result.icon = QIcon(":/plugins/swiss_locator/icons/swiss_locator.png")
+            result.icon = QIcon(
+                str(os.path.join(PLUGIN_PATH, "icons", "swiss_locator.png")))
             self.result_found = True
             self.resultFetched.emit(result)
