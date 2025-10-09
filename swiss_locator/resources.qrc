@@ -1,5 +1,0 @@
-<RCC>
-    <qresource prefix="/plugins/swiss_locator">
-        <file>icons/swiss_locator.png</file>
-    </qresource>
-</RCC>

@@ -52,7 +52,7 @@ def fetch(
     if header:
         request.setHeader(*tuple(header))
     
-    log(translate("SGD", "Start request {}").format(callUrl))
+    log(translate("SGD", "Start request {}").format(callUrl.toString()))
     # Start request
     http = QgsBlockingNetworkRequest()
     if method == "get":
@@ -68,7 +68,7 @@ def fetch(
         # Service is not reachable
         task.exception = translate("SGD",
                                    "{} not reachable or no internet connection").format(
-                callUrl)
+                callUrl.toString())
         # Service returned an error
         if r.content():
             try:
@@ -78,7 +78,8 @@ def fetch(
                 raise e
             if "code" and "description" in errorResp:
                 task.exception = (
-                        translate("SGD", "{} returns error").format(callUrl)
+                        translate("SGD", "{} returns error").format(
+                            callUrl.toString())
                         + f": {errorResp['code']} - {errorResp['description']}"
                 )
         return False

@@ -35,6 +35,7 @@ from swiss_locator.core.filters.swiss_locator_filter import (
 )
 from swiss_locator.core.results import FeatureResult
 from swiss_locator.map_geo_admin.layers import searchable_layers
+from swiss_locator.utils.utils import get_icon_path
 
 
 class SwissLocatorFilterFeature(SwissLocatorFilter):
@@ -105,6 +106,6 @@ class SwissLocatorFilterFeature(SwissLocatorFilter):
                 layer=layer,
                 feature_id=loc["attrs"]["feature_id"],
             ).as_definition()
-            result.icon = QIcon(":/plugins/swiss_locator/icons/swiss_locator.png")
+            result.icon = QIcon(get_icon_path("swiss_locator.png"))
             self.result_found = True
             self.resultFetched.emit(result)

@@ -17,15 +17,14 @@
  ***************************************************************************/
 """
 
-import traceback
 import json
-import sys
 import os
+import sys
+import traceback
 
 from qgis.PyQt.QtCore import QUrl
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtNetwork import QNetworkRequest
-
 from qgis.core import (
     Qgis,
     QgsLocatorResult,
@@ -36,12 +35,12 @@ from qgis.core import (
 )
 from qgis.gui import QgisInterface
 
-from swiss_locator.core.filters.swiss_locator_filter import SwissLocatorFilter
 from swiss_locator.core.filters.filter_type import FilterType
 from swiss_locator.core.filters.map_geo_admin import map_geo_admin_url
+from swiss_locator.core.filters.swiss_locator_filter import SwissLocatorFilter
 from swiss_locator.core.results import LocationResult
 from swiss_locator.utils.html_stripper import strip_tags
-from swiss_locator.utils.utils import url_with_param
+from swiss_locator.utils.utils import url_with_param, get_icon_path
 
 
 class SwissLocatorFilterLocation(SwissLocatorFilter):
@@ -94,7 +93,7 @@ class SwissLocatorFilterLocation(SwissLocatorFilter):
                     else None,
                     html_label=loc["attrs"]["label"],
                 ).as_definition()
-                result.icon = QIcon(":/plugins/swiss_locator/icons/swiss_locator.png")
+                result.icon = QIcon(get_icon_path("swiss_locator.png"))
                 self.result_found = True
                 self.resultFetched.emit(result)
 

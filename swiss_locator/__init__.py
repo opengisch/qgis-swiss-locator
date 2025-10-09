@@ -21,7 +21,10 @@
  ***************************************************************************/
 """
 
+import os
+
 DEBUG = False
+PLUGIN_PATH = os.path.dirname(__file__)
 
 
 def classFactory(iface):
