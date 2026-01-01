@@ -49,7 +49,7 @@ jobs:
         qgis-plugin-ci package ${VERSION} \
         --transifex-token "${{ secrets.TX_TOKEN }}"
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v6
       if: ${{ ! startsWith(github.ref, 'refs/tags/') }}
       with:
         name: swiss_locator_plugin_dev
