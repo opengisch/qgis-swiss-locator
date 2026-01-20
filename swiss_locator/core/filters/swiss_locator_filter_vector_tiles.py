@@ -50,18 +50,6 @@ class SwissLocatorFilterVectorTiles(SwissLocatorFilter):
                 "url": "https://vectortiles.geo.admin.ch/tiles/ch.swisstopo.base.vt/v1.0.0/{z}/{x}/{y}.pbf",
                 "style": "https://vectortiles.geo.admin.ch/styles/ch.swisstopo.imagerybasemap.vt/style.json",
             },
-            "leichte-basiskarte": {
-                "title": "leichte-basiskarte",
-                "description": "",
-                "url": "https://vectortiles.geo.admin.ch/tiles/ch.swisstopo.leichte-basiskarte.vt/v3.0.1/{z}/{x}/{y}.pbf",
-                "style": "https://vectortiles.geo.admin.ch/styles/ch.swisstopo.leichte-basiskarte.vt/style.json",
-            },
-            "leichte-basiskarte-imagery": {
-                "title": "leichte-basiskarte-imagery",
-                "description": "",
-                "url": "https://vectortiles.geo.admin.ch/tiles/ch.swisstopo.leichte-basiskarte.vt/v3.0.1/{z}/{x}/{y}.pbf",
-                "style": "https://vectortiles.geo.admin.ch/styles/ch.swisstopo.leichte-basiskarte-imagery.vt/style.json",
-            },
         }
 
         for keyword in list(data.keys()):
