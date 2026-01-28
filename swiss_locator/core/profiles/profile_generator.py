@@ -1,7 +1,7 @@
 import json
 
 from qgis.PyQt.QtCore import QUrl
-from qgis.PyQt.QtNetwork import QNetworkRequest
+from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply
 from qgis.core import (
     Qgis,
     QgsAbstractProfileGenerator,
@@ -32,11 +32,15 @@ class SwissProfileGenerator(QgsAbstractProfileGenerator):
     def __init__(self, request):
         QgsAbstractProfileGenerator.__init__(self)
         self.__request = request
-        self.__profile_curve = request.profileCurve().clone() if request.profileCurve() else None
+        self.__profile_curve = (
+            request.profileCurve().clone() if request.profileCurve() else None
+        )
         self.__transformed_curve = None
-        self.__transformation = QgsCoordinateTransform(request.crs(),  # Profile curve's CRS
-                                                       QgsCoordinateReferenceSystem("EPSG:2056"),
-                                                       request.transformContext())
+        self.__transformation = QgsCoordinateTransform(
+            request.crs(),  # Profile curve's CRS
+            QgsCoordinateReferenceSystem("EPSG:2056"),
+            request.transformContext(),
+        )
         self.__results = None  # SwissProfileResults()
         self.__feedback = QgsFeedback()
 
@@ -54,24 +58,34 @@ class SwissProfileGenerator(QgsAbstractProfileGenerator):
         req = QNetworkRequest(QUrl(url))
         reply = network_access_manager.blockingGet(req, feedback=self.__feedback)
 
-        if reply.error():
-            result = {"error": reply.errorString()}
-        else:
+        if reply.error() == QNetworkReply.NetworkError.NoError:
             content = reply.content()
             try:
-                result = json.loads(str(content, 'utf-8'))
+                result = json.loads(str(content, "utf-8"))
             except json.decoder.JSONDecodeError as e:
                 QgsMessageLog.logMessage(
-                        "Unable to parse results from Profile service. Details: {}".format(
-                            e.msg),
-                        "Swiss locator",
-                        Qgis.MessageLevel.Critical
+                    "Unable to parse results from Profile service. Details: {}".format(
+                        e.msg
+                    ),
+                    "Swiss locator",
+                    Qgis.MessageLevel.Critical,
                 )
+        else:
+            result = {
+                "error": "Error from the profile server. Details: "
+                + reply.errorString()
+                + f" (status code: {reply.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute)}, error code: {reply.error()})"
+            }
 
         return result
 
     def __parse_response_point(self, point):
-        return point[self.X], point[self.Y], point[self.Z_DICT][self.Z], point[self.DISTANCE]
+        return (
+            point[self.X],
+            point[self.Y],
+            point[self.Z_DICT][self.Z],
+            point[self.DISTANCE],
+        )
 
     def feedback(self):
         return self.__feedback
@@ -84,9 +98,11 @@ class SwissProfileGenerator(QgsAbstractProfileGenerator):
         try:
             self.__transformed_curve.transform(self.__transformation)
         except QgsCsException as e:
-            QgsMessageLog.logMessage("Error transforming profile line to EPSG:2056.",
-                                     "Swiss locator",
-                                     Qgis.MessageLevel.Critical)
+            QgsMessageLog.logMessage(
+                f"Error transforming profile line to EPSG 2056. Details: {e}",
+                "Swiss locator",
+                Qgis.MessageLevel.Critical,
+            )
             return False
 
         self.__results = SwissProfileResults()
@@ -95,8 +111,9 @@ class SwissProfileGenerator(QgsAbstractProfileGenerator):
         result = self.__get_profile_from_rest_api()
 
         if "error" in result:
-            QgsMessageLog.logMessage(result["error"], "Swiss locator",
-                                     Qgis.MessageLevel.Critical)
+            QgsMessageLog.logMessage(
+                result["error"], "Swiss locator", Qgis.MessageLevel.Critical
+            )
             return False
 
         cartesian_d = 0
@@ -110,22 +127,31 @@ class SwissProfileGenerator(QgsAbstractProfileGenerator):
             point_z.transform(self.__transformation, Qgis.TransformDirection.Reverse)
 
             self.__results.ellipsoidal_distance_to_height[d] = z
-            self.__results.ellipsoidal_cross_section_geometries.append(QgsGeometry(QgsPoint(d, z)))
+            self.__results.ellipsoidal_cross_section_geometries.append(
+                QgsGeometry(QgsPoint(d, z))
+            )
 
             try:
                 if d != 0:
                     # QGIS elevation profile won't calculate distances
                     # using 3d, so let's stick to 2d to avoid getting
                     # displaced markers or lines in the profile canvas
-                    cartesian_d += QgsGeometryUtils.distance2D(point_z, self.__results.raw_points[-1])
+                    cartesian_d += QgsGeometryUtils.distance2D(
+                        point_z, self.__results.raw_points[-1]
+                    )
             except IndexError as e:
-                QgsMessageLog.logMessage(f"\nError in SwissLocator Elevation Profile. Details: {e}",
-                                         "Swiss locator", Qgis.MessageLevel.Critical)
+                QgsMessageLog.logMessage(
+                    f"\nError in SwissLocator Elevation Profile. Details: {e}",
+                    "Swiss locator",
+                    Qgis.MessageLevel.Critical,
+                )
                 return False
 
             self.__results.raw_points.append(point_z)
             self.__results.cartesian_distance_to_height[cartesian_d] = z
-            self.__results.cartesian_cross_section_geometries.append(QgsGeometry(QgsPoint(cartesian_d, z)))
+            self.__results.cartesian_cross_section_geometries.append(
+                QgsGeometry(QgsPoint(cartesian_d, z))
+            )
 
             if z < self.__results.min_z:
                 self.__results.min_z = z
