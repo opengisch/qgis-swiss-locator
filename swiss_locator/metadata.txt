@@ -9,7 +9,7 @@ version=dev
 author=OPENGIS.ch
 email=info@opengis.ch
 
-supportsQt6=yes
+supportsQt6=True
 
 
 # Tags are comma separated with spaces allowed
