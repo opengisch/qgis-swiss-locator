@@ -26,11 +26,7 @@ import traceback
 
 from qgis.PyQt.QtCore import Qt, QTimer, QUrl, pyqtSignal, QEventLoop
 from qgis.PyQt.QtGui import QColor
-from qgis.PyQt.QtNetwork import (
-    QNetworkRequest,
-    QNetworkReply,
-    QNetworkAccessManager
-)
+from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply, QNetworkAccessManager
 from qgis.PyQt.QtWidgets import QLabel, QWidget, QTabWidget
 from qgis.core import (
     QgsMessageLog,
@@ -47,7 +43,7 @@ from qgis.core import (
     QgsFeedback,
     QgsRasterLayer,
     QgsVectorTileLayer,
-    QgsVectorTileUtils
+    QgsVectorTileUtils,
 )
 from qgis.gui import QgsRubberBand, QgisInterface
 
@@ -257,6 +253,13 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
     def handle_reply(self, url: str, feedback: QgsFeedback, slot, data=None):
         self.dbg_info(f"feature handle reply {url}")
+        if url not in self.network_replies:
+            # might be happening when both event_loop.quit() and reply.abort() are called
+            self.dbg_info(
+                f"url {url} missing from network_replies, "
+                "it was likely already handled or cancelled"
+            )
+            return
         reply = self.network_replies[url]
 
         try:
@@ -377,7 +380,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         if type(swiss_result) == WMSLayerResult:
             params = dict()
             params["contextualWMSLegend"] = 0
-            params["crs"] = f"EPSG:{self.crs}"
+            params["crs"] = "EPSG:{}".format(self.crs)
             params["dpiMode"] = 7
             params["featureCount"] = 10
             params["format"] = swiss_result.format
@@ -515,7 +518,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 else:
                     QgsProject.instance().addMapLayer(ch_layer, False)
                     root.insertLayer(-1, ch_layer)
-        
+
         elif type(swiss_result) == STACResult:
             if swiss_result.is_streamed:
                 self.add_asset_to_qgis(swiss_result)
@@ -523,7 +526,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 self.download_asset(swiss_result)
             else:
                 self.open_filter_widget(swiss_result)
-        
+
         # Location
         else:
             point = QgsGeometry.fromPointXY(swiss_result.point)
