@@ -63,11 +63,10 @@ class SwissLocatorFilterFeature(SwissLocatorFilter):
             assert len(layers) > 0
             step = 20
             for i_layer in range(0, len(layers), step):
-                last = min(i_layer + step - 1, len(layers) - 1)
                 url, params = map_geo_admin_url(
                     search, self.type.value, self.crs, self.lang, limit
                 )
-                params["features"] = ",".join(layers[i_layer:last])
+                params["features"] = ",".join(layers[i_layer : i_layer + step])
                 requests.append(self.request_for_url(url, params, self.HEADERS))
         except IOError:
             self.info(

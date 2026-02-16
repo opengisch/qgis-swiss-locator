@@ -29,10 +29,10 @@ from qgis.PyQt.QtWidgets import (
     QTableWidgetItem,
     QAbstractItemView,
     QComboBox,
-    QSpinBox
+    QSpinBox,
 )
 from qgis.PyQt.uic import loadUiType
-from qgis.core import QgsLocatorFilter
+from qgis.core import Qgis, QgsLocatorFilter
 from qgis.gui import (
     QgsSettingsStringComboBoxWrapper,
     QgsSettingsBoolCheckBoxWrapper,
@@ -55,6 +55,13 @@ class ConfigDialog(QDialog, DialogUi):
     def accept(self):
         for wrapper in self.wrappers:
             wrapper.setSettingFromWidget()
+
+        # feature_search_restrict is a checkable QGroupBox, not a QCheckBox,
+        # so it cannot use QgsSettingsBoolCheckBoxWrapper on QGIS < 4.0
+        if Qgis.QGIS_VERSION_INT < 39900:
+            self.settings.feature_search_restrict.setValue(
+                self.feature_search_restrict.isChecked()
+            )
 
         layers_list = []
         for r in range(self.feature_search_layers_list.rowCount()):
@@ -90,11 +97,21 @@ class ConfigDialog(QDialog, DialogUi):
                 self.settings.layers_include_opendataswiss,
             )
         )
-        self.wrappers.append(
-            QgsSettingsBoolCheckBoxWrapper(
-                self.feature_search_restrict, self.settings.feature_search_restrict
+        # feature_search_restrict is a checkable QGroupBox, not a QCheckBox.
+        # QgsSettingsBoolGroupBoxWrapper is available from QGIS 4.0 onwards.
+        if Qgis.QGIS_VERSION_INT >= 39900:
+            from qgis.gui import QgsSettingsBoolGroupBoxWrapper
+
+            self.wrappers.append(
+                QgsSettingsBoolGroupBoxWrapper(
+                    self.feature_search_restrict,
+                    self.settings.feature_search_restrict,
+                )
             )
-        )
+        else:
+            self.feature_search_restrict.setChecked(
+                self.settings.feature_search_restrict.value()
+            )
 
         display_strings = {
             QgsLocatorFilter.Priority.Highest: self.tr("Highest"),
@@ -113,18 +130,20 @@ class ConfigDialog(QDialog, DialogUi):
                     displayStrings=display_strings,
                 )
                 self.wrappers.append(ew)
-            
+
             sb = self.findChild(QSpinBox, "{}_limit".format(filter_type.value))
             if sb is not None:
                 sbw = QgsSettingsIntegerSpinBoxWrapper(
-                        sb, self.settings.filters[filter_type.value]["limit"])
+                    sb, self.settings.filters[filter_type.value]["limit"]
+                )
                 self.wrappers.append(sbw)
-        
+
         sb_stac = self.findChild(QSpinBox, "stac_limit_files_per_result")
         if sb_stac is not None:
             sbw_stac = QgsSettingsIntegerSpinBoxWrapper(
-                    sb_stac, self.settings.filters[filter_type.value][
-                        "limit_files_per_result"])
+                sb_stac,
+                self.settings.filters[filter_type.value]["limit_files_per_result"],
+            )
             self.wrappers.append(sbw_stac)
 
         self.search_line_edit.textChanged.connect(self.filter_rows)
