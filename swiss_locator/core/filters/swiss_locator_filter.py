@@ -24,6 +24,8 @@ import re
 import sys
 import traceback
 
+from qgis.PyQt import sip
+
 from qgis.PyQt.QtCore import Qt, QTimer, QUrl, pyqtSignal, QEventLoop
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply, QNetworkAccessManager
@@ -252,6 +254,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
         return request
 
     def handle_reply(self, url: str, feedback: QgsFeedback, slot, data=None):
+        if sip.isdeleted(self):
+            return
         self.dbg_info(f"feature handle reply {url}")
         if url not in self.network_replies:
             # might be happening when both event_loop.quit() and reply.abort() are called
@@ -322,6 +326,14 @@ class SwissLocatorFilter(QgsLocatorFilter):
         if len(self.network_replies) > 0:
             self.event_loop.exec(QEventLoop.ProcessEventsFlag.ExcludeUserInputEvents)
 
+        # After event loop exits (e.g. due to cancellation), clean up any
+        # remaining replies to prevent callbacks on a deleted filter object
+        for url, reply in list(self.network_replies.items()):
+            reply.finished.disconnect()
+            reply.abort()
+            reply.deleteLater()
+        self.network_replies.clear()
+
     def fetchResults(
         self, search: str, context: QgsLocatorContext, feedback: QgsFeedback
     ):
@@ -380,7 +392,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         if type(swiss_result) == WMSLayerResult:
             params = dict()
             params["contextualWMSLegend"] = 0
-            params["crs"] = "EPSG:{}".format(self.crs)
+            params["crs"] = f"EPSG:{self.crs}"  # NOQA E231
             params["dpiMode"] = 7
             params["featureCount"] = 10
             params["format"] = swiss_result.format
