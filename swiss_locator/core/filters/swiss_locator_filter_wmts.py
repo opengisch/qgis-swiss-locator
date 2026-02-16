@@ -44,7 +44,7 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
         super().__init__(FilterType.WMTS, iface, crs)
 
         self.capabilities = capabilities
-        self.capabilities_url = f"https://wmts.geo.admin.ch/EPSG/{self.crs}/1.0.0/WMTSCapabilities.xml?lang={self.lang}"
+        self.capabilities_url = f"https://wmts.geo.admin.ch/EPSG/{self.crs}/1.0.0/WMTSCapabilities.xml?lang={self.lang}"  # NOQA E231
 
         # do this on main thread only?
         if self.capabilities is None and iface is not None:
@@ -128,6 +128,7 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
             return
 
         # Search for layers containing the search term in the name or title
+        results = {}
         for layer in self.capabilities.findall(".//wmts:Layer", namespaces):
             layer_title = layer.find(".//ows:Title", namespaces).text
             layer_abstract = layer.find(".//ows:Abstract", namespaces).text
@@ -145,8 +146,6 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
             dimensions = "&".join([f"{k}={v}" for (k, v) in dimensions.items()])
             dimensions = urllib.parse.quote(dimensions)
 
-            results = {}
-
             if layer_identifier:
                 if search.lower() in layer_identifier.lower():
                     score = 1
@@ -163,7 +162,11 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
 
                 result = QgsLocatorResult()
                 result.filter = self
-                result.icon = QgsApplication.getThemeIcon("/mIconTemporalRaster.svg") if temporal_wmts else QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
+                result.icon = (
+                    QgsApplication.getThemeIcon("/mIconTemporalRaster.svg")
+                    if temporal_wmts
+                    else QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
+                )
 
                 result.displayString = layer_title
                 result.description = layer_abstract
@@ -179,10 +182,9 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
 
                 results[result] = score
 
-            # sort the results with score
-            results = sorted([result for (result, score) in results.items()])
-
-            limit = self.settings.filters[self.type.value]["limit"].value()
-            for result in results[0:limit]:
-                self.resultFetched.emit(result)
-                self.result_found = True
+        # sort the results by score and apply the limit
+        sorted_results = sorted(results.items(), key=lambda item: item[1])
+        limit = self.settings.filters[self.type.value]["limit"].value()
+        for result, _score in sorted_results[:limit]:
+            self.resultFetched.emit(result)
+            self.result_found = True

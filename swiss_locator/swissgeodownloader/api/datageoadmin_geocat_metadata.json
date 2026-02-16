@@ -7950,6 +7950,12 @@
       "title": "swissBOUNDARIES3D"
     }
   },
+  "ch.swisstopo.swissboundaries3d.inspire": {
+    "en": {
+      "description": "Administrative units is based on the data set swissBOUNDARIES3D by swisstopo. It contains all administrative units and national boundaries of Switzerland and the Principality of Liechtenstein in vector form. The product is based on an optimized data model for Switzerland and conforms to the data of the Swiss Federal Statistical Office and European INSPIRE directives. swissBOUNDARIES3D replaces the GG25 dataset from 2010 onwards.",
+      "title": "Administrative units Switzerland - INSPIRE"
+    }
+  },
   "ch.swisstopo.swissbuildings3d_2": {
     "de": {
       "description": "swissBUILDINGS3D 2.0 ist ein Vektordatensatz, der Gebäude als 3D-Modelle mit Dachformen und Dachüberständen darstellt. Die hohe Genauigkeit in allen drei Dimensionen, die grossflächige Abdeckung sowie die realitätsnahe Wiedergabe der Gebäudevolumenkörper machen dieses Produkt zu einem wertvollen Basisdatensatz für verschiedenste Anwendungen.",
@@ -8092,6 +8098,12 @@
     "it": {
       "description": "swissNAMES3D è la raccolta dei nomi geografici la più completa della Svizzera e del Principato del Liechtenstein. swissNAMES3D comprende oltre 430'000 dati georeferenziati e suddivisi in diverse categorie. La nuova serie di dati sostituisce dal 2015 il precedente prodotto SwissNames che era basato sui nomi della Carta Nazionale ed era stato aggiornato nel 2008. All’interno del geoportale federale, il layer \"nomi geografici\" corrisponde a una selezione di swissNAMES3D in funzione del livello di zoom scelto.",
       "title": "swissNAMES3D nomi geografici della misurazione nazionale"
+    }
+  },
+  "ch.swisstopo.swissnames3d.inspire": {
+    "en": {
+      "description": "Geographical Names is based on the data set swissNAMES3D by swisstopo. It is the most comprehensive collection of geographical names for Switzerland and Liechtenstein. swissNAMES3D contains over 437'000 georeferenced entries divided in different categories. The dataset replaces since 2015 the old product swissNAMES updated until 2008. In the federal geoportal the layer \"geographical names\" corresponds to a selection of swissNAMES3D for the different zoomlevels. This is the INSPIRE-compliant product derivation.",
+      "title": "Geographical Names Switzerland - INSPIRE"
     }
   },
   "ch.swisstopo.swisssurface3d": {
