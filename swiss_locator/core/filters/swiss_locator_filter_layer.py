@@ -155,6 +155,7 @@ class SwissLocatorFilterLayer(SwissLocatorFilter):
         # Get xml namespace
         match = re.match(r"\{.*\}", capabilities.tag)
         namespace = match.group(0) if match else ""
+        search = search.lower()
 
         # Search for layers containing the search term in the name or title
         for layer in capabilities.findall(".//{}Layer".format(namespace)):
