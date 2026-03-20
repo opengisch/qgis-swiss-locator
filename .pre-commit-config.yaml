@@ -1,12 +1,13 @@
 repos:
- - repo: https://github.com/psf/black
-   rev: 22.6.0
+ - repo: https://github.com/astral-sh/ruff-pre-commit
+   rev: v0.11.2
    hooks:
-   - id: black
-     language_version: python3
-
- - repo: https://github.com/PyCQA/flake8
-   rev: 5.0.4
-   hooks:
-   - id: flake8
-     args: ['--ignore=E203,E402,E501,W503']
+   - id: ruff
+     args: [
+       '--fix',
+       '--target-version', 'py311',
+       '--select', 'E,F,UP,W',
+       '--ignore', 'E203,E402,E501',
+     ]
+   - id: ruff-format
+     args: ['--target-version', 'py311']
