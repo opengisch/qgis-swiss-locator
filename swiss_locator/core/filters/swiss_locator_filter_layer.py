@@ -61,7 +61,21 @@ class SwissLocatorFilterLayer(SwissLocatorFilter):
         requests = []
         for (url, params) in urls:
             requests.append(self.request_for_url(url, params, self.HEADERS))
+
+        # Collect GetCapabilities URLs during handle_content instead of
+        # fetching them inline (which would re-enter the event loop).
+        self._pending_capabilities = []
         self.fetch_requests(requests, feedback, slot=self.handle_content, data=search)
+
+        # Now process the GetCapabilities requests one by one.
+        # The outer event loop has already returned, so exec() can be called again.
+        for cap_request, cap_data in self._pending_capabilities:
+            self.fetch_requests(
+                [cap_request],
+                feedback,
+                slot=self.handle_capabilities_response,
+                data=cap_data,
+            )
 
     def handle_content(self, content, feedback: QgsFeedback, search: str):
         data = json.loads(content)
@@ -81,7 +95,7 @@ class SwissLocatorFilterLayer(SwissLocatorFilter):
 
                     url = res["url"]
                     url_components = urlparse(url)
-                    wms_url = f"{url_components.scheme}://{url_components.netloc}/{url_components.path}?"
+                    wms_url = f"{url_components.scheme}://{url_components.netloc}/{url_components.path}?"  # noqa: E231
 
                     result = QgsLocatorResult()
                     result.filter = self
@@ -118,11 +132,11 @@ class SwissLocatorFilterLayer(SwissLocatorFilter):
                         ):
                             self.dbg_info(f"get_cap: {url_components.netloc} {url}")
                             visited_capabilities.append(url_components.netloc)
-                            self.fetch_request(
-                                QNetworkRequest(QUrl(url)),
-                                feedback,
-                                slot=self.handle_capabilities_response,
-                                data=(search, wms_url),
+                            self._pending_capabilities.append(
+                                (
+                                    QNetworkRequest(QUrl(url)),
+                                    (search, wms_url),
+                                )
                             )
 
         else:

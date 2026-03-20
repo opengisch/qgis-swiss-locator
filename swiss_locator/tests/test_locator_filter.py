@@ -12,59 +12,26 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
+
+Tests in this file have been reorganised:
+  - Basic / unit tests          → test_basic.py
+  - Integration tests (locator) → test_integration.py
+
+This file keeps only the STAC local-search test that depends on
+QgsLocator + SwissLocatorFilterSTAC but does NOT hit the network.
 """
 
-import json
-from urllib.parse import urlencode
-from urllib.request import urlopen, Request
-
-from qgis.PyQt.QtTest import QSignalSpy
 from qgis._core import QgsStacExtent
-from qgis.core import QgsStacCollection, QgsLocator, QgsLocatorContext
+from qgis.core import QgsStacCollection, QgsLocator
 from qgis.testing import start_app, unittest
 from qgis.testing.mocked import get_iface
 
 from swiss_locator.core.filters.map_geo_admin_stac import (
     collections_to_searchable_strings,
 )
-from swiss_locator.core.filters.opendata_swiss import opendata_swiss_url
 from swiss_locator.core.filters.swiss_locator_filter_stac import SwissLocatorFilterSTAC
-from swiss_locator.core.filters.swiss_locator_filter_wmts import SwissLocatorFilterWMTS
 
 start_app()
-
-
-class TestSwissLocatorFilters(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.iface = get_iface()
-
-    def setUp(self):
-        pass
-
-    def testSwissLocatorFilterWMTS(self):
-        def got_hit(result):
-            print(result)
-            print(result.displayString)
-            got_hit._results_.append(result.displayString)
-
-        got_hit._results_ = []
-
-        context = QgsLocatorContext()
-
-        loc = QgsLocator()
-        _filter = SwissLocatorFilterWMTS(get_iface())
-        loc.registerFilter(_filter)
-
-        loc.foundResult.connect(got_hit)
-
-        spy = QSignalSpy(loc.foundResult)
-
-        loc.fetchResults("pixelkarte-farbe", context)
-
-        spy.wait(1000)
-
-        self.assertTrue(got_hit._results_[0].startswith("National Map"))
 
 
 class TestLocatorFilterSTAC(unittest.TestCase):
@@ -85,21 +52,6 @@ class TestLocatorFilterSTAC(unittest.TestCase):
             )
             cls.collections[key].setTitle(title)
 
-    def setUp(self):
-        pass
-
-    def test_collections_to_searchable_strings(self):
-        search_strings, search_ids = collections_to_searchable_strings(self.collections)
-
-        self.assertEqual(
-            search_strings,
-            [
-                "swissalti3d ch.swisstopo.swissalti3d",
-                "2g - gsm / edge verfügbarkeit ch.bakom.mobilnetz-2g",
-                "wasserverfügbarkeit im boden (standortwasserbilanz) ch.bafu.wald-wasserverfuegbarkeit_boden",
-            ],
-        )
-
     def test_local_search(self):
         search_strings, search_ids = collections_to_searchable_strings(self.collections)
 
@@ -116,53 +68,4 @@ class TestLocatorFilterSTAC(unittest.TestCase):
         self.assertEqual(
             search_res_2,
             ["ch.bafu.wald-wasserverfuegbarkeit_boden", "ch.bakom.mobilnetz-2g"],
-        )
-
-
-class TestOpendataSwiss(unittest.TestCase):
-    def test_opendata_swiss_url(self):
-        url, params = opendata_swiss_url("wasser")
-        self.assertEqual(url, "https://opendata.swiss/api/3/action/package_search")
-        self.assertIn("wasser", params["q"])
-        self.assertIn("title:wasser*", params["q"])
-        self.assertIn("res_format", params["fq"])
-
-    def test_opendata_swiss_search(self):
-        """Test that the opendata.swiss API returns WMS/WMTS results."""
-        url, params = opendata_swiss_url("wasser")
-        full_url = f"{url}?{urlencode(params)}"
-        req = Request(
-            full_url, headers={"User-Agent": "Mozilla/5.0 QGIS Swiss Locator Test"}
-        )
-        response = urlopen(req, timeout=10)
-        data = json.loads(response.read().decode("utf-8"))
-
-        self.assertTrue(data["success"])
-        results = data["result"]["results"]
-        self.assertGreater(len(results), 0, "Expected at least one result for 'wasser'")
-
-        # Verify results have expected structure
-        first = results[0]
-        self.assertIn("title", first)
-        self.assertIn("resources", first)
-
-    def test_opendata_swiss_search_partial_word(self):
-        """Test that partial words like 'asia' find 'Asiatische' datasets."""
-        url, params = opendata_swiss_url("asia")
-        full_url = f"{url}?{urlencode(params)}"
-        req = Request(
-            full_url, headers={"User-Agent": "Mozilla/5.0 QGIS Swiss Locator Test"}
-        )
-        response = urlopen(req, timeout=10)
-        data = json.loads(response.read().decode("utf-8"))
-
-        self.assertTrue(data["success"])
-        results = data["result"]["results"]
-        self.assertGreater(len(results), 0, "Expected results for 'asia'")
-
-        # At least one result should have 'asiat' in a German title
-        titles = [r["title"].get("de", "") for r in results]
-        self.assertTrue(
-            any("asiat" in t.lower() for t in titles if t),
-            f"Expected 'Asiatische' in titles, got: {titles}",
         )
