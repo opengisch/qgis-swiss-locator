@@ -18,6 +18,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+
 from qgis.core import Qgis, QgsTask
 
 from swiss_locator.swissgeodownloader.utils.utilities import MESSAGE_CATEGORY, log

@@ -18,6 +18,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+
 import re
 import xml.etree.ElementTree as ET
 
@@ -144,7 +145,7 @@ class ApiGeoCat:
 
     @staticmethod
     def extractUuid(url):
-        if not url or not type(url) is str:
+        if not url or type(url) is not str:
             return None
         uuidRegex = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
         uuid = re.search(uuidRegex, url)

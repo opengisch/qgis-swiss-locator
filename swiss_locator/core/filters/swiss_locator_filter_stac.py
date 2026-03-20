@@ -180,7 +180,7 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
             results = []
             # Analyse response and create stac result objects
             for item in response["features"]:
-                for (asset_id, asset) in item["assets"].items():
+                for asset_id, asset in item["assets"].items():
                     asset_result = STACResult(
                         stac_collection.id(),
                         stac_collection.title(),
@@ -308,7 +308,6 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
         _alreadyAdded: int = 0,
         exception=None,
     ):
-
         msg = ""
         level = Qgis.MessageLevel.Info
         if layers:

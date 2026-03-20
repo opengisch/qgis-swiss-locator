@@ -6,7 +6,7 @@ BASE_URL = "https://data.geo.admin.ch/api/stac/v1"
 def collections_to_searchable_strings(collections: dict[str, QgsStacCollection]):
     collection_ids = []
     collection_search_strings = []
-    for (coll_id, collection) in collections.items():
+    for coll_id, collection in collections.items():
         collection_ids.append(coll_id)
         collection_search_strings.append(
             (" ".join([collection.title(), coll_id])).lower()

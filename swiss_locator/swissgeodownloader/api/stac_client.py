@@ -146,7 +146,6 @@ class STACClient:
          additional properties of the asset."""
         parsedItems = []
         for rawItem in rawStacItemResponse["features"]:
-
             if task.isCanceled():
                 raise Exception("User canceled")
 

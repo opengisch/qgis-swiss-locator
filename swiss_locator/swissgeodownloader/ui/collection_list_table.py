@@ -18,6 +18,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+
 from qgis.PyQt.QtCore import (
     QCoreApplication,
     QObject,

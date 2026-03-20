@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-#  -*- coding: utf-8 -*-
 """
 /***************************************************************************
 
@@ -30,7 +29,7 @@ from swiss_locator.core.settings import Settings
 
 def data_file(lang: str):
     cur_dir = os.path.dirname(__file__)
-    return os.path.join(cur_dir, "layers_{}.json".format(lang))
+    return os.path.join(cur_dir, f"layers_{lang}.json")
 
 
 def searchable_layers(lang: str, restrict: bool = False) -> dict:
@@ -48,7 +47,7 @@ def searchable_layers(lang: str, restrict: bool = False) -> dict:
 
     layers = {}
 
-    with open(data_file(lang), "r") as f:
+    with open(data_file(lang)) as f:
         content = f.read()
 
     data = json.loads(content)

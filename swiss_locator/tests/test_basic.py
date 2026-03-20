@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Basic / unit tests for Swiss Locator.
 

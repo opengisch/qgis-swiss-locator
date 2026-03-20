@@ -18,6 +18,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+
 from copy import deepcopy
 
 from qgis.core import QgsBox3D, QgsStacAsset, QgsStacCollection
@@ -166,21 +167,21 @@ class SgdAsset(QgsStacAsset):
                 max(bbox.xMinimum(), bbox.xMaximum()),
                 max(bbox.yMinimum(), bbox.yMaximum()),
             ]
-            assert [
-                isinstance(c, float) or isinstance(c, int) for c in bboxList
-            ], "bbox contains non-numeric values"
-            assert (
-                -180 <= bboxList[0] <= 180 and -180 <= bboxList[2] <= 180
-            ), "bbox coordinates out of range"
-            assert (
-                -90 <= bboxList[1] <= 90 and -90 <= bboxList[3] <= 90
-            ), "bbox coordinates out of range"
-            assert (
-                bboxList[0] != bboxList[2] and bboxList[1] != bboxList[3]
-            ), "Warning - bbox coordinates are overlapping"
-            assert (
-                bboxList[0] < bboxList[2] and bboxList[1] < bboxList[3]
-            ), "bbox coordinates are not ordered"
+            assert [isinstance(c, float) or isinstance(c, int) for c in bboxList], (
+                "bbox contains non-numeric values"
+            )
+            assert -180 <= bboxList[0] <= 180 and -180 <= bboxList[2] <= 180, (
+                "bbox coordinates out of range"
+            )
+            assert -90 <= bboxList[1] <= 90 and -90 <= bboxList[3] <= 90, (
+                "bbox coordinates out of range"
+            )
+            assert bboxList[0] != bboxList[2] and bboxList[1] != bboxList[3], (
+                "Warning - bbox coordinates are overlapping"
+            )
+            assert bboxList[0] < bboxList[2] and bboxList[1] < bboxList[3], (
+                "bbox coordinates are not ordered"
+            )
         except AssertionError as e:
             self.bbox = None
             if str(e).startswith("Warning"):

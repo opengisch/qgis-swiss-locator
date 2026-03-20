@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 /***************************************************************************
 
@@ -16,6 +15,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+
 import json
 import re
 from urllib.parse import urlparse, parse_qs
@@ -59,7 +59,7 @@ class SwissLocatorFilterLayer(SwissLocatorFilter):
             opendata_swiss_url(search),
         ]
         requests = []
-        for (url, params) in urls:
+        for url, params in urls:
             requests.append(self.request_for_url(url, params, self.HEADERS))
 
         # Collect GetCapabilities URLs during handle_content instead of
@@ -92,7 +92,6 @@ class SwissLocatorFilterLayer(SwissLocatorFilter):
                     display_name = loc["title"]["de"]
 
                 for res in loc["resources"]:
-
                     url = res["url"]
                     url_components = urlparse(url)
                     wms_url = f"{url_components.scheme}://{url_components.netloc}/{url_components.path}?"  # noqa: E231
@@ -172,9 +171,9 @@ class SwissLocatorFilterLayer(SwissLocatorFilter):
         search = search.lower()
 
         # Search for layers containing the search term in the name or title
-        for layer in capabilities.findall(".//{}Layer".format(namespace)):
-            layername = self.find_text(layer, "{}Name".format(namespace))
-            layertitle = self.find_text(layer, "{}Title".format(namespace))
+        for layer in capabilities.findall(f".//{namespace}Layer"):
+            layername = self.find_text(layer, f"{namespace}Name")
+            layertitle = self.find_text(layer, f"{namespace}Title")
             if layername and (
                 search in layername.lower() or search in layertitle.lower()
             ):

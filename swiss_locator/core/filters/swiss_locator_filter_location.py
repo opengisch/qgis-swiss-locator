@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 /***************************************************************************
 
@@ -166,6 +165,6 @@ class SwissLocatorFilterLocation(SwissLocatorFilter):
             "parcel": {"name": self.tr("Parcel"), "layer": None},
         }
         if group not in groups:
-            self.info("Could not find group {} in dictionary".format(group))
+            self.info(f"Could not find group {group} in dictionary")
             return None, None
         return groups[group]["name"], groups[group]["layer"]

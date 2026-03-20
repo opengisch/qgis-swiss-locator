@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-#  -*- coding: utf-8 -*-
 """
 /***************************************************************************
 
@@ -27,7 +26,6 @@ import urllib.request
 
 
 def main():
-
     AVAILABLE_LANGUAGES = ("de", "de", "fr", "it", "rm", "en")
     names = [
         "chargeableLayers",
@@ -72,9 +70,9 @@ def main():
                 already_print.append(layer)
 
     for lang in AVAILABLE_LANGUAGES:
-        print("****** {}".format(lang))
+        print(f"****** {lang}")
         for name in names:
-            print("{}: {}".format(name, counts[lang][name]))
+            print(f"{name}: {counts[lang][name]}")
 
 
 if __name__ == "__main__":

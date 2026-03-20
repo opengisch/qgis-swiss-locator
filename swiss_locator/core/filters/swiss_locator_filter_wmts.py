@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 /***************************************************************************
 
@@ -48,7 +47,6 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
 
         # do this on main thread only?
         if self.capabilities is None and iface is not None:
-
             self.content = QgsApplication.networkContentFetcherRegistry().fetch(
                 self.capabilities_url
             )

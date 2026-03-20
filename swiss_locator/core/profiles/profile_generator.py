@@ -64,9 +64,7 @@ class SwissProfileGenerator(QgsAbstractProfileGenerator):
                 result = json.loads(str(content, "utf-8"))
             except json.decoder.JSONDecodeError as e:
                 QgsMessageLog.logMessage(
-                    "Unable to parse results from Profile service. Details: {}".format(
-                        e.msg
-                    ),
+                    f"Unable to parse results from Profile service. Details: {e.msg}",
                     "Swiss locator",
                     Qgis.MessageLevel.Critical,
                 )

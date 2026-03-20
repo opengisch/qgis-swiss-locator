@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 /***************************************************************************
 
@@ -122,7 +121,7 @@ class ConfigDialog(QDialog, DialogUi):
         }
 
         for filter_type in FilterType:
-            cb = self.findChild(QComboBox, "{}_priority".format(filter_type.value))
+            cb = self.findChild(QComboBox, f"{filter_type.value}_priority")
             if cb is not None:  # Some filters might not have a config dialog
                 ew = QgsSettingsEnumEditorWidgetWrapper(
                     editor=cb,
@@ -131,7 +130,7 @@ class ConfigDialog(QDialog, DialogUi):
                 )
                 self.wrappers.append(ew)
 
-            sb = self.findChild(QSpinBox, "{}_limit".format(filter_type.value))
+            sb = self.findChild(QSpinBox, f"{filter_type.value}_limit")
             if sb is not None:
                 sbw = QgsSettingsIntegerSpinBoxWrapper(
                     sb, self.settings.filters[filter_type.value]["limit"]

@@ -18,6 +18,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+
 from qgis.PyQt.QtCore import QUrl
 from qgis.core import QgsTask, Qgis, QgsStacItem
 
@@ -153,7 +154,7 @@ class ApiDataGeoAdmin:
             item = items[-1]
 
             # Get an estimate of file size
-            for (assetId, asset) in item.assets().items():
+            for assetId, asset in item.assets().items():
                 if task.isCanceled():
                     raise Exception("User canceled")
 
@@ -219,7 +220,7 @@ class ApiDataGeoAdmin:
                 item.id(), {}
             )
             # Save all files and their properties
-            for (assetId, asset) in item.assets().items():
+            for assetId, asset in item.assets().items():
                 if task.isCanceled():
                     raise Exception("User canceled")
 

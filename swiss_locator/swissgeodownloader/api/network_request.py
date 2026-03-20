@@ -18,6 +18,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+
 import json
 
 from qgis.PyQt.QtCore import QByteArray, QEventLoop, QUrl, QUrlQuery

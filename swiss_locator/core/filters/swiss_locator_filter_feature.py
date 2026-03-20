@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 /***************************************************************************
 
@@ -68,7 +67,7 @@ class SwissLocatorFilterFeature(SwissLocatorFilter):
                 )
                 params["features"] = ",".join(layers[i_layer : i_layer + step])
                 requests.append(self.request_for_url(url, params, self.HEADERS))
-        except IOError:
+        except OSError:
             self.info(
                 "Layers data file not found. Please report an issue.",
                 Qgis.MessageLevel.Critical,
