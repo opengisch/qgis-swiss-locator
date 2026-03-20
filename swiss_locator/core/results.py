@@ -163,9 +163,17 @@ class VectorTilesLayerResult:
 
 class STACResult:
     STREAMED_SOURCE_PREFIX = "/vsicurl/"
-    
-    def __init__(self, collection_id: str, collection_name: str, asset_id: str,
-                 description: str, media_type: str, href: str, path: str = ''):
+
+    def __init__(
+        self,
+        collection_id: str,
+        collection_name: str,
+        asset_id: str,
+        description: str,
+        media_type: str,
+        href: str,
+        path: str = "",
+    ):
         self.collection_id = collection_id
         self.collection_name = collection_name
         self.asset_id = asset_id
@@ -175,7 +183,7 @@ class STACResult:
         self.path = path
         # Necessary for Swiss Geo Downloader compatibility
         self.id = asset_id
-    
+
     def as_definition(self):
         definition = {
             "type": "STACResult",
@@ -188,46 +196,48 @@ class STACResult:
             "path": self.path,
         }
         return json.dumps(definition)
-    
+
     @staticmethod
     def from_dict(dict_data: dict):
         return STACResult(
-                dict_data["collection_id"],
-                dict_data["collection_name"],
-                dict_data["asset_id"],
-                dict_data["description"],
-                dict_data["media_type"],
-                dict_data["href"],
-                dict_data["path"],
+            dict_data["collection_id"],
+            dict_data["collection_name"],
+            dict_data["asset_id"],
+            dict_data["description"],
+            dict_data["media_type"],
+            dict_data["href"],
+            dict_data["path"],
         )
-    
+
     @property
     def is_downloadable(self):
         return self.asset_id and self.href
-    
+
     @property
     def is_streamable(self):
-        return "profile=cloud-optimized" in self.media_type and self.asset_id and self.href
-    
+        return (
+            "profile=cloud-optimized" in self.media_type and self.asset_id and self.href
+        )
+
     @property
     def is_streamed(self):
-        return self.is_streamable and self.path.startswith(
-                self.STREAMED_SOURCE_PREFIX)
-    
+        return self.is_streamable and self.path.startswith(self.STREAMED_SOURCE_PREFIX)
+
     @property
     def isStreamable(self):
         # Necessary for Swiss Geo Downloader compatibility
         return self.is_streamed
-    
+
     @property
     def simple_file_type(self):
         try:
-            main_type = self.media_type.split(';')[0]
+            main_type = self.media_type.split(";")[0]
         except IndexError:
             return self.media_type
         try:
-            return main_type.split('/')[
-                -1] + (" (streamed)" if self.is_streamed else "")
+            return main_type.split("/")[-1] + (
+                " (streamed)" if self.is_streamed else ""
+            )
         except IndexError:
             return main_type
 

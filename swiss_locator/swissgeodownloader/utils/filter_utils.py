@@ -18,10 +18,7 @@
  *                                                                         *
  ***************************************************************************/
 """
-from swiss_locator.swissgeodownloader.api.response_objects import (
-    ALL_VALUE,
-    SgdAsset
-)
+from swiss_locator.swissgeodownloader.api.response_objects import ALL_VALUE, SgdAsset
 
 
 def cleanupFilterItems(filterItems: dict):
@@ -33,17 +30,17 @@ def cleanupFilterItems(filterItems: dict):
         sortedList.sort()
         sortedList.reverse()
         filterItems[key] = sortedList
-    
+
     # Add an 'ALL' option to the filter list
     for filterType in filterItems.keys():
         if len(filterItems[filterType]) >= 2:
             filterItems[filterType].append(ALL_VALUE)
-    
+
     return filterItems
 
 
 def currentFileByBbox(fileList: list[SgdAsset]):
-    """ Searches for the most current file for each bbox and property
+    """Searches for the most current file for each bbox and property
     combination. Creates a dictionary for each unique bbox that contains
     the most current file for each property combination.
     Example:
@@ -56,7 +53,7 @@ def currentFileByBbox(fileList: list[SgdAsset]):
     for file in fileList:
         bboxKey = file.bboxKey
         propKey = file.propKey
-        
+
         # Bbox already exists
         propertyDict = bboxList.get(bboxKey)
         if propertyDict:
@@ -68,7 +65,7 @@ def currentFileByBbox(fileList: list[SgdAsset]):
             elif propertyDict[propKey].timestamp < file.timestamp:
                 # Replace old file with new file
                 bboxList[bboxKey][propKey] = file
-        
+
         # Same bbox key does not exist yet, search for similar bbox by
         #  comparing coordinates
         else:
@@ -76,8 +73,9 @@ def currentFileByBbox(fileList: list[SgdAsset]):
             # Go trough already saved bbox entries
             for savedBboxKey, propertyDict in bboxList.items():
                 # If property combination matches, compare bbox
-                if (propKey in propertyDict
-                        and propertyDict[propKey].hasSimilarBboxAs(file.bbox)):
+                if propKey in propertyDict and propertyDict[propKey].hasSimilarBboxAs(
+                    file.bbox
+                ):
                     foundSimilar = True
                     # Compare timestamps and replace file if timestamp is
                     #  more current
@@ -87,6 +85,5 @@ def currentFileByBbox(fileList: list[SgdAsset]):
             # Add new bbox entry
             if not foundSimilar:
                 bboxList[bboxKey] = {propKey: file}
-    
-    return bboxList
 
+    return bboxList

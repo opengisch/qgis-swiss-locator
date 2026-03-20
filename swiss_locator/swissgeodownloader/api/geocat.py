@@ -26,24 +26,23 @@ from qgis.core import QgsTask
 from swiss_locator.swissgeodownloader.api.network_request import fetch
 from swiss_locator.swissgeodownloader.utils.metadata_handler import (
     loadFromFile,
-    saveToFile
+    saveToFile,
 )
 from swiss_locator.swissgeodownloader.utils.utilities import translate, log
 
-BASEURL = 'https://www.geocat.ch/geonetwork/srv/eng/csw'
-XML_NAMESPACES = {'gmd': '{http://www.isotc211.org/2005/gmd}'}
+BASEURL = "https://www.geocat.ch/geonetwork/srv/eng/csw"
+XML_NAMESPACES = {"gmd": "{http://www.isotc211.org/2005/gmd}"}
 REQUEST_PARAMS = {
-    'service': 'CSW',
-    'version': '2.0.2',
-    'request': 'GetRecordById',
-    'elementSetName': 'summary',
-    'outputFormat': 'application/xml',
-    'outputSchema': 'http://www.isotc211.org/2005/gmd',
+    "service": "CSW",
+    "version": "2.0.2",
+    "request": "GetRecordById",
+    "elementSetName": "summary",
+    "outputFormat": "application/xml",
+    "outputSchema": "http://www.isotc211.org/2005/gmd",
 }
 
 
 class ApiGeoCat:
-    
     def __init__(self, locale, fileName):
         """Request metadata from geocat.ch, the official geodata metadata
         service for switzerland."""
@@ -51,69 +50,85 @@ class ApiGeoCat:
         self.dataPath = fileName
         self.preSavedMetadata = {}
         self.loadPreSavedMetadata()
-    
-    def getMeta(self, task: QgsTask, collectionId: str, metadataUrl: str,
-                locale: str, saveInFile: bool = True):
+
+    def getMeta(
+        self,
+        task: QgsTask,
+        collectionId: str,
+        metadataUrl: str,
+        locale: str,
+        saveInFile: bool = True,
+    ):
         """Requests metadata for a collection Id. Since calling geocat several
         times on each plugin start is very slow, metadata is saved to a file
         and read from there. Only if there is no metadata for a specific
         collection in the file, geocat.ch is called."""
         metadata = {}
-        
+
         # Check if metadata has been pre-saved and return this data
-        if collectionId in self.preSavedMetadata \
-                and locale in self.preSavedMetadata[collectionId]:
+        if (
+            collectionId in self.preSavedMetadata
+            and locale in self.preSavedMetadata[collectionId]
+        ):
             return self.preSavedMetadata[collectionId][locale]
-        
+
         geocatDsId = self.extractUuid(metadataUrl)
         if not geocatDsId:
-            msg = translate('SGD',
-                            'Error when trying to retrieve metadata - No dataset ID found')
-            log(f'{msg}:\n{metadataUrl}')
+            msg = translate(
+                "SGD", "Error when trying to retrieve metadata - No dataset ID found"
+            )
+            log(f"{msg}:\n{metadataUrl}")
             return metadata
-        
+
         # Call geocat API
         rqParams = REQUEST_PARAMS
-        rqParams['id'] = geocatDsId
-        xml = fetch(task, BASEURL, params=rqParams, decoder='string')
+        rqParams["id"] = geocatDsId
+        xml = fetch(task, BASEURL, params=rqParams, decoder="string")
         try:
             root = ET.fromstring(xml)
         except ET.ParseError:
-            msg = translate('SGD',
-                            'Error when trying to retrieve metadata - Response cannot be parsed')
+            msg = translate(
+                "SGD",
+                "Error when trying to retrieve metadata - Response cannot be parsed",
+            )
             log(msg)
             return metadata
-        
+
         # Search for title and description in xml
         searchTerms = {
-            'title': f"{XML_NAMESPACES['gmd']}title",
-            'description': f"{XML_NAMESPACES['gmd']}abstract",
+            "title": f"{XML_NAMESPACES['gmd']}title",
+            "description": f"{XML_NAMESPACES['gmd']}abstract",
         }
-        
+
         for mapsTo, searchTerm in searchTerms.items():
             xmlElements = [elem for elem in root.iter(tag=searchTerm)]
             for xmlElem in xmlElements:
-                localizedStrings = [elem for elem in xmlElem.iter(
-                        tag=f"{XML_NAMESPACES['gmd']}LocalisedCharacterString")]
+                localizedStrings = [
+                    elem
+                    for elem in xmlElem.iter(
+                        tag=f"{XML_NAMESPACES['gmd']}LocalisedCharacterString"
+                    )
+                ]
                 for localizedString in localizedStrings:
-                    if localizedString.get('locale') == '#' + locale.upper():
+                    if localizedString.get("locale") == "#" + locale.upper():
                         metadata[mapsTo] = localizedString.text
                         break
                 if metadata.get(mapsTo):
                     break
-        
+
         if saveInFile:
             # Save metadata to file so we don't have to call the API again
             self.updatePreSavedMetadata(metadata, collectionId, locale)
-        
+
         return metadata
-    
+
     def loadPreSavedMetadata(self):
         """Read pre-saved metadata from json file."""
         self.preSavedMetadata = loadFromFile(self.dataPath)
-    
-    def updatePreSavedMetadata(self, metadata, collectionId: str | None = None,
-                               locale: str | None = None):
+
+    def updatePreSavedMetadata(
+        self, metadata, collectionId: str | None = None, locale: str | None = None
+    ):
         """Update the pre-saved metadata with a completely new dictionary or
         only update partially by adding a new collection."""
         if collectionId and locale:
@@ -126,7 +141,7 @@ class ApiGeoCat:
         else:
             # Fully replace the data in the file
             saveToFile(metadata, self.dataPath)
-    
+
     @staticmethod
     def extractUuid(url):
         if not url or not type(url) is str:

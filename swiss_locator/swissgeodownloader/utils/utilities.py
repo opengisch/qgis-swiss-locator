@@ -25,7 +25,7 @@ from qgis.core import Qgis, QgsMessageLog
 
 from swiss_locator.swissgeodownloader import DEBUG
 
-MESSAGE_CATEGORY = 'Swiss Geo Downloader'
+MESSAGE_CATEGORY = "Swiss Geo Downloader"
 
 
 def translate(context, message):
@@ -38,10 +38,10 @@ def translate(context, message):
 def formatCoordinate(number):
     """Format big numbers with thousand separator, swiss-style"""
     if number is None:
-        return ''
+        return ""
     # Format big numbers with thousand separator
     elif number >= 1000:
-        return f"{number:,.0f}".replace(',', "'")
+        return f"{number:,.0f}".replace(",", "'")
     else:
         return f"{number:,.6f}"
 
@@ -51,28 +51,28 @@ def castToNum(formattedNum):
     if type(formattedNum) in [int, float]:
         return formattedNum
     try:
-        num = float(formattedNum.replace("'", ''))
+        num = float(formattedNum.replace("'", ""))
     except (ValueError, AttributeError):
         num = None
     return num
 
 
-def filesizeFormatter(num, suffix='B'):
+def filesizeFormatter(num, suffix="B"):
     """Formats data sizes to human readable units"""
-    for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
+    for unit in ["", "K", "M", "G", "T", "P", "E", "Z"]:
         if abs(num) < 1024.0:
             return "%3.1f %s%s" % (num, unit, suffix)
         num /= 1024.0
-    return "%.1f %s%s" % (num, 'Yi', suffix)
+    return "%.1f %s%s" % (num, "Yi", suffix)
 
 
 def getDateFromIsoString(isoString, formatted=True):
     """Translate ISO date string to date or swiss date format"""
-    if isoString[-1] == 'Z':
+    if isoString[-1] == "Z":
         isoString = isoString[:-1]
     dt = datetime.fromisoformat(isoString)
     if formatted:
-        return dt.strftime('%Y-%m-%d')
+        return dt.strftime("%Y-%m-%d")
     else:
         return dt
 
@@ -81,5 +81,5 @@ def log(msg, level=Qgis.MessageLevel.Info, debugMsg=False):
     if debugMsg:
         if not DEBUG:
             return
-        msg = f'DEBUG {msg}'
+        msg = f"DEBUG {msg}"
     QgsMessageLog.logMessage(str(msg), MESSAGE_CATEGORY, level)

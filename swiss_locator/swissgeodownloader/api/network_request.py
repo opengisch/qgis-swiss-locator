@@ -20,12 +20,7 @@
 """
 import json
 
-from qgis.PyQt.QtCore import (
-    QByteArray,
-    QEventLoop,
-    QUrl,
-    QUrlQuery
-)
+from qgis.PyQt.QtCore import QByteArray, QEventLoop, QUrl, QUrlQuery
 from qgis.PyQt.QtNetwork import QNetworkReply, QNetworkRequest
 from qgis.core import QgsTask, QgsBlockingNetworkRequest, QgsFileDownloader
 
@@ -33,25 +28,25 @@ from swiss_locator.swissgeodownloader.utils.utilities import translate, log
 
 
 def fetch(
-        task: QgsTask,
-        url: QUrl | str,
-        params=None,
-        header=None,
-        method="get",
-        decoder="json",
+    task: QgsTask,
+    url: QUrl | str,
+    params=None,
+    header=None,
+    method="get",
+    decoder="json",
 ) -> dict | QByteArray:
     """Perform a blocking network request without the help of the
     QgsStacController. This is necessary because the controller does not
     parse all available item/asset properties of the response."""
-    
+
     request = QNetworkRequest()
     # Prepare url
     callUrl = createUrl(url, params)
     request.setUrl(callUrl)
-    
+
     if header:
         request.setHeader(*tuple(header))
-    
+
     log(translate("SGD", "Start request {}").format(callUrl.toString()))
     # Start request
     http = QgsBlockingNetworkRequest()
@@ -59,16 +54,16 @@ def fetch(
         http.get(request, forceRefresh=True)
     elif method == "head":
         http.head(request, forceRefresh=True)
-    
+
     # Check if request was successful
     r = http.reply()
     try:
         assert r.error() == QNetworkReply.NetworkError.NoError, r.error()
     except AssertionError:
         # Service is not reachable
-        task.exception = translate("SGD",
-                                   "{} not reachable or no internet connection").format(
-                callUrl.toString())
+        task.exception = translate(
+            "SGD", "{} not reachable or no internet connection"
+        ).format(callUrl.toString())
         # Service returned an error
         if r.content():
             try:
@@ -78,12 +73,11 @@ def fetch(
                 raise e
             if "code" and "description" in errorResp:
                 task.exception = (
-                        translate("SGD", "{} returns error").format(
-                            callUrl.toString())
-                        + f": {errorResp['code']} - {errorResp['description']}"
+                    translate("SGD", "{} returns error").format(callUrl.toString())
+                    + f": {errorResp['code']} - {errorResp['description']}"
                 )
         return False
-    
+
     # Process response
     if method == "get":
         if decoder == "json":
@@ -92,7 +86,7 @@ def fetch(
                 if content:
                     return json.loads(content)
                 else:
-                    raise Exception('Empty response')
+                    raise Exception("Empty response")
             except json.JSONDecodeError as e:
                 task.exception = str(e)
                 raise Exception(task.exception)
@@ -104,8 +98,14 @@ def fetch(
         raise Exception(f"Method {method} not supported")
 
 
-def fetchFile(task: QgsTask, url: QUrl | str, filename: str,
-              filePath: str, part: float, params: dict | None = None):
+def fetchFile(
+    task: QgsTask,
+    url: QUrl | str,
+    filename: str,
+    filePath: str,
+    part: float,
+    params: dict | None = None,
+):
     # Prepare url
     callUrl = QUrl(url)
     if params:
@@ -113,26 +113,26 @@ def fetchFile(task: QgsTask, url: QUrl | str, filename: str,
         for key, value in params.items():
             queryParams.addQueryItem(key, str(value))
         callUrl.setQuery(queryParams)
-    
-    log(translate("SGD", 'Start download of {}').format(callUrl.toString()))
+
+    log(translate("SGD", "Start download of {}").format(callUrl.toString()))
     fileFetcher = QgsFileDownloader(callUrl, filePath)
-    
+
     def onError():
-        task.exception = translate("SGD", 'Error when downloading {}'
-                                   ).format(filename)
+        task.exception = translate("SGD", "Error when downloading {}").format(filename)
         return False
-    
+
     def onProgress(bytesReceived, bytesTotal):
         if task.isCanceled():
-            task.exception = translate("SGD", 'Download of {} was canceled'
-                                       ).format(filename)
+            task.exception = translate("SGD", "Download of {} was canceled").format(
+                filename
+            )
             fileFetcher.cancelDownload()
         else:
             partProgress = 0
             if bytesTotal > 0:
                 partProgress = (part / 100) * (bytesReceived / bytesTotal)
             task.setProgress(task.progress() + partProgress)
-    
+
     # Run file download in separate event loop
     eventLoop = QEventLoop()
     fileFetcher.downloadError.connect(onError)

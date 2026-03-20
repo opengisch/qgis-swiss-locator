@@ -15,12 +15,12 @@ def url_with_param(url: str, params: dict) -> QUrl:
     return url
 
 
-def get_save_location(prompt: str = "Choose download location",
-                      open_dir: str = None):
+def get_save_location(prompt: str = "Choose download location", open_dir: str = None):
     if not open_dir:
-        open_dir = os.path.expanduser('~')
-    path = QFileDialog.getExistingDirectory(None, prompt, open_dir,
-                                            QFileDialog.Option.ShowDirsOnly)
+        open_dir = os.path.expanduser("~")
+    path = QFileDialog.getExistingDirectory(
+        None, prompt, open_dir, QFileDialog.Option.ShowDirsOnly
+    )
     return path
 
 

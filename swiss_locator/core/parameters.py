@@ -25,10 +25,12 @@
 # ---------------------------------------------------------------------
 
 
-AVAILABLE_CRS = ('2056', '21781')
-AVAILABLE_LANGUAGES = {'German': 'de',
-                       'SwissGerman': 'de',
-                       'French': 'fr',
-                       'Italian': 'it',
-                       'Romansh': 'rm',
-                       'English': 'en'}
+AVAILABLE_CRS = ("2056", "21781")
+AVAILABLE_LANGUAGES = {
+    "German": "de",
+    "SwissGerman": "de",
+    "French": "fr",
+    "Italian": "it",
+    "Romansh": "rm",
+    "English": "en",
+}

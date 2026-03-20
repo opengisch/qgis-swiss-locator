@@ -291,7 +291,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
         # clean nam
         reply.deleteLater()
-        self.network_replies.pop(url)
+        self.network_replies.pop(url, None)
 
         # quit loop if every nam has completed
         if len(self.network_replies) == 0:

@@ -29,6 +29,7 @@ from qgis.gui import QgisInterface
 
 from swiss_locator import DEBUG
 from swiss_locator.gui.qtwebkit_conf import with_qt_web_kit
+
 if with_qt_web_kit():
     from qgis.PyQt.QtWebKit import QWebSettings
     from qgis.PyQt.QtWebKitWidgets import QWebView, QWebPage
@@ -137,8 +138,7 @@ class MapTip(QDockWidget):
 
     def info(self, msg="", level=Qgis.MessageLevel.Info):
         QgsMessageLog.logMessage(
-                "{} {}".format(self.__class__.__name__, msg), "Swiss locator",
-                level
+            "{} {}".format(self.__class__.__name__, msg), "Swiss locator", level
         )
 
     def dbg_info(self, msg=""):
