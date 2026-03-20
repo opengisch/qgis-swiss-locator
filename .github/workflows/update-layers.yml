@@ -23,17 +23,16 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: 3.8
+          python-version: 3.12
 
       - name: Update layers
         run: |
           cd swiss_locator/map_geo_admin
           ./download_layer_data.py
 
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v8
-        with:
-          commit-message: update map.geo.admin.ch layers
-          title: Automated updates to map.geo.admin.ch layers
-          body:
-          branch: update-layers
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add swiss_locator/map_geo_admin/layers_*.json
+          git diff --cached --quiet || (git commit -m "update map.geo.admin.ch layers" && git push)

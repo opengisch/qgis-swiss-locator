@@ -26,53 +26,33 @@ import urllib.request
 
 
 def main():
-    AVAILABLE_LANGUAGES = ("de", "de", "fr", "it", "rm", "en")
-    names = [
-        "chargeableLayers",
-        "notChargeableLayers",
-        "tooltipLayers",
-        "searchableLayers",
-    ]
-    counts = {}
+    AVAILABLE_LANGUAGES = ("de", "fr", "it", "rm", "en")
 
     for lang in AVAILABLE_LANGUAGES:
-        counts[lang] = {}
+        url = f"https://api3.geo.admin.ch/rest/services/all/MapServer/layersConfig?lang={lang}"
+        raw = urllib.request.urlopen(url).read().decode("utf-8")
+        layers_config = json.loads(raw)
 
-        url = f"https://api3.geo.admin.ch/rest/services/api/faqlist?lang={lang}"
-        contents = (
-            urllib.request.urlopen(url)
-            .read()
-            .decode("utf-8")
-            .replace('","', '",\n"')
-            .replace('":{"', '":{\n"')
-            .replace('"},"', '"},\n"')
-            .replace('":["', '":[\n"')
-            .replace('"],', '"],\n')
-            .replace('"]}', '"\n]}')
-        )
+        translations = {}
+        searchable_layers = []
+
+        for layer_id, props in sorted(layers_config.items()):
+            label = props.get("label", layer_id)
+            translations[layer_id] = label
+            if props.get("searchable"):
+                searchable_layers.append(layer_id)
+
+        output = {
+            "translations": translations,
+            "searchableLayers": searchable_layers,
+        }
 
         with open(f"layers_{lang}.json", "w") as f:
-            f.write(contents)
+            json.dump(output, f, ensure_ascii=False, indent=2)
 
-        data = json.loads(contents)
-        translations_api = data["translations"]
-
-        # print(translations_api)
-
-        for name in names:
-            counts[lang][name] = 0
-            already_print = []
-            for layer in data[name]:
-                counts[lang][name] += 1
-                if layer in already_print:
-                    raise NameError(f"layer {layer} already listed in {name}")
-                print(layer, translations_api[layer])
-                already_print.append(layer)
-
-    for lang in AVAILABLE_LANGUAGES:
-        print(f"****** {lang}")
-        for name in names:
-            print(f"{name}: {counts[lang][name]}")
+        print(
+            f"****** {lang}: {len(searchable_layers)} searchable / {len(translations)} total"
+        )
 
 
 if __name__ == "__main__":
