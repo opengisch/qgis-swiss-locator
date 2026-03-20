@@ -1138,7 +1138,9 @@
       "title": "Inventario federale delle riserve di uccelli acquatici e migratori d'importanza internazionale e nazionale"
     }
   },
-  "ch.bafu.erosion-gruenland_bodenabtrag": {},
+  "ch.bafu.erosion-gruenland_bodenabtrag": {
+    "en": {}
+  },
   "ch.bafu.fauna-steinbockkolonien": {
     "de": {
       "description": "Der Alpensteinbock lebt nach seiner Wiederansiedlung im Jahre 1906 in verschiedenen Kolonien unterschiedlicher Ausdehnung im Alpenraum und im Jura. Das Wachstum der Bestände hat in einzelnen Kolonien zu negativen Auswirkungen bei anderen Arten und der Vegetation geführt, so dass Regulierungsmassnahmen getroffen werden. Die Vorschriften über die Abschussplanungen der Steinbockbestände beruhen auf dem Bundesgesetz über die Jagd und den Schutz wildlebender Säugetiere und Vögel vom 20. Juni 1986. Die Kolonien werden gemäss den Vorschriften über die Bestandeserhebungen in der Verordnung über die Regulierung von Steinbockbeständen vom 30. April 1990 erfasst und bilden zusammen mit den Bestandeserhebungen die Basis für die Abschussplanungen.",
@@ -1227,7 +1229,9 @@
       "title": "Banca dati per il rilevamento del trasporto solido di fondo (Confederazione)"
     }
   },
-  "ch.bafu.fischerei-aeschen": {},
+  "ch.bafu.fischerei-aeschen": {
+    "en": {}
+  },
   "ch.bafu.fischerei-krebspest": {
     "de": {
       "description": "Krebspest-Nachweis in der Schweiz: Georeferenzierte Standorte von Populationen mit Untersuchungsergebnissen. Die für die europäischen Arten verhängnisvollste Krankheit ist die Krebspest (Erreger: Aphanomyces astaci; Oamycetes). Diese Pilzkrankheit wurde 1880 vom amerikanischen Kontinent nach Europa verschleppt und hat danach einen Grossteil der einheimischen Krebsbestände in Europa zerstört, denn die europäischen Krebsarten sterben daran. Die amerikanischen Arten können den Erreger jedoch mit sich tragen und Populationen von einheimischen Arten durch ins Wasser ausgeschiedene Sporen anstecken. Diese Krankheit tritt unregelmässig da und dort in der Schweiz auf.",
@@ -2627,7 +2631,9 @@
       "title": "Piante esotiche invasive"
     }
   },
-  "ch.bafu.niederschlagserosivitaet": {},
+  "ch.bafu.niederschlagserosivitaet": {
+    "en": {}
+  },
   "ch.bafu.oekomorphologie-f": {
     "de": {
       "description": "Um die Gewässer umfassend schützen zu können, muss ihr Zustand bekannt sein. Das Modul-Stufen-Konzept bildet den Rahmen für eine standardisierte Gewässeruntersuchung und -bewertung. Das Konzept ist modular aufgebaut und umfasst Untersuchungen der Hydrologie, Struktur der Gewässer (Ökomorphologie), Wasserchemie und Ökotoxikologie sowie der Lebensgemeinschaften von Tieren, Pflanzen und Mikroorganismen (Biologie).Im Modul Ökomorphologie werden die strukturellen Eigenschaften der Bäche und Flüsse ganzer Regionen (z.B. Kantone, Regionen, Gemeinden) flächendeckend (Stufe F) untersucht.",
@@ -3385,6 +3391,7 @@
       "description": "Mit dem Geobasisdatensatz «Topographische Einzugsgebiete Schweizer Gewässer» steht eine fein aufgelöste und schweizweit flächendeckende Datengrundlage zur Verfügung. Sie bildet zusammen mit dem digitalen Gewässernetz eine feste Einheit.\nDer Datensatz beinhaltet ein flächendeckendes Mosaik aus über 22'000 aus der Topographie abgeleiteten Teileinzugsgebieten. Er deckt die Schweiz sowie das angrenzende Ausland ab, wobei sämtliche Gewässer mit einer Einzugsgebietsfläche grösser 1-1.5 km² berücksichtigt sind. Die Teileinzugsgebiete sind hierarchisch strukturiert und ermöglichen rasch und einfach Auswertungen über Gesamteinzugsgebiete. \nDer Geobasisdatensatz ist eine Erhebung von gesamtschweizerischem Interesse über die hydrologischen Verhältnisse. Von ihm geht keinerlei Rechtswirkung aus und er stellt in keiner Art und Weise eine verbindliche Vorgabe dar bei der Definition von Einzugsgebieten.",
       "title": "Topographische Einzugsgebiete Schweizer Gewässer"
     },
+    "en": {},
     "fr": {
       "description": "Le jeu de géodonnées de base « Bassins versants topographiques des eaux suisses » fournit des données de référence à haute résolution et couvrant l'ensemble du pays.\nLe jeu de géodonnées se compose d'une mosaïque de 22 000 bassins versants partiels, déterminés sur la base de critères topographiques. Il couvre la Suisse et les régions limitrophes et prend en compte tous les bassins versants dont la superficie dépasse 1 à 1,5 km². La structure hiérarchique de ces bassins versants partiels accélère et simplifie les analyses sur les bassins versants entiers.\nLe jeu de géodonnées de base est un relevé de données hydrologiques d'intérêt national. Il n'a aucune force juridique et ne constitue en aucune manière une prescription contraignante dans le cadre de la délimitation des bassins versants.",
       "title": "Bassins versants topographiques des eaux suisses"
@@ -6223,6 +6230,12 @@
       "title": "Vigneti in zone declive"
     }
   },
+  "ch.blw.ursprungsbezeichnungen": {
+    "en": {
+      "description": "The register of designations of origin (PDO) and geographical indications (PGI) allows the region names and traditional designations of agricultural products to be protected (with the exception of wine), where the quality and the main characteristics of the products are determined by their geographical origin. If a name is protected, it can only be used by producers in the specified geographical region, who must comply with a detailed requirements specification. The purpose of protecting certain designations of agricultural products is to prevent consumers from being exposed to fraud and, in the interests of farmers, to stop unfair competition relating to the use of the designations. The rules in this area allow for the mutual recognition of quality products by Switzerland and the European Union. There are four categories: cheese, meat products, products of plant origin and spirits. The register of designations of origin currently contains around 30 different products and new ones are frequently being added.",
+      "title": "Register of designations of origin (PDO) and geographical indications (PGI)"
+    }
+  },
   "ch.blw.ursprungsbezeichnungen-fleisch": {
     "de": {
       "description": "Mit dem Register Ursprungsbezeichnungen (GUB) und geografischen Angaben (GGA) lassen sich die Gebietsnamen und traditionellen Bezeichnungen von landwirtschaftlichen Erzeugnissen schützen (Wein ausgenommen), deren Qualität und Haupteigenschaften durch ihre geografische Herkunft bestimmt werden. Ist ein Name geschützt, darf er nur von den Produzentinnen und Produzenten des entsprechend definierten geografischen Gebiets benutzt werden, die sich an ein detailliertes Pflichtenheft halten.Der Schutz bestimmter Bezeichnungen für Landwirtschaftsprodukte bezweckt, die Konsumentinnen und Konsumenten vor Täuschung zu schützen und - im Interesse der Bäuerinnen und Bauern - den unlauteren Wettbewerb in der Verwendung dieser Begriffe zu verhindern. Die Regelungen in diesem Bereich ermöglichen, die gegenseitige Anerkennung von Qualitätsprodukten zwischen der Schweiz und der Europäischen Union. Es wird zwischen den vier Kategorien Käse, Fleischwaren, pflanzliche Produkte und Spirituosen unterschieden. Aktuell sind gegen 30 verschiedene Erzeugnisse im Register Ursprungsbezeichnungen eingetragen und es kommen laufend neue dazu.",
@@ -6529,6 +6542,18 @@
       "title": "Scenari climatici per i futuri ambienti interni (SIA 2028)"
     }
   },
+  "ch.meteoschweiz.ogd-climate-scenarios-ch2025": {
+    "en": {
+      "description": "The available data sets for the Swiss climate scenarios CH2025 comprise daily time series of several meteorological variables at stations (DAILY-LOCAL) and on a high-resolution 1 km grid (DAILY-GRIDDED). These large data sets are primarily suitable for further processing by computer models.",
+      "title": "Climate scenarios CH2025 per station - DAILY-LOCAL"
+    }
+  },
+  "ch.meteoschweiz.ogd-climate-scenarios-ch2025-grid": {
+    "en": {
+      "description": "The available data sets for the Swiss climate scenarios CH2025 comprise daily time series of several meteorological variables at stations (DAILY-LOCAL) and on a high-resolution 1 km grid (DAILY-GRIDDED). These large data sets are primarily suitable for further processing by computer models.",
+      "title": "Climate scenarios CH2025 grid - DAILY-GRIDDED"
+    }
+  },
   "ch.meteoschweiz.ogd-forecasting-icon-ch1": {
     "de": {
       "description": "Vorhersage von Temperatur, Feuchte, Niederschlag, Wind, Druck, Geopotential, Verdunstung und Strahlung mit 1 km Gittergrösse für die nächsten 33 Stunden – alle 3 Stunden aktualisiert, verfügbar für die letzten 24 Stunden.",
@@ -6563,6 +6588,12 @@
     "it": {
       "description": "Basisinformation zum Datenbestand / Kurzbeschreibung it",
       "title": "Modello numerico di previsione meteorologica ICON-CH2-EPS"
+    }
+  },
+  "ch.meteoschweiz.ogd-local-forecasting": {
+    "en": {
+      "description": "The localised forecasting data is based on a mix of different models (INCA, ICON-CH1-EPS, ICON-CH2-EPS, ECMWF) and is available for all ZIP-codes, SwissMetNet-stations and selected POI in the mountains as point data. The forecast is available for the time period from +0h to +192h and is being updated hourly. It is the same forecast data used in the MeteoSwiss app and on the website for each ZIP-code.",
+      "title": "Localised forecasting data – Point data"
     }
   },
   "ch.meteoschweiz.ogd-nbcn": {
@@ -6671,6 +6702,18 @@
     "it": {
       "description": "Concentrazione pollinica – per stazione – valori orari ('h') e giornalieri ('d') – dall'anno corrente fino a ieri ('recent'), dall'inizio delle misurazioni ('historical'). Se si necessitano valori giornalieri, si consiglia vivamente di scaricare la risoluzione corrispondente.",
       "title": "Stazioni pollini – Valori misurati"
+    }
+  },
+  "ch.meteoschweiz.ogd-radar-hail": {
+    "en": {
+      "description": "Hail: Probability of hail, expressed as a percentage POH and maximum expected severe hail size in cm MESHS. Updated every 5 minutes and every day, available for the last 14 days. Hail products are only calculated between April 1st and September 30th. All files published outside this period (e.g., in winter) are empty.",
+      "title": "Radar products hail - POH (probability of hail) and MESHS (maximum hail size)"
+    }
+  },
+  "ch.meteoschweiz.ogd-radar-precip": {
+    "en": {
+      "description": "Precipitation data, updated every 5, 10 and 60 minutes and available for the last 14 days. The PRECIP product is the baseline weather radar product for precipitation estimation at ground. It combines the data from all five C-band Swiss weather radar stations. The PRECIP-SV product is a version of the PRECIP product with additional \"Side-View\" (SV) to visualize the vertical cross-sections along the x- and y-axis. The CombiPrecip (CPC) product combines in real-time the precipitation information from the weather radar network with the MeteoSwiss ground stations (rain-gauges).",
+      "title": "Radar products precipitation - PRECIP, PRECIP-SV (Side View) and CombiPrecip (CPC)"
     }
   },
   "ch.meteoschweiz.ogd-smn": {
@@ -7680,6 +7723,12 @@
       "title": "Riprese terrestri swisstopo bianco e nero"
     }
   },
+  "ch.swisstopo.pixelkarte-farbe": {
+    "en": {
+      "description": "swisstopo produces national maps in the scales 1:10'000 up to 1:1 Million. The layer National maps (color) combines the different maps and shows the best fitted map for each zoom level. The layer National maps (color) is used as base map in the swiss federal geoportal. It is also available as WMS and WMTS geoservices. Once a year, a copy of the WMTS tile pyramid is made available for download in JPEG format and in the Web Mercator coordinate system (EPSG:3857) up to zoom level/tile matrix 18 (0.5 m resolution).",
+      "title": "National maps of Switzerland (color)"
+    }
+  },
   "ch.swisstopo.pixelkarte-farbe-pk100.noscale": {
     "de": {
       "description": "Die Landeskarte 1:100'000 ist eine überregionale, topografische Karte der Schweiz. Der Kartenperimeter ist in 23 Einzelblätter aufgeteilt. Von ausgewählten Regionen existieren Zusammensetzungen. Die Landeskarte 1:100'000 ist in analoger (Papierkarte) und in digitaler (Swiss Map Raster) Form verfügbar. Die Nachführung erfolgt sektorenweise. Die verschiedenen Nachführungsstände zeigt der Layer \"<a href=\"https://map.geo.admin.ch/?lang=de&topic=ech&bgLayer=ch.swisstopo.pixelkarte-farbe&layers=ch.swisstopo.pixelkarte-pk100.metadata\" target=\"_blank\">Einteilung Landeskarte 100 Raster</a>\".",
@@ -7786,6 +7835,12 @@
     "it": {
       "description": "La Carta nazionale 1:500'000 è una carta sinottica topografica della Svizzera. La Carta nazionale 1:500'000 è disponibile in formato analogico (cartaceo) e digitale (Swiss Map Raster, Swiss Map Vector).",
       "title": "Carta nazionale 1:500'000"
+    }
+  },
+  "ch.swisstopo.pixelkarte-grau": {
+    "en": {
+      "description": "swisstopo produces national maps in the scales 1:10'000 up to 1:1 Million. The layer National maps (grey) combines the different maps and shows the best fitted map for each zoom level. The layer National maps (grey) is used as base map in the swiss federal geoportal. It is also available as WMS and WMTS geoservices. Once a year, a copy of the WMTS tile pyramid is made available for download in JPEG format and in the Web Mercator coordinate system (EPSG:3857) up to zoom level/tile matrix 18 (0.5 m resolution).",
+      "title": "National maps of Switzerland (grey)"
     }
   },
   "ch.swisstopo.strassenkarte-200": {
@@ -8062,6 +8117,12 @@
     "it": {
       "description": "Mappa dello stato della foresta basata sul VHI (Vegetation Health Index), che rappresenta lo stato attuale della foresta in relazione ai dati storici 1991-2020. L'indice si basa su dati satellitari (Meteosat, Landsat 5,7,8 e Sentinel-2) di diverse risoluzioni spaziali, aggregate a dieci o trenta metri. Il VHI è composto da due componenti: una parte (VCI - Vegetation Condition Index) rappresenta le condizioni biofisiche locali della vegetazione, e l'altra parte (TCI - Thermal Condition Index) caratterizza le condizioni climatiche (temperatura). Entrambe le parti rappresentano la situazione attuale rispetto a un periodo di riferimento. Il VHI combinato è utilizzato per valutare la siccità e altri disturbi o fattori di stress - più basso è il valore, maggiore è lo stress e il suo impatto sulla vegetazione. La rappresentazione cartografica mostra la superficie forestale, che fornisce un indicatore affidabile dello stato della vegetazione regionale. Il set di dati è stato sviluppato in collaborazione con MeteoSvizzera per il portale della siccità della Confederazione.\nContiene dati modificati Copernicus Sentinel.",
       "title": "swissEO VHI: Stato di salute della foresta"
+    }
+  },
+  "ch.swisstopo.swissimage": {
+    "en": {
+      "description": "The Orthophotomosaic SWISSIMAGE (Background) is a composition of digital color aerial images of Switzerland and surroundings. The orthophotos of the neighboring countries come from SPOT 5 satellite images (Airbus Defence and Space) taken in 2004 and 2005 with a ground resolution of 5 m. An orthophoto is an aerial image in which the distortions created by the camera and the relief are corrected. The layer is used as base map in the swiss federal geoportal. It is also available as WMS and WMTS geoservices. Once a year, a copy of the WMTS tile pyramid is made available for download in JPEG format and in the Web Mercator coordinate system (EPSG:3857) up to zoom level/tile matrix 18 (0.5 m resolution).",
+      "title": "SWISSIMAGE Background: The Digital Orthophotomosaic of Switzerland"
     }
   },
   "ch.swisstopo.swissimage-dop10": {
