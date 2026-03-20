@@ -9,7 +9,7 @@ from qgis.core import (
     QgsMarkerSymbol,
     QgsProfilePoint,
     QgsProfileRenderContext,
-    QgsProfileSnapResult
+    QgsProfileSnapResult,
 )
 
 PROFILE_SYMBOLOGY = Qgis.ProfileSurfaceSymbology.FillBelow
@@ -30,20 +30,16 @@ class SwissProfileResults(QgsAbstractProfileResults):
         self.min_z = 4500
         self.max_z = -100
 
-        self.marker_symbol = QgsMarkerSymbol.createSimple({
-            'name': 'square',
-            'size': 1,
-            'color': '#aeaeae',
-            'outline_style': 'no'
-        })
-        self.line_symbol = QgsLineSymbol.createSimple({'color': '#ff0000',
-                                                       'width': 0.6})
+        self.marker_symbol = QgsMarkerSymbol.createSimple(
+            {"name": "square", "size": 1, "color": "#aeaeae", "outline_style": "no"}
+        )
+        self.line_symbol = QgsLineSymbol.createSimple(
+            {"color": "#ff0000", "width": 0.6}
+        )
         self.line_symbol.setOpacity(0.5)
-        self.fill_symbol = QgsFillSymbol.createSimple({
-            'color': '#ff0000',
-            'style': 'solid',
-            'outline_style': 'no'
-        })
+        self.fill_symbol = QgsFillSymbol.createSimple(
+            {"color": "#ff0000", "style": "solid", "outline_style": "no"}
+        )
         self.fill_symbol.setOpacity(0.5)
 
     def asFeatures(self, type, feedback):
@@ -93,16 +89,21 @@ class SwissProfileResults(QgsAbstractProfileResults):
     def snapPoint(self, point, context):
         result = QgsProfileSnapResult()
 
-        prev_distance = float('inf')
+        prev_distance = float("inf")
         prev_elevation = 0
         for k, v in self.cartesian_distance_to_height.items():
             # find segment which corresponds to the given distance along curve
             if k != 0 and prev_distance <= point.distance() <= k:
                 dx = k - prev_distance
                 dy = v - prev_elevation
-                snapped_z = (dy / dx) * (point.distance() - prev_distance) + prev_elevation
+                snapped_z = (dy / dx) * (
+                    point.distance() - prev_distance
+                ) + prev_elevation
 
-                if abs(point.elevation() - snapped_z) > context.maximumSurfaceElevationDelta:
+                if (
+                    abs(point.elevation() - snapped_z)
+                    > context.maximumSurfaceElevationDelta
+                ):
                     return QgsProfileSnapResult()
 
                 result.snappedPoint = QgsProfilePoint(point.distance(), snapped_z)
@@ -131,7 +132,9 @@ class SwissProfileResults(QgsAbstractProfileResults):
         min_z = context.elevationRange().lower()
         max_z = context.elevationRange().upper()
 
-        visible_region = QRectF(min_distance, min_z, max_distance - min_distance, max_z - min_z)
+        visible_region = QRectF(
+            min_distance, min_z, max_distance - min_distance, max_z - min_z
+        )
         clip_path = QPainterPath()
         clip_path.addPolygon(context.worldTransform().map(QPolygonF(visible_region)))
         painter.setClipPath(clip_path, Qt.ClipOperation.IntersectClip)
@@ -147,16 +150,26 @@ class SwissProfileResults(QgsAbstractProfileResults):
             min_z: float,
             max_z: float,
             prev_distance: float,
-            current_part_start_distance: float
+            current_part_start_distance: float,
         ):
             if len(current_line) > 1:
                 if PROFILE_SYMBOLOGY == Qgis.ProfileSurfaceSymbology.Line:
-                    self.line_symbol.renderPolyline(current_line, None, context.renderContext())
+                    self.line_symbol.renderPolyline(
+                        current_line, None, context.renderContext()
+                    )
                 elif PROFILE_SYMBOLOGY == Qgis.ProfileSurfaceSymbology.FillBelow:
-                    current_line.append(context.worldTransform().map(QPointF(prev_distance, min_z)))
-                    current_line.append(context.worldTransform().map(QPointF(current_part_start_distance, min_z)))
+                    current_line.append(
+                        context.worldTransform().map(QPointF(prev_distance, min_z))
+                    )
+                    current_line.append(
+                        context.worldTransform().map(
+                            QPointF(current_part_start_distance, min_z)
+                        )
+                    )
                     current_line.append(current_line.at(0))
-                    self.fill_symbol.renderPolygon(current_line, None, None, context.renderContext())
+                    self.fill_symbol.renderPolygon(
+                        current_line, None, None, context.renderContext()
+                    )
 
         current_line = QPolygonF()
         prev_distance = None
@@ -169,13 +182,27 @@ class SwissProfileResults(QgsAbstractProfileResults):
                 current_part_start_distance = k
 
             if not v:
-                check_line(current_line, context, min_z, max_z, prev_distance, current_part_start_distance)
+                check_line(
+                    current_line,
+                    context,
+                    min_z,
+                    max_z,
+                    prev_distance,
+                    current_part_start_distance,
+                )
                 current_line.clear()
             else:
                 current_line.append(context.worldTransform().map(QPointF(k, v)))
                 prev_distance = k
 
-        check_line(current_line, context, min_z, max_z, prev_distance, current_part_start_distance)
+        check_line(
+            current_line,
+            context,
+            min_z,
+            max_z,
+            prev_distance,
+            current_part_start_distance,
+        )
 
         if PROFILE_SYMBOLOGY == Qgis.ProfileSurfaceSymbology.Line:
             self.line_symbol.stopRender(context.renderContext())
@@ -195,7 +222,9 @@ class SwissProfileResults(QgsAbstractProfileResults):
         minZ = context.elevationRange().lower()
         maxZ = context.elevationRange().upper()
 
-        visibleRegion = QRectF(minDistance, minZ, maxDistance - minDistance, maxZ - minZ)
+        visibleRegion = QRectF(
+            minDistance, minZ, maxDistance - minDistance, maxZ - minZ
+        )
         clipPath = QPainterPath()
         clipPath.addPolygon(context.worldTransform().map(QPolygonF(visibleRegion)))
         painter.setClipPath(clipPath, Qt.ClipOperation.IntersectClip)
@@ -206,6 +235,10 @@ class SwissProfileResults(QgsAbstractProfileResults):
             if not v:
                 continue
 
-            self.marker_symbol.renderPoint(context.worldTransform().map(QPointF(k, v)), None, context.renderContext())
+            self.marker_symbol.renderPoint(
+                context.worldTransform().map(QPointF(k, v)),
+                None,
+                context.renderContext(),
+            )
 
         self.marker_symbol.stopRender(context.renderContext())

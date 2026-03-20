@@ -12,12 +12,12 @@ from swiss_locator.swissgeodownloader.api.datageoadmin import ApiDataGeoAdmin
 
 def refreshMetadata():
     api = ApiDataGeoAdmin()
-    task = ApiCallerTask(api, None, '')
+    task = ApiCallerTask(api, None, "")
     api.refreshAllMetadata(task)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     QGIS_APP = QgsApplication([], False)
     QGIS_APP.initQgis()
-    
+
     refreshMetadata()

@@ -24,35 +24,34 @@ import os
 from swiss_locator.swissgeodownloader import PLUGIN_DIR
 from swiss_locator.swissgeodownloader.utils.utilities import log
 
-SETTING_PREFIX = 'PluginSwissGeoDownloader'
-SAVE_DIRECTORY = os.path.join(PLUGIN_DIR, 'api')
+SETTING_PREFIX = "PluginSwissGeoDownloader"
+SAVE_DIRECTORY = os.path.join(PLUGIN_DIR, "api")
 
 
 def saveToFile(metadata, filename):
     try:
-        jsonData = json.dumps(metadata, indent=2, sort_keys=True,
-                              ensure_ascii=False)
+        jsonData = json.dumps(metadata, indent=2, sort_keys=True, ensure_ascii=False)
     except Exception:
-        log('Converting metadata to json data not successful')
+        log("Converting metadata to json data not successful")
         return
-    
+
     metafile = os.path.join(SAVE_DIRECTORY, filename)
     try:
-        with open(metafile, 'w', encoding='utf8') as f:
+        with open(metafile, "w", encoding="utf8") as f:
             f.write(jsonData)
     except PermissionError:
-        log('Saving metadata to json file not successful')
+        log("Saving metadata to json file not successful")
 
 
 def loadFromFile(filename):
     filepath = os.path.join(SAVE_DIRECTORY, filename)
     if os.path.exists(filepath):
         try:
-            with open(filepath, encoding='utf-8') as f:
+            with open(filepath, encoding="utf-8") as f:
                 return json.load(f)
         except json.JSONDecodeError:
-            log('Loading metadata from file not possible')
+            log("Loading metadata from file not possible")
             return {}
     else:
-        log('Metadata file not found')
+        log("Metadata file not found")
     return {}

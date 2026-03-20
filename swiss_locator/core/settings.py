@@ -47,7 +47,7 @@ class Settings:
             cls.instance = super(Settings, cls).__new__(cls)
 
             settings_node = QgsSettingsTree.createPluginTreeNode(pluginName=PLUGIN_NAME)
-            
+
             cls.lang = QgsSettingsEntryString("lang", settings_node, "")
             cls.show_map_tip = QgsSettingsEntryBool(
                 "show_map_tip", settings_node, False
@@ -115,16 +115,17 @@ class Settings:
                 },
                 FilterType.STAC.value: {
                     "priority": QgsSettingsEntryEnumFlag(
-                            f"{FilterType.STAC.value}_priority",
-                            settings_node,
-                            QgsLocatorFilter.Priority.Low,
+                        f"{FilterType.STAC.value}_priority",
+                        settings_node,
+                        QgsLocatorFilter.Priority.Low,
                     ),
                     "limit": QgsSettingsEntryInteger(
-                            f"{FilterType.STAC.value}_limit", settings_node, 5
+                        f"{FilterType.STAC.value}_limit", settings_node, 5
                     ),
                     "limit_files_per_result": QgsSettingsEntryInteger(
-                            f"{FilterType.STAC.value}_limit_files_per_result",
-                            settings_node, 5
+                        f"{FilterType.STAC.value}_limit_files_per_result",
+                        settings_node,
+                        5,
                     ),
                 },
             }

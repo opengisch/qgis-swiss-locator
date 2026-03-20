@@ -27,34 +27,31 @@ from qgis.core import (
     QgsPoint,
     QgsProject,
     QgsRasterLayer,
-    QgsRectangle
+    QgsRectangle,
 )
 from qgis.gui import QgsMapCanvas
 
 from swiss_locator.swissgeodownloader.utils.utilities import translate
 
-SWISSTOPO_WMS_URL = 'http://wms.geo.admin.ch/'
-OVERVIEW_MAP = 'ch.swisstopo.pixelkarte-grau'
-SWISS_CRS = 'EPSG:2056'
-RECOMMENDED_CRS = ['EPSG:2056', 'EPSG:21781']
+SWISSTOPO_WMS_URL = "http://wms.geo.admin.ch/"
+OVERVIEW_MAP = "ch.swisstopo.pixelkarte-grau"
+SWISS_CRS = "EPSG:2056"
+RECOMMENDED_CRS = ["EPSG:2056", "EPSG:21781"]
 
 
 def transformBbox(rectangle: QgsRectangle, transformer: QgsCoordinateTransform):
     llCoord = (rectangle.xMinimum(), rectangle.yMinimum())
     urCoord = (rectangle.xMaximum(), rectangle.yMaximum())
-    
+
     # Cancel if there are no actual coords in input fields
     if not all(llCoord) or not all(urCoord):
         return []
-    
+
     llPoint = QgsPoint(*tuple(llCoord))
     urPoint = QgsPoint(*tuple(urCoord))
     llPoint.transform(transformer)
     urPoint.transform(transformer)
-    return [llPoint.x(),
-            llPoint.y(),
-            urPoint.x(),
-            urPoint.y()]
+    return [llPoint.x(), llPoint.y(), urPoint.x(), urPoint.y()]
 
 
 def addLayersToQgis(layers: list[QgsRasterLayer | QgsVectorLayer]):
@@ -72,28 +69,35 @@ def switchToCrs(canvas: QgsMapCanvas, crs=SWISS_CRS):
 
 def addOverviewMap(canvas: QgsMapCanvas, crs=SWISS_CRS):
     qgsProject = QgsProject.instance()
-    layerName = translate('SGD', 'Swisstopo National Map (grey)')
-    wmsUrl = (f'contextualWMSLegend=0&crs={crs}&dpiMode=7'
-              f'&featureCount=10&format=image/png'
-              f'&layers={OVERVIEW_MAP}'
-              f'&styles=&url={SWISSTOPO_WMS_URL}')
-    
+    layerName = translate("SGD", "Swisstopo National Map (grey)")
+    wmsUrl = (
+        f"contextualWMSLegend=0&crs={crs}&dpiMode=7"
+        f"&featureCount=10&format=image/png"
+        f"&layers={OVERVIEW_MAP}"
+        f"&styles=&url={SWISSTOPO_WMS_URL}"
+    )
+
     already_added = [lyr.source() for lyr in qgsProject.mapLayers().values()]
-    
+
     if wmsUrl not in already_added:
-        wmsLayer = QgsRasterLayer(wmsUrl, layerName, 'wms')
+        wmsLayer = QgsRasterLayer(wmsUrl, layerName, "wms")
         if wmsLayer.isValid():
             qgsProject.addMapLayer(wmsLayer)
             canvas.refresh()
-            return translate('SGD', "Layer '{}' added to map").format(
-                layerName), Qgis.MessageLevel.Success
+            return (
+                translate("SGD", "Layer '{}' added to map").format(layerName),
+                Qgis.MessageLevel.Success,
+            )
         else:
-            return translate('SGD',
-                             "Not able to add layer '{}' to map").format(
-                layerName), Qgis.MessageLevel.Warning
+            return (
+                translate("SGD", "Not able to add layer '{}' to map").format(layerName),
+                Qgis.MessageLevel.Warning,
+            )
     else:
-        return translate('SGD', "Layer '{}' already added to map").format(
-            layerName), Qgis.MessageLevel.Info
+        return (
+            translate("SGD", "Layer '{}' already added to map").format(layerName),
+            Qgis.MessageLevel.Info,
+        )
 
 
 def validateBbox(bbox, authid=SWISS_CRS):
@@ -107,4 +111,5 @@ def validateBbox(bbox, authid=SWISS_CRS):
             maxBbox.xMinimum(),
             maxBbox.yMinimum(),
             maxBbox.xMaximum(),
-            maxBbox.yMaximum()]
+            maxBbox.yMaximum(),
+        ]
