@@ -7,7 +7,7 @@ repos:
        '--fix',
        '--target-version', 'py311',
        '--select', 'E,F,UP,W',
-       '--ignore', 'E203,E402,E501',
+       '--ignore', 'E501',
      ]
    - id: ruff-format
      args: ['--target-version', 'py311']
