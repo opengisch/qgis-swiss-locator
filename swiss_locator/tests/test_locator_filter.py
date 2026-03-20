@@ -14,18 +14,22 @@
  ***************************************************************************/
 """
 
+import json
+from urllib.parse import urlencode
+from urllib.request import urlopen, Request
+
 from qgis.PyQt.QtTest import QSignalSpy
 from qgis._core import QgsStacExtent
 from qgis.core import QgsStacCollection, QgsLocator, QgsLocatorContext
 from qgis.testing import start_app, unittest
 from qgis.testing.mocked import get_iface
 
-from swiss_locator.core.filters.map_geo_admin_stac import \
-    collections_to_searchable_strings
-from swiss_locator.core.filters.swiss_locator_filter_stac import \
-    SwissLocatorFilterSTAC
-from swiss_locator.core.filters.swiss_locator_filter_wmts import \
-    SwissLocatorFilterWMTS
+from swiss_locator.core.filters.map_geo_admin_stac import (
+    collections_to_searchable_strings,
+)
+from swiss_locator.core.filters.opendata_swiss import opendata_swiss_url
+from swiss_locator.core.filters.swiss_locator_filter_stac import SwissLocatorFilterSTAC
+from swiss_locator.core.filters.swiss_locator_filter_wmts import SwissLocatorFilterWMTS
 
 start_app()
 
@@ -64,48 +68,79 @@ class TestSwissLocatorFilters(unittest.TestCase):
 
 
 class TestLocatorFilterSTAC(unittest.TestCase):
-    
     @classmethod
     def setUpClass(cls):
         cls.test_strings = (
-            ('ch.swisstopo.swissalti3d', 'swissALTI3D'),
-            ('ch.bakom.mobilnetz-2g', '2G - GSM / EDGE Verfügbarkeit'),
-            ('ch.bafu.wald-wasserverfuegbarkeit_boden',
-                'Wasserverfügbarkeit im Boden (Standortwasserbilanz)'),
+            ("ch.swisstopo.swissalti3d", "swissALTI3D"),
+            ("ch.bakom.mobilnetz-2g", "2G - GSM / EDGE Verfügbarkeit"),
+            (
+                "ch.bafu.wald-wasserverfuegbarkeit_boden",
+                "Wasserverfügbarkeit im Boden (Standortwasserbilanz)",
+            ),
         )
         cls.collections = {}
         for key, title in cls.test_strings:
-            cls.collections[key] = QgsStacCollection(key, None, None, [], None,
-                                                     QgsStacExtent())
+            cls.collections[key] = QgsStacCollection(
+                key, None, None, [], None, QgsStacExtent()
+            )
             cls.collections[key].setTitle(title)
-    
+
     def setUp(self):
         pass
-    
+
     def test_collections_to_searchable_strings(self):
-        search_strings, search_ids = collections_to_searchable_strings(
-                self.collections)
-        
-        self.assertEqual(search_strings, [
-            'swissalti3d ch.swisstopo.swissalti3d',
-            '2g - gsm / edge verfügbarkeit ch.bakom.mobilnetz-2g',
-            'wasserverfügbarkeit im boden (standortwasserbilanz) ch.bafu.wald-wasserverfuegbarkeit_boden'
-        ])
-    
+        search_strings, search_ids = collections_to_searchable_strings(self.collections)
+
+        self.assertEqual(
+            search_strings,
+            [
+                "swissalti3d ch.swisstopo.swissalti3d",
+                "2g - gsm / edge verfügbarkeit ch.bakom.mobilnetz-2g",
+                "wasserverfügbarkeit im boden (standortwasserbilanz) ch.bafu.wald-wasserverfuegbarkeit_boden",
+            ],
+        )
+
     def test_local_search(self):
-        search_strings, search_ids = collections_to_searchable_strings(
-                self.collections)
-        
+        search_strings, search_ids = collections_to_searchable_strings(self.collections)
+
         loc = QgsLocator()
-        _filter = SwissLocatorFilterSTAC(get_iface(), None,
-                                         [self.collections, search_strings,
-                                             search_ids])
+        _filter = SwissLocatorFilterSTAC(
+            get_iface(), None, [self.collections, search_strings, search_ids]
+        )
         loc.registerFilter(_filter)
-        
-        search_res_1 = _filter.perform_local_search('gsm')
-        search_res_2 = _filter.perform_local_search('verfügbarkeit')
-        
-        self.assertEqual(search_res_1, ['ch.bakom.mobilnetz-2g'])
-        self.assertEqual(search_res_2,
-                         ['ch.bafu.wald-wasserverfuegbarkeit_boden',
-                             'ch.bakom.mobilnetz-2g'])
+
+        search_res_1 = _filter.perform_local_search("gsm")
+        search_res_2 = _filter.perform_local_search("verfügbarkeit")
+
+        self.assertEqual(search_res_1, ["ch.bakom.mobilnetz-2g"])
+        self.assertEqual(
+            search_res_2,
+            ["ch.bafu.wald-wasserverfuegbarkeit_boden", "ch.bakom.mobilnetz-2g"],
+        )
+
+
+class TestOpendataSwiss(unittest.TestCase):
+    def test_opendata_swiss_url(self):
+        url, params = opendata_swiss_url("wasser")
+        self.assertEqual(url, "https://opendata.swiss/api/3/action/package_search")
+        self.assertEqual(params["q"], "wasser")
+        self.assertIn("res_format", params["fq"])
+
+    def test_opendata_swiss_search(self):
+        """Test that the opendata.swiss API returns WMS/WMTS results."""
+        url, params = opendata_swiss_url("wasser")
+        full_url = f"{url}?{urlencode(params)}"
+        req = Request(
+            full_url, headers={"User-Agent": "Mozilla/5.0 QGIS Swiss Locator Test"}
+        )
+        response = urlopen(req, timeout=10)
+        data = json.loads(response.read().decode("utf-8"))
+
+        self.assertTrue(data["success"])
+        results = data["result"]["results"]
+        self.assertGreater(len(results), 0, "Expected at least one result for 'wasser'")
+
+        # Verify results have expected structure
+        first = results[0]
+        self.assertIn("title", first)
+        self.assertIn("resources", first)
