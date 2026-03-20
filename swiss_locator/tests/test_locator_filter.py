@@ -123,7 +123,8 @@ class TestOpendataSwiss(unittest.TestCase):
     def test_opendata_swiss_url(self):
         url, params = opendata_swiss_url("wasser")
         self.assertEqual(url, "https://opendata.swiss/api/3/action/package_search")
-        self.assertEqual(params["q"], "wasser")
+        self.assertIn("wasser", params["q"])
+        self.assertIn("title:wasser*", params["q"])
         self.assertIn("res_format", params["fq"])
 
     def test_opendata_swiss_search(self):
@@ -144,3 +145,24 @@ class TestOpendataSwiss(unittest.TestCase):
         first = results[0]
         self.assertIn("title", first)
         self.assertIn("resources", first)
+
+    def test_opendata_swiss_search_partial_word(self):
+        """Test that partial words like 'asia' find 'Asiatische' datasets."""
+        url, params = opendata_swiss_url("asia")
+        full_url = f"{url}?{urlencode(params)}"
+        req = Request(
+            full_url, headers={"User-Agent": "Mozilla/5.0 QGIS Swiss Locator Test"}
+        )
+        response = urlopen(req, timeout=10)
+        data = json.loads(response.read().decode("utf-8"))
+
+        self.assertTrue(data["success"])
+        results = data["result"]["results"]
+        self.assertGreater(len(results), 0, "Expected results for 'asia'")
+
+        # At least one result should have 'asiat' in a German title
+        titles = [r["title"].get("de", "") for r in results]
+        self.assertTrue(
+            any("asiat" in t.lower() for t in titles if t),
+            f"Expected 'Asiatische' in titles, got: {titles}",
+        )
