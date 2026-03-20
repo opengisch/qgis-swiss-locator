@@ -85,7 +85,7 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
     LABEL_SUCCESS_STYLE = "QLabel { color : green; font-weight: bold;}"
 
     def __init__(self, interface: QgisInterface, locale, parent=None):
-        super(SwissGeoDownloaderDockWidget, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
         self.iface = interface
         self.locale = locale
@@ -395,9 +395,7 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
             self.guiExtentWidget.setCollapsed(True)
             self.guiGroupFiles.setDisabled(True)
             self.resetFileList()
-            self.fileListTbl.onEmptyList(
-                self.tr("No files available in this " "dataset")
-            )
+            self.fileListTbl.onEmptyList(self.tr("No files available in this dataset"))
             self.guiRequestListBtn.setDisabled(True)
             return
 
@@ -565,7 +563,7 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
             # Add info message to file list
             if self.getBbox():
                 self.fileListTbl.onEmptyList(
-                    self.tr("No files available in " "current extent")
+                    self.tr("No files available in current extent")
                 )
             else:
                 self.fileListTbl.onEmptyList(self.tr("No files available"))
@@ -626,7 +624,7 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
         # There are files but all of them are currently filtered out
         if self.fileList and not orderedFileList:
             self.fileListTbl.onEmptyList(
-                self.tr("Currently selected filters " "do not match any files")
+                self.tr("Currently selected filters do not match any files")
             )
         else:
             self.fileListTbl.fill(orderedFileList)
@@ -640,7 +638,6 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
         self.fileListFiltered = {}
         orderedFilesForTbl = []
         for file in self.fileList:
-
             if (
                 file.filetypeFitsFilter(self.currentFilters["filetype"])
                 and file.categoryFitsFilter(self.currentFilters["category"])
@@ -676,7 +673,6 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
                 and uiElem.isVisible()
                 and uiElem.currentData() != ALL_VALUE
             ):
-
                 idx = uiElem.findData(ALL_VALUE)
                 if idx:
                     uiElem.setDisabled(True)

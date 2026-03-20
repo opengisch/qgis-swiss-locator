@@ -30,9 +30,9 @@ SOFTWARE.
 
 import math
 
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtGui import *
-from qgis.PyQt.QtWidgets import *
+from qgis.PyQt.QtCore import Qt, QRect, QTimer
+from qgis.PyQt.QtGui import QColor, QPainter
+from qgis.PyQt.QtWidgets import QWidget
 
 
 class QtWaitingSpinner(QWidget):

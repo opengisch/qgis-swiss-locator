@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # -----------------------------------------------------------
 #
 # QGIS Swiss Locator Plugin
@@ -44,7 +43,7 @@ class Settings:
 
     def __new__(cls):
         if cls.instance is None:
-            cls.instance = super(Settings, cls).__new__(cls)
+            cls.instance = super().__new__(cls)
 
             settings_node = QgsSettingsTree.createPluginTreeNode(pluginName=PLUGIN_NAME)
 

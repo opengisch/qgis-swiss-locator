@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 /***************************************************************************
 
@@ -16,7 +15,6 @@
  *                                                                         *
  ***************************************************************************/
 """
-
 
 import json
 import os
@@ -93,7 +91,6 @@ class InvalidBox(Exception):
 
 
 class SwissLocatorFilter(QgsLocatorFilter):
-
     HEADERS = {b"User-Agent": b"Mozilla/5.0 QGIS Swiss Geoportal Locator Filter"}
 
     message_emitted = pyqtSignal(str, str, Qgis.MessageLevel, QWidget)
@@ -209,7 +206,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         if self.crs not in AVAILABLE_CRS:
             self.crs = "2056"
         assert self.crs in AVAILABLE_CRS
-        src_crs_ch = QgsCoordinateReferenceSystem("EPSG:{}".format(self.crs))
+        src_crs_ch = QgsCoordinateReferenceSystem(f"EPSG:{self.crs}")
         assert src_crs_ch.isValid()
         dst_crs = self.map_canvas.mapSettings().destinationCrs()
         self.transform_ch = QgsCoordinateTransform(
@@ -240,7 +237,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         """
         coords = re.findall(r"\b(\d+(?:\.\d+)?)\b", box)
         if len(coords) != 4:
-            raise InvalidBox("Could not parse: {}".format(box))
+            raise InvalidBox(f"Could not parse: {box}")
         return QgsRectangle(
             float(coords[0]), float(coords[1]), float(coords[2]), float(coords[3])
         )
@@ -281,7 +278,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             exc_type, exc_obj, exc_traceback = sys.exc_info()
             filename = os.path.split(exc_traceback.tb_frame.f_code.co_filename)[1]
             self.info(
-                "{} {} {}".format(exc_type, filename, exc_traceback.tb_lineno),
+                f"{exc_type} {filename} {exc_traceback.tb_lineno}",
                 Qgis.MessageLevel.Critical,
             )
             self.info(
@@ -357,7 +354,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             exc_type, exc_obj, exc_traceback = sys.exc_info()
             filename = os.path.split(exc_traceback.tb_frame.f_code.co_filename)[1]
             self.info(
-                "{} {} {}".format(exc_type, filename, exc_traceback.tb_lineno),
+                f"{exc_type} {filename} {exc_traceback.tb_lineno}",
                 Qgis.MessageLevel.Critical,
             )
             self.info(
@@ -385,11 +382,11 @@ class SwissLocatorFilter(QgsLocatorFilter):
             )
             return
 
-        if type(swiss_result) == NoResult:
+        if isinstance(swiss_result, NoResult):
             return
 
         # Layers
-        if type(swiss_result) == WMSLayerResult:
+        if isinstance(swiss_result, WMSLayerResult):
             params = dict()
             params["contextualWMSLegend"] = 0
             params["crs"] = f"EPSG:{self.crs}"  # NOQA E231
@@ -416,25 +413,19 @@ class SwissLocatorFilter(QgsLocatorFilter):
             if "geo.admin.ch" in swiss_result.url.lower():
                 label.setText(
                     '<a href="https://map.geo.admin.ch/'
-                    '?lang={}&bgLayer=ch.swisstopo.pixelkarte-farbe&layers={}">'
-                    "Open layer in map.geo.admin.ch</a>".format(
-                        self.lang, swiss_result.layer
-                    )
+                    f'?lang={self.lang}&bgLayer=ch.swisstopo.pixelkarte-farbe&layers={swiss_result.layer}">'
+                    "Open layer in map.geo.admin.ch</a>"
                 )
 
             if not ch_layer.isValid():
                 msg = self.tr(
-                    "Cannot load Layers layer: {} ({})".format(
-                        swiss_result.title, swiss_result.layer
-                    )
+                    f"Cannot load Layers layer: {swiss_result.title} ({swiss_result.layer})"
                 )
                 level = Qgis.MessageLevel.Warning
                 self.info(msg, level)
             else:
                 msg = self.tr(
-                    "Layers layer added to the map: {} ({})".format(
-                        swiss_result.title, swiss_result.layer
-                    )
+                    f"Layers layer added to the map: {swiss_result.title} ({swiss_result.layer})"
                 )
                 level = Qgis.MessageLevel.Info
 
@@ -443,7 +434,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.message_emitted.emit(self.displayName(), msg, level, label)
 
         # Feature
-        elif type(swiss_result) == FeatureResult:
+        elif isinstance(swiss_result, FeatureResult):
             point = QgsGeometry.fromPointXY(swiss_result.point)
             point.transform(self.transform_4326)
             self.highlight(point)
@@ -451,7 +442,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 self.show_map_tip(swiss_result.layer, swiss_result.feature_id, point)
 
         # Vector tiles
-        elif type(swiss_result) == VectorTilesLayerResult:
+        elif isinstance(swiss_result, VectorTilesLayerResult):
             params = dict()
             params["styleUrl"] = swiss_result.style
             if Qgis.QGIS_VERSION_INT < 33900:
@@ -474,9 +465,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
             ch_layer = QgsVectorTileLayer(url_with_params, result.displayString)
 
             if not ch_layer.isValid():
-                msg = self.tr(
-                    "Cannot load Vector Tiles layer: {}".format(swiss_result.title)
-                )
+                msg = self.tr(f"Cannot load Vector Tiles layer: {swiss_result.title}")
                 level = Qgis.MessageLevel.Warning
                 self.info(msg, level)
             else:
@@ -504,7 +493,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     level = Qgis.MessageLevel.Warning
                     self.info(msg, level)
 
-                msg = self.tr("Layer added to the map: {}".format(swiss_result.title))
+                msg = self.tr(f"Layer added to the map: {swiss_result.title}")
                 level = Qgis.MessageLevel.Info
                 self.info(msg, level)
 
@@ -531,7 +520,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                     QgsProject.instance().addMapLayer(ch_layer, False)
                     root.insertLayer(-1, ch_layer)
 
-        elif type(swiss_result) == STACResult:
+        elif isinstance(swiss_result, STACResult):
             if swiss_result.is_streamed:
                 self.add_asset_to_qgis(swiss_result)
             elif swiss_result.is_downloadable:
@@ -569,9 +558,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
     def show_map_tip(self, layer, feature_id, point):
         if layer and feature_id:
-            url = "https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}/htmlPopup".format(
-                layer=layer, feature_id=feature_id
-            )
+            url = f"https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}/htmlPopup"
             params = {"lang": self.lang, "sr": self.crs}
             url = url_with_param(url, params)
             self.dbg_info(url)

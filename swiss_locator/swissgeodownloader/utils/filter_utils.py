@@ -18,6 +18,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+
 from swiss_locator.swissgeodownloader.api.response_objects import ALL_VALUE, SgdAsset
 
 
@@ -25,8 +26,8 @@ def cleanupFilterItems(filterItems: dict):
     """Cleanup filter values so no duplicates are present. Also add 'ALL'
     option."""
     # Remove duplicate entries in the filter list and sort
-    for key, l in filterItems.items():
-        sortedList = list(set(l))
+    for key, values in filterItems.items():
+        sortedList = list(set(values))
         sortedList.sort()
         sortedList.reverse()
         filterItems[key] = sortedList
