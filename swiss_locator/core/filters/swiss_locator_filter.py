@@ -16,7 +16,6 @@
  ***************************************************************************/
 """
 
-import json
 import os
 import re
 import sys
@@ -53,11 +52,11 @@ from swiss_locator.core.language import get_language
 from swiss_locator.core.parameters import AVAILABLE_CRS
 from swiss_locator.core.results import (
     WMSLayerResult,
-    LocationResult,
     FeatureResult,
     VectorTilesLayerResult,
     NoResult,
     STACResult,
+    result_from_data as _result_from_data,
 )
 from swiss_locator.core.settings import Settings
 from swiss_locator.gui.config_dialog import ConfigDialog
@@ -72,18 +71,7 @@ def result_from_data(result: QgsLocatorResult):
         definition = result.getUserData()
     else:
         definition = result.userData
-    dict_data = json.loads(definition)
-    if dict_data["type"] == "WMSLayerResult":
-        return WMSLayerResult.from_dict(dict_data)
-    if dict_data["type"] == "LocationResult":
-        return LocationResult.from_dict(dict_data)
-    if dict_data["type"] == "FeatureResult":
-        return FeatureResult.from_dict(dict_data)
-    if dict_data["type"] == "VectorTilesLayerResult":
-        return VectorTilesLayerResult.from_dict(dict_data)
-    if dict_data["type"] == "STACResult":
-        return STACResult.from_dict(dict_data)
-    return NoResult()
+    return _result_from_data(definition)
 
 
 class InvalidBox(Exception):
