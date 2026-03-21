@@ -26,10 +26,23 @@ import json
 from swiss_locator.core.parameters import AVAILABLE_LANGUAGES
 from swiss_locator.core.settings import Settings
 
+# Module-level cache: parsed JSON data keyed by language code.
+# The JSON files are static per plugin version, so caching avoids
+# repeated file I/O on every keystroke in the locator bar.
+_layers_cache: dict[str, dict] = {}
+
 
 def data_file(lang: str):
     cur_dir = os.path.dirname(__file__)
     return os.path.join(cur_dir, f"layers_{lang}.json")
+
+
+def _load_data(lang: str) -> dict:
+    """Return parsed layer data for *lang*, using an in-memory cache."""
+    if lang not in _layers_cache:
+        with open(data_file(lang)) as f:
+            _layers_cache[lang] = json.loads(f.read())
+    return _layers_cache[lang]
 
 
 def searchable_layers(lang: str, restrict: bool = False) -> dict:
@@ -47,10 +60,7 @@ def searchable_layers(lang: str, restrict: bool = False) -> dict:
 
     layers = {}
 
-    with open(data_file(lang)) as f:
-        content = f.read()
-
-    data = json.loads(content)
+    data = _load_data(lang)
     translations_api = data["translations"]
 
     for layer in data["searchableLayers"]:

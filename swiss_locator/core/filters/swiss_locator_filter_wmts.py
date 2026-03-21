@@ -28,6 +28,7 @@ from qgis.core import (
     QgsLocatorResult,
     QgsFeedback,
 )
+from swiss_locator.core.constants import WMTS_BASE_URL
 from swiss_locator.core.filters.swiss_locator_filter import (
     SwissLocatorFilter,
 )
@@ -43,7 +44,7 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
         super().__init__(FilterType.WMTS, iface, crs)
 
         self.capabilities = capabilities
-        self.capabilities_url = f"https://wmts.geo.admin.ch/EPSG/{self.crs}/1.0.0/WMTSCapabilities.xml?lang={self.lang}"  # NOQA E231
+        self.capabilities_url = f"{WMTS_BASE_URL}/EPSG/{self.crs}/1.0.0/WMTSCapabilities.xml?lang={self.lang}"
 
         # do this on main thread only?
         if self.capabilities is None and iface is not None:

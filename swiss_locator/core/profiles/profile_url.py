@@ -1,5 +1,8 @@
+from swiss_locator.core.constants import PROFILE_URL
+
+
 def profile_url(geojson: str):
-    base_url = "https://api3.geo.admin.ch/rest/services/profile.json"
+    base_url = PROFILE_URL
     base_params = {
         "geom": geojson,
         "sr": "2056",

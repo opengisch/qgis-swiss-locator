@@ -32,6 +32,7 @@ from qgis.core import (
 )
 from qgis.gui import QgisInterface
 
+from swiss_locator.core.constants import WMS_BASE_URL
 from swiss_locator.core.filters.swiss_locator_filter import SwissLocatorFilter
 from swiss_locator.core.filters.filter_type import FilterType
 from swiss_locator.core.filters.map_geo_admin import map_geo_admin_url
@@ -154,7 +155,7 @@ class SwissLocatorFilterLayer(SwissLocatorFilter):
                     result.userData = WMSLayerResult(
                         layer=loc["attrs"]["layer"],
                         title=loc["attrs"]["title"],
-                        url="http://wms.geo.admin.ch/?VERSION%3D2.0.0",
+                        url=f"{WMS_BASE_URL}/?VERSION%3D2.0.0",
                     ).as_definition()
                     result.icon = QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
                     self.result_found = True

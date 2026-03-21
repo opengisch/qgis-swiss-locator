@@ -16,6 +16,7 @@ from qgis.core import (
 )
 from qgis.gui import QgisInterface
 
+from swiss_locator.core.constants import USER_AGENT
 from swiss_locator.core.filters.filter_type import FilterType
 from swiss_locator.core.filters.map_geo_admin_stac import (
     collections_to_searchable_strings,
@@ -65,7 +66,7 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
     fetching all collections and storing titles and ids in a searchable list.
     """
 
-    HEADERS = {b"User-Agent": b"Mozilla/5.0 QGIS Swiss Geoportal Stac Filter"}
+    HEADERS = {b"User-Agent": USER_AGENT}
 
     show_filter_widget = pyqtSignal(str)
 

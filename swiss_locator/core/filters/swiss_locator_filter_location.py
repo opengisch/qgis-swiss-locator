@@ -17,15 +17,11 @@
 """
 
 import json
-import os
-import sys
-import traceback
 
 from qgis.PyQt.QtCore import QUrl
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtNetwork import QNetworkRequest
 from qgis.core import (
-    Qgis,
     QgsLocatorResult,
     QgsPointXY,
     QgsGeometry,
@@ -34,6 +30,7 @@ from qgis.core import (
 )
 from qgis.gui import QgisInterface
 
+from swiss_locator.core.constants import MAP_SERVER_URL
 from swiss_locator.core.filters.filter_type import FilterType
 from swiss_locator.core.filters.map_geo_admin import map_geo_admin_url
 from swiss_locator.core.filters.swiss_locator_filter import SwissLocatorFilter
@@ -64,54 +61,40 @@ class SwissLocatorFilterLocation(SwissLocatorFilter):
         self.fetch_request(request, feedback, self.handle_content)
 
     def handle_content(self, content: str, feedback: QgsFeedback):
-        try:
-            data = json.loads(content)
-            for loc in data["results"]:
-                result = QgsLocatorResult()
-                result.filter = self
-                result.group = self.tr("Swiss Geoportal")
-                for key, val in loc["attrs"].items():
-                    self.dbg_info(f"{key}: {val}")
-                group_name, group_layer = self.group_info(loc["attrs"]["origin"])
-                if "layerBodId" in loc["attrs"]:
-                    self.dbg_info("layer: {}".format(loc["attrs"]["layerBodId"]))
-                if "featureId" in loc["attrs"]:
-                    self.dbg_info("feature: {}".format(loc["attrs"]["featureId"]))
+        data = json.loads(content)
+        for loc in data["results"]:
+            result = QgsLocatorResult()
+            result.filter = self
+            result.group = self.tr("Swiss Geoportal")
+            for key, val in loc["attrs"].items():
+                self.dbg_info(f"{key}: {val}")
+            group_name, group_layer = self.group_info(loc["attrs"]["origin"])
+            if "layerBodId" in loc["attrs"]:
+                self.dbg_info("layer: {}".format(loc["attrs"]["layerBodId"]))
+            if "featureId" in loc["attrs"]:
+                self.dbg_info("feature: {}".format(loc["attrs"]["featureId"]))
 
-                result.displayString = strip_tags(loc["attrs"]["label"])
-                # result.description = loc['attrs']['detail']
-                # if 'featureId' in loc['attrs']:
-                #     result.description = loc['attrs']['featureId']
-                result.group = group_name
-                result.userData = LocationResult(
-                    point=QgsPointXY(loc["attrs"]["y"], loc["attrs"]["x"]),
-                    bbox=self.box2geometry(loc["attrs"]["geom_st_box2d"]),
-                    layer=group_layer,
-                    feature_id=loc["attrs"]["featureId"]
-                    if "featureId" in loc["attrs"]
-                    else None,
-                    html_label=loc["attrs"]["label"],
-                ).as_definition()
-                result.icon = QIcon(get_icon_path("swiss_locator.png"))
-                self.result_found = True
-                self.resultFetched.emit(result)
-
-        except Exception as e:
-            self.info(str(e), Qgis.MessageLevel.Critical)
-            exc_type, exc_obj, exc_traceback = sys.exc_info()
-            filename = os.path.split(exc_traceback.tb_frame.f_code.co_filename)[1]
-            self.info(
-                f"{exc_type} {filename} {exc_traceback.tb_lineno}",
-                Qgis.MessageLevel.Critical,
-            )
-            self.info(
-                traceback.print_exception(exc_type, exc_obj, exc_traceback),
-                Qgis.MessageLevel.Critical,
-            )
+            result.displayString = strip_tags(loc["attrs"]["label"])
+            # result.description = loc['attrs']['detail']
+            # if 'featureId' in loc['attrs']:
+            #     result.description = loc['attrs']['featureId']
+            result.group = group_name
+            result.userData = LocationResult(
+                point=QgsPointXY(loc["attrs"]["y"], loc["attrs"]["x"]),
+                bbox=self.box2geometry(loc["attrs"]["geom_st_box2d"]),
+                layer=group_layer,
+                feature_id=loc["attrs"]["featureId"]
+                if "featureId" in loc["attrs"]
+                else None,
+                html_label=loc["attrs"]["label"],
+            ).as_definition()
+            result.icon = QIcon(get_icon_path("swiss_locator.png"))
+            self.result_found = True
+            self.resultFetched.emit(result)
 
     def fetch_feature(self, layer, feature_id):
         # Try to get more info
-        url = f"https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}"
+        url = f"{MAP_SERVER_URL}/{layer}/{feature_id}"
         params = {"lang": self.lang, "sr": self.crs}
         url = url_with_param(url, params)
         request = QNetworkRequest(QUrl(url))
