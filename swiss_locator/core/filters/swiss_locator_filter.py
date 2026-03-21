@@ -47,6 +47,11 @@ from qgis.core import (
 from qgis.gui import QgsRubberBand, QgisInterface
 
 from swiss_locator import DEBUG
+from swiss_locator.core.constants import (
+    MAP_GEO_ADMIN_URL,
+    MAP_SERVER_URL,
+    USER_AGENT,
+)
 from swiss_locator.core.filters.filter_type import FilterType
 from swiss_locator.core.language import get_language
 from swiss_locator.core.parameters import AVAILABLE_CRS
@@ -79,7 +84,7 @@ class InvalidBox(Exception):
 
 
 class SwissLocatorFilter(QgsLocatorFilter):
-    HEADERS = {b"User-Agent": b"Mozilla/5.0 QGIS Swiss Geoportal Locator Filter"}
+    HEADERS = {b"User-Agent": USER_AGENT}
 
     message_emitted = pyqtSignal(str, str, Qgis.MessageLevel, QWidget)
 
@@ -400,7 +405,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
             if "geo.admin.ch" in swiss_result.url.lower():
                 label.setText(
-                    '<a href="https://map.geo.admin.ch/'
+                    f'<a href="{MAP_GEO_ADMIN_URL}/'
                     f'?lang={self.lang}&bgLayer=ch.swisstopo.pixelkarte-farbe&layers={swiss_result.layer}">'
                     "Open layer in map.geo.admin.ch</a>"
                 )
@@ -546,7 +551,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
     def show_map_tip(self, layer, feature_id, point):
         if layer and feature_id:
-            url = f"https://api3.geo.admin.ch/rest/services/api/MapServer/{layer}/{feature_id}/htmlPopup"
+            url = f"{MAP_SERVER_URL}/{layer}/{feature_id}/htmlPopup"
             params = {"lang": self.lang, "sr": self.crs}
             url = url_with_param(url, params)
             self.dbg_info(url)

@@ -1,6 +1,6 @@
 from qgis.core import QgsStacCollection
 
-BASE_URL = "https://data.geo.admin.ch/api/stac/v1"
+from swiss_locator.core.constants import STAC_BASE_URL
 
 
 def collections_to_searchable_strings(collections: dict[str, QgsStacCollection]):
@@ -15,6 +15,6 @@ def collections_to_searchable_strings(collections: dict[str, QgsStacCollection])
 
 
 def map_geo_admin_stac_items_url(collection_id: str, limit: int):
-    url = f"{BASE_URL}/collections/{collection_id}/items"
+    url = f"{STAC_BASE_URL}/collections/{collection_id}/items"
     base_params = {"limit": str(limit)}
     return url, base_params

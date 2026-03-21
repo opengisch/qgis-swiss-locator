@@ -1,5 +1,8 @@
+from swiss_locator.core.constants import OPENDATA_SWISS_URL
+
+
 def opendata_swiss_url(search: str):
-    url = "https://opendata.swiss/api/3/action/package_search"
+    url = OPENDATA_SWISS_URL
     # Combine default search (benefits from Solr German stemming) with
     # explicit title wildcard (prefix match on unstemmed tokens).
     # E.g. "asia" is not a German stem so the default field misses
