@@ -4,6 +4,7 @@ from qgis.core import (
     QgsLocatorResult,
     QgsFeedback,
 )
+from swiss_locator.core.constants import VECTOR_TILES_BASE_URL
 from swiss_locator.core.filters.swiss_locator_filter import (
     SwissLocatorFilter,
 )
@@ -31,24 +32,25 @@ class SwissLocatorFilterVectorTiles(SwissLocatorFilter):
         return False
 
     def perform_fetch_results(self, search: str, feedback: QgsFeedback):
+        tiles_url = f"{VECTOR_TILES_BASE_URL}/tiles/ch.swisstopo.base.vt/v1.0.0/{{z}}/{{x}}/{{y}}.pbf"
         data = {
             "base map": {
                 "title": "Base map",
                 "description": "",
-                "url": "https://vectortiles.geo.admin.ch/tiles/ch.swisstopo.base.vt/v1.0.0/{z}/{x}/{y}.pbf",
-                "style": "https://vectortiles.geo.admin.ch/styles/ch.swisstopo.basemap.vt/style.json",
+                "url": tiles_url,
+                "style": f"{VECTOR_TILES_BASE_URL}/styles/ch.swisstopo.basemap.vt/style.json",
             },
             "light base map": {
                 "title": "Light base map",
                 "description": "",
-                "url": "https://vectortiles.geo.admin.ch/tiles/ch.swisstopo.base.vt/v1.0.0/{z}/{x}/{y}.pbf",
-                "style": "https://vectortiles.geo.admin.ch/styles/ch.swisstopo.lightbasemap.vt/style.json",
+                "url": tiles_url,
+                "style": f"{VECTOR_TILES_BASE_URL}/styles/ch.swisstopo.lightbasemap.vt/style.json",
             },
             "imagery base map": {
                 "title": "Imagery base map",
                 "description": "",
-                "url": "https://vectortiles.geo.admin.ch/tiles/ch.swisstopo.base.vt/v1.0.0/{z}/{x}/{y}.pbf",
-                "style": "https://vectortiles.geo.admin.ch/styles/ch.swisstopo.imagerybasemap.vt/style.json",
+                "url": tiles_url,
+                "style": f"{VECTOR_TILES_BASE_URL}/styles/ch.swisstopo.imagerybasemap.vt/style.json",
             },
         }
 
