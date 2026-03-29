@@ -21,6 +21,7 @@
 
 import os
 
+from qgis.PyQt.QtCore import QEventLoop, QTimer, QUrl
 from qgis.core import (
     QgsTask,
     QgsBox3D,
@@ -59,7 +60,6 @@ class STACClient:
         if self.CACHE.get(initUrl):
             return self.CACHE.get(initUrl)
 
-        errorMsg = ""
         collections = []
         url = initUrl
 
@@ -67,13 +67,10 @@ class STACClient:
             if task.isCanceled():
                 raise Exception("User canceled")
 
-            response: QgsStacCollectionList = self.controller.fetchCollections(
-                url, errorMsg
-            )
+            response = self._fetchCollectionsAsync(task, url)
 
-            if errorMsg or not response:
-                task.exception = errorMsg
-                raise Exception(task.exception)
+            if not response:
+                raise Exception(task.exception or "Failed to fetch collections")
 
             collections += response.takeCollections()
             url = None
@@ -88,6 +85,50 @@ class STACClient:
             self.CACHE[initUrl] = collections
 
         return collections
+
+    def _fetchCollectionsAsync(
+        self, task: QgsTask, url: str
+    ) -> QgsStacCollectionList | None:
+        """Fetch collections asynchronously so the request can be cancelled
+        when the task is cancelled (e.g. during QGIS shutdown)."""
+        loop = QEventLoop()
+        result: dict = {"response": None, "error": ""}
+
+        def on_finished(request_id: int, error_message: str):
+            if request_id != req_id:
+                return
+            result["error"] = error_message
+            result["response"] = self.controller.takeCollections(request_id)
+            loop.quit()
+
+        self.controller.finishedCollectionsRequest.connect(on_finished)
+        req_id = self.controller.fetchCollectionsAsync(QUrl(url))
+
+        # Poll for task cancellation while waiting for the network reply
+        timer = QTimer()
+        timer.setInterval(200)
+
+        def check_canceled():
+            if task.isCanceled():
+                self.controller.cancelPendingAsyncRequests()
+                loop.quit()
+
+        timer.timeout.connect(check_canceled)
+        timer.start()
+
+        loop.exec()
+
+        timer.stop()
+        self.controller.finishedCollectionsRequest.disconnect(on_finished)
+
+        if task.isCanceled():
+            raise Exception("User canceled")
+
+        if result["error"]:
+            task.exception = result["error"]
+            raise Exception(task.exception)
+
+        return result["response"]
 
     def fetchItems(
         self,
