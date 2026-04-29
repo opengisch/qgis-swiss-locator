@@ -19,6 +19,8 @@ Similarly to the online geoportal [https://map.geo.admin.ch](https://map.geo.adm
 * Features (search through features descriptions)
 * Downloadable files from the Swisstopo STAC catalog
 
+Elevation profiles can be displayed in QGIS and included in layouts. These profiles use the Elevation Profile service (swissALTI3D height model).
+
 ## How
 
 Type the text to search in the locator bar.
@@ -50,6 +52,13 @@ double clicking opens a filter dialog to further narrow down the search.
 Users can do a spatial search, as well as filter file type, timestamp, raster
 resolution, and more.
 ![File filter](doc/stac_filter_dialog.png)
+
+For displaying **elevation profiles**:
+ 1. Go to View -> Elevation Profiles -> New Elevation Profile.
+2. Draw a line on the map using the `Capture Curve` tool from the Elevation Profile widget.
+3. Optionally, you can change both the profile visibility and the rendering order in the Elevation Profile's Layer Tree.
+
+![Elevation profile](doc/elevation_profile.png)
 
 ## More
 
