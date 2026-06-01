@@ -8,7 +8,7 @@ MAP_SERVER_URL = f"{API_BASE_URL}/rest/services/api/MapServer"
 PROFILE_URL = f"{API_BASE_URL}/rest/services/profile.json"
 
 WMTS_BASE_URL = "https://wmts.geo.admin.ch"
-WMS_BASE_URL = "http://wms.geo.admin.ch"
+WMS_BASE_URL = "https://wms.geo.admin.ch"
 
 STAC_BASE_URL = "https://data.geo.admin.ch/api/stac/v1"
 
