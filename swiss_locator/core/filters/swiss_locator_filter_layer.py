@@ -116,12 +116,14 @@ class SwissLocatorFilterLayer(SwissLocatorFilter):
                             result.description = url
 
                             if res["title"]["de"] == "GetMap":
-                                layers = parse_qs(url_components.query)["LAYERS"]
+                                query = parse_qs(url_components.query)
+                                layers = query["LAYERS"]
+                                version = query.get("VERSION", ["1.3.0"])[0]
                                 self.info(layers)
                                 result.userData = WMSLayerResult(
                                     layer=layers[0],
                                     title=display_name,
-                                    url=wms_url,
+                                    url=f"{wms_url}VERSION%3D{version}",
                                 ).as_definition()
                                 self.result_found = True
                                 self.resultFetched.emit(result)
@@ -155,7 +157,7 @@ class SwissLocatorFilterLayer(SwissLocatorFilter):
                     result.userData = WMSLayerResult(
                         layer=loc["attrs"]["layer"],
                         title=loc["attrs"]["title"],
-                        url=f"{WMS_BASE_URL}/?VERSION%3D2.0.0",
+                        url=f"{WMS_BASE_URL}/?VERSION%3D1.3.0",
                     ).as_definition()
                     result.icon = QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
                     self.result_found = True
@@ -169,6 +171,9 @@ class SwissLocatorFilterLayer(SwissLocatorFilter):
         # Get xml namespace
         match = re.match(r"\{.*\}", capabilities.tag)
         namespace = match.group(0) if match else ""
+        # Extract WMS version from capabilities root (defaults to 1.3.0)
+        version = capabilities.get("version", "1.3.0")
+        wms_url = f"{wms_url}VERSION%3D{version}"
         search = search.lower()
 
         # Search for layers containing the search term in the name or title
