@@ -274,7 +274,7 @@ class TestSTACResultProperties(unittest.TestCase):
             "d",
             "image/tiff; profile=cloud-optimized",
             "http://example.com",
-            path="/tmp/local.tif",
+            path="/home/user/local.tif",
         )
         self.assertFalse(r.is_streamed)
 
