@@ -19,13 +19,13 @@
 import json
 import re
 from urllib.parse import urlparse, parse_qs
-import xml.etree.ElementTree as etree
 
 
 from qgis.PyQt.QtCore import QUrl
 from qgis.PyQt.QtNetwork import QNetworkRequest
 
 from qgis.core import (
+    Qgis,
     QgsLocatorResult,
     QgsFeedback,
     QgsApplication,
@@ -38,6 +38,7 @@ from swiss_locator.core.filters.filter_type import FilterType
 from swiss_locator.core.filters.map_geo_admin import map_geo_admin_url
 from swiss_locator.core.filters.opendata_swiss import opendata_swiss_url
 from swiss_locator.core.results import WMSLayerResult
+from swiss_locator.utils import safe_xml
 
 
 class SwissLocatorFilterLayer(SwissLocatorFilter):
@@ -166,7 +167,18 @@ class SwissLocatorFilterLayer(SwissLocatorFilter):
     def handle_capabilities_response(self, content, feedback: QgsFeedback, data):
         search = data[0]
         wms_url = data[1]
-        capabilities = etree.fromstring(content)
+        # The capabilities come from arbitrary servers advertised by
+        # opendata.swiss, so a broken or hostile document must not break search.
+        try:
+            capabilities = safe_xml.fromstring(content)
+        except safe_xml.ParseError as e:
+            self.info(
+                self.tr("Could not parse the capabilities of {url}: {error}").format(
+                    url=wms_url, error=e
+                ),
+                Qgis.MessageLevel.Warning,
+            )
+            return
 
         # Get xml namespace
         match = re.match(r"\{.*\}", capabilities.tag)

@@ -34,8 +34,8 @@ from swiss_locator.core.filters.swiss_locator_filter import (
 )
 from swiss_locator.core.filters.filter_type import FilterType
 from swiss_locator.core.results import WMSLayerResult
+from swiss_locator.utils import safe_xml
 
-import xml.etree.ElementTree as ET
 import urllib.parse
 
 
@@ -63,7 +63,7 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
                 self.info(
                     f"Swisstopo capabilities already downloaded. Reading from {file_path}"
                 )
-                self.capabilities = ET.parse(file_path).getroot()
+                self.capabilities = self.read_capabilities_file(file_path)
             else:
                 self.content.download()
 
@@ -78,7 +78,18 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
                 reply.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute)
                 == 200
             ):  # other codes are handled by NetworkAccessManager
-                self.capabilities = ET.fromstring(reply.content().data().decode("utf8"))
+                try:
+                    self.capabilities = safe_xml.fromstring(
+                        reply.content().data().decode("utf8")
+                    )
+                except safe_xml.ParseError as e:
+                    self.info(
+                        self.tr(
+                            "The Swiss Locator filter for WMTS layers could not parse capabilities."
+                        )
+                        + f" {e}",
+                        Qgis.MessageLevel.Critical,
+                    )
             else:
                 self.info(
                     self.tr(
@@ -94,6 +105,20 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
     def prefix(self):
         return "chw"
 
+    def read_capabilities_file(self, file_path: str):
+        """Parse a downloaded capabilities document, returning None if it cannot be read."""
+        try:
+            return safe_xml.parse_file(file_path)
+        except (safe_xml.ParseError, OSError) as e:
+            self.info(
+                self.tr(
+                    "The Swiss Locator filter for WMTS layers could not parse capabilities."
+                )
+                + f" {e}",
+                Qgis.MessageLevel.Critical,
+            )
+            return None
+
     def handle_capabilities_response(self):
         if (
             self.content.status() == QgsFetchedContent.ContentStatus.Finished
@@ -102,7 +127,7 @@ class SwissLocatorFilterWMTS(SwissLocatorFilter):
             self.info(
                 f"Swisstopo capabilities has been downloaded. Reading from {self.content.filePath()}"
             )
-            self.capabilities = ET.parse(self.content.filePath()).getroot()
+            self.capabilities = self.read_capabilities_file(self.content.filePath())
         else:
             self.info(
                 "The Swiss Locator filter for WMTS layers could not fetch capabilities",
