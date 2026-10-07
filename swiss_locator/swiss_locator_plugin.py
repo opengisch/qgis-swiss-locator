@@ -40,6 +40,7 @@ from swiss_locator.core.filters.swiss_locator_filter_vector_tiles import (
 from swiss_locator.core.filters.swiss_locator_filter_wmts import SwissLocatorFilterWMTS
 from swiss_locator.core.language import get_language
 from swiss_locator.map_geo_admin.layers import SEARCHABLE_LAYERS
+from swiss_locator.processing.provider import SwissLocatorProcessingProvider
 from swiss_locator.swissgeodownloader.ui.sgd_dockwidget import (
     SwissGeoDownloaderDockWidget,
 )
@@ -68,12 +69,23 @@ class SwissLocatorPlugin:
 
         self.locator_filters = []
         self.stac_filter_widget: QgsDockWidget | None = None
+        self.provider: SwissLocatorProcessingProvider | None = None
 
         if Qgis.QGIS_VERSION_INT >= 33700:
             # Only on QGIS 3.37+ we'll be able to register profile sources
             self.profile_source = SwissProfileSource()
 
+    def initProcessing(self):
+        # Called by QGIS before initGui() (hasProcessingProvider=yes in the
+        # metadata) and by qgis_process, hence the guard against a double
+        # registration
+        if self.provider is None:
+            self.provider = SwissLocatorProcessingProvider()
+            QgsApplication.processingRegistry().addProvider(self.provider)
+
     def initGui(self):
+        self.initProcessing()
+
         # Update the data published by the plugin on GitHub Pages, in the background
         for remote_data_file in (SEARCHABLE_LAYERS, WMS_LAYERS_INDEX):
             remote_data_file.refresh()
@@ -134,6 +146,10 @@ class SwissLocatorPlugin:
                 self.close_stac_filter_widget
             )
             self.stac_filter_widget.deleteLater()
+
+        if self.provider is not None:
+            QgsApplication.processingRegistry().removeProvider(self.provider)
+            self.provider = None
 
         QgsSettingsTree.unregisterPluginTreeNode(PLUGIN_NAME)
 
