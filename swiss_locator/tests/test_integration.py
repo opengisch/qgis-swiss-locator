@@ -9,9 +9,16 @@ running X server (or xvfb) and network access.
 import json
 
 from qgis.PyQt.QtTest import QSignalSpy
-from qgis.core import QgsLocator, QgsLocatorContext
+from qgis.core import (
+    QgsCoordinateTransformContext,
+    QgsGeocoderContext,
+    QgsLocator,
+    QgsLocatorContext,
+)
 from qgis.testing import start_app, unittest
 from qgis.testing.mocked import get_iface
+
+from swiss_locator.core.geocoder.swiss_geocoder import SwissGeocoder
 
 from swiss_locator.core.filters.swiss_locator_filter_layer import (
     SwissLocatorFilterLayer,
@@ -336,6 +343,51 @@ class TestLocatorFilterLayer(unittest.TestCase):
         self.assertTrue(
             any("No result" in r["displayString"] for r in results),
             f"Expected 'No result found.' for gibberish, got: {results}",
+        )
+
+
+# ---------------------------------------------------------------------------
+# Geocoder (live SearchServer requests)
+# ---------------------------------------------------------------------------
+
+
+class TestGeocoderIntegration(unittest.TestCase):
+    """Geocode real addresses with the SearchServer API."""
+
+    def _geocode(self, address, **kwargs):
+        geocoder = SwissGeocoder(**kwargs)
+        return geocoder.geocodeString(
+            address, QgsGeocoderContext(QgsCoordinateTransformContext())
+        )
+
+    def test_building_address_lv95(self):
+        results = self._geocode("Seftigenstrasse 264, 3084 Wabern")
+        self.assertGreaterEqual(len(results), 1)
+        best = results[0]
+        self.assertTrue(best.isValid(), best.error())
+        self.assertEqual(best.additionalAttributes()["geocode_quality"], "exact")
+        self.assertEqual(best.description(), "Seftigenstrasse 264 3084 Wabern")
+        point = best.geometry().asPoint()
+        self.assertAlmostEqual(point.x(), 2600968.668, delta=1)
+        self.assertAlmostEqual(point.y(), 1197426.954, delta=1)
+
+    def test_building_address_lv03(self):
+        results = self._geocode("Rue du Stand 15, 1204 Genève", sr="21781", lang="fr")
+        self.assertGreaterEqual(len(results), 1)
+        best = results[0]
+        self.assertTrue(best.isValid(), best.error())
+        self.assertEqual(best.crs().authid(), "EPSG:21781")
+        self.assertEqual(best.additionalAttributes()["geocode_quality"], "exact")
+        point = best.geometry().asPoint()
+        # LV03 coordinates of the building, from map.geo.admin.ch
+        self.assertAlmostEqual(point.x(), 499475, delta=5)
+        self.assertAlmostEqual(point.y(), 117710, delta=5)
+
+    def test_gibberish_has_no_exact_match(self):
+        results = self._geocode("xyzzy98765qqq")
+        self.assertTrue(all(r.isValid() for r in results))
+        self.assertFalse(
+            any(r.additionalAttributes()["geocode_quality"] == "exact" for r in results)
         )
 
 
