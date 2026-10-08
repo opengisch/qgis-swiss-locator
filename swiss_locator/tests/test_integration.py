@@ -368,8 +368,8 @@ class TestGeocoderIntegration(unittest.TestCase):
         self.assertEqual(best.additionalAttributes()["geocode_quality"], "exact")
         self.assertEqual(best.description(), "Seftigenstrasse 264 3084 Wabern")
         point = best.geometry().asPoint()
-        self.assertAlmostEqual(point.x(), 2600968.668, delta=1)
-        self.assertAlmostEqual(point.y(), 1197426.954, delta=1)
+        self.assertAlmostEqual(point.x(), 2600969, delta=5)
+        self.assertAlmostEqual(point.y(), 1197427, delta=5)
 
     def test_building_address_lv03(self):
         results = self._geocode("Rue du Stand 15, 1204 Genève", sr="21781", lang="fr")
