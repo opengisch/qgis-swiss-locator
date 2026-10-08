@@ -21,6 +21,8 @@ Similarly to the online geoportal [https://map.geo.admin.ch](https://map.geo.adm
 
 Elevation profiles can be displayed in QGIS and included in layouts. These profiles use the Elevation Profile service (swissALTI3D height model).
 
+Tables of addresses (for instance a CSV file) can be geocoded in bulk into a point layer with the **Geocode addresses** Processing algorithm, see [Batch geocoding](#batch-geocoding).
+
 ## How
 
 Type the text to search in the locator bar.
@@ -59,6 +61,43 @@ For displaying **elevation profiles**:
 3. Optionally, you can change both the profile visibility and the rendering order in the Elevation Profile's Layer Tree.
 
 ![Elevation profile](doc/elevation_profile.png)
+
+### Batch geocoding
+
+The plugin adds a **Swiss Locator** provider to the Processing toolbox with the algorithm
+**Geocode addresses (geo.admin.ch)**. It geocodes every row of a layer or table and writes a point
+layer that keeps the source attributes.
+
+1. Load the table of addresses, e.g. a CSV file through Layer -> Add Layer -> Add Delimited Text Layer
+   with the geometry definition set to *No geometry*.
+2. Open the Processing toolbox and run Swiss Locator -> Geocode addresses (geo.admin.ch).
+3. Set the **Address** expression: either the column holding the full address, or a concatenation of
+   columns such as `concat("street", ' ', "number", ', ', "zip", ' ', "city")`.
+4. Optionally restrict the search to an extent, choose the output CRS (LV95 by default) or search
+   other kinds of locations than building addresses (parcels, postal codes, municipalities...).
+
+![Geocode addresses](doc/geocode_addresses.png)
+
+Each output feature gets the following attributes in addition to the source columns:
+
+* `geocode_status`: `matched`, `unmatched`, `empty` (no address in the row) or `error` (the request
+  failed, the reason is given in `geocode_message`). Unmatched and empty rows are kept without
+  geometry unless *Keep unmatched rows* is unchecked.
+* `geocode_quality`: `exact` when every word of the address is found in the result, `fuzzy`
+  otherwise. The search service is fuzzy and almost always returns a location, even for typos or
+  unknown addresses, so check this attribute before trusting a result.
+* `geocode_candidates`: number of locations returned by the service. More than one means the
+  address is ambiguous; the *Maximum candidates per address* parameter writes several of them, best
+  first, with their rank in `geocode_candidate`.
+* `geocode_label`, `geocode_detail`, `geocode_origin`, `geocode_feature_id` (EGID and EDID of the
+  building), `geocode_rank` and `geocode_weight` as returned by the service.
+
+The algorithm is also available from the model designer, the batch interface and `qgis_process`.
+
+The geo.admin.ch services are free of charge but subject to a
+[fair use policy](https://www.geo.admin.ch/en/general-terms-of-use-fsdi) of about 20 requests per
+minute on average. Identical addresses are requested only once and a configurable pause is applied
+between requests. Keep it for large tables and do not run unattended bulk jobs.
 
 ## More
 
