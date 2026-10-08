@@ -42,7 +42,7 @@ class SwissLocatorProcessingProvider(QgsProcessingProvider):
         return "Swiss Locator"
 
     def longName(self) -> str:
-        return "Swiss Locator (geo.admin.ch)"
+        return "Swiss Locator"
 
     def icon(self) -> QIcon:
         return QIcon(ICON_PATH)
