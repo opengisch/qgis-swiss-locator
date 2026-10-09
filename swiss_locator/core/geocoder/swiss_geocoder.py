@@ -460,6 +460,8 @@ class SwissGeocoder(QgsGeocoderInterface):
             self._last_request = time.monotonic()
         self.consecutive_errors = 0
 
-        results = self.json_to_results(data, query)
+        # Only the returned locations are kept, the candidates count carried
+        # by each of them still reflects the whole response
+        results = self.json_to_results(data, query)[: self.max_results]
         self._cache[key] = results
-        return results[: self.max_results]
+        return results
