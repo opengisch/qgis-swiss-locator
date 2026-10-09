@@ -36,7 +36,7 @@ from swiss_locator.core.filters.map_geo_admin import map_geo_admin_url
 from swiss_locator.core.filters.swiss_locator_filter import SwissLocatorFilter
 from swiss_locator.core.results import LocationResult
 from swiss_locator.utils.html_stripper import strip_tags
-from swiss_locator.utils.utils import url_with_param, get_icon_path
+from swiss_locator.utils.utils import box2geometry, url_with_param, get_icon_path
 
 
 class SwissLocatorFilterLocation(SwissLocatorFilter):
@@ -81,7 +81,7 @@ class SwissLocatorFilterLocation(SwissLocatorFilter):
             result.group = group_name
             result.userData = LocationResult(
                 point=QgsPointXY(loc["attrs"]["y"], loc["attrs"]["x"]),
-                bbox=self.box2geometry(loc["attrs"]["geom_st_box2d"]),
+                bbox=box2geometry(loc["attrs"]["geom_st_box2d"]),
                 layer=group_layer,
                 feature_id=loc["attrs"]["featureId"]
                 if "featureId" in loc["attrs"]

@@ -20,9 +20,6 @@
 """
 
 # Geocoder backed by the geo.admin.ch SearchServer API.
-#
-# This module is used from Processing worker threads and from qgis_process,
-# so it must stay free of any qgis.gui / QtWidgets import.
 
 import json
 import re
@@ -52,6 +49,7 @@ from swiss_locator.core.constants import USER_AGENT
 from swiss_locator.core.filters.map_geo_admin import map_geo_admin_url
 from swiss_locator.core.parameters import AVAILABLE_CRS
 from swiss_locator.utils.html_stripper import strip_tags
+from swiss_locator.utils.utils import InvalidBox, box2geometry
 
 # Origins accepted by the SearchServer "locations" search, see
 # https://api3.geo.admin.ch/services/sdiservices.html#search
@@ -85,7 +83,6 @@ QUALITY_FUZZY = "fuzzy"
 # being compared.
 _UMLAUTS = str.maketrans({"ä": "ae", "ö": "oe", "ü": "ue", "ß": "ss"})
 _NON_WORD = re.compile(r"[^\w]+")
-_NUMBER = re.compile(r"-?\d+(?:\.\d+)?")
 
 
 class GeocoderRequestError(Exception):
@@ -146,20 +143,6 @@ def match_quality(query: str, detail: str | None, label: str | None) -> str:
     if query_tokens <= tokens(detail) | tokens(label):
         return QUALITY_EXACT
     return QUALITY_FUZZY
-
-
-def parse_box2d(box: str | None) -> QgsRectangle | None:
-    """
-    Parses the "geom_st_box2d" attribute, e.g. "BOX(2600968.668 1197426.954,2600968.668 1197426.954)".
-    :return: the rectangle or None if the value cannot be parsed
-    """
-    if not box:
-        return None
-    numbers = _NUMBER.findall(box)
-    if len(numbers) != 4:
-        return None
-    xmin, ymin, xmax, ymax = (float(n) for n in numbers)
-    return QgsRectangle(xmin, ymin, xmax, ymax)
 
 
 class SwissGeocoder(QgsGeocoderInterface):
@@ -310,7 +293,10 @@ class SwissGeocoder(QgsGeocoderInterface):
             attrs = item.get("attrs", {})
             label = attrs.get("label") or ""
             detail = attrs.get("detail") or ""
-            box = parse_box2d(attrs.get("geom_st_box2d"))
+            try:
+                box = box2geometry(attrs.get("geom_st_box2d"))
+            except InvalidBox:
+                box = None
             if box is not None and box.width() == 0 and box.height() == 0:
                 # Single location: the box carries the full precision coordinates
                 point = QgsPointXY(box.xMinimum(), box.yMinimum())
