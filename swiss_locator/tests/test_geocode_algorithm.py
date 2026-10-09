@@ -132,9 +132,7 @@ class TestProvider(unittest.TestCase):
         try:
             algorithm = registry.algorithmById("swiss_locator:geocodeaddresses")
             self.assertIsNotNone(algorithm)
-            self.assertEqual(
-                algorithm.displayName(), "Geocode addresses (geo.admin.ch)"
-            )
+            self.assertEqual(algorithm.displayName(), "Geocode addresses")
             self.assertFalse(algorithm.icon().isNull())
         finally:
             registry.removeProvider(provider)

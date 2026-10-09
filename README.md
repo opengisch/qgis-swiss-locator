@@ -65,12 +65,12 @@ For displaying **elevation profiles**:
 ### Batch geocoding
 
 The plugin adds a **Swiss Locator** provider to the Processing toolbox with the algorithm
-**Geocode addresses (geo.admin.ch)**. It geocodes every row of a layer or table and writes a point
+**Geocode addresses**. It geocodes every row of a layer or table and writes a point
 layer that keeps the source attributes. It is built on the batch geocoding algorithm of QGIS.
 
 1. Load the table of addresses, e.g. a CSV file through Layer -> Add Layer -> Add Delimited Text Layer
    with the geometry definition set to *No geometry*.
-2. Open the Processing toolbox and run Swiss Locator -> Geocode addresses (geo.admin.ch).
+2. Open the Processing toolbox and run Swiss Locator -> Geocode addresses.
 3. Set the **Address field**: the column holding the full address, such as
    `Seftigenstrasse 264, 3084 Wabern`. When the address is split over several columns, build it
    first with the field calculator, e.g. `concat("street", ' ', "number", ', ', "zip", ' ', "city")`.
