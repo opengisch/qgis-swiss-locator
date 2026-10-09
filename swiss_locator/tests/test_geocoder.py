@@ -503,6 +503,18 @@ class TestSwissGeocoderOptions(unittest.TestCase):
         self.assertEqual(sleep.call_count, 1)
         self.assertLessEqual(sleep.call_args[0][0], 0.05)
 
+    def test_cancelled_pause_sends_no_request(self):
+        geocoder = SwissGeocoder(delay_s=0.05)
+        self.geocode(geocoder, "Bern")
+        feedback = QgsFeedback()
+        feedback.cancel()
+        with patch.object(SwissGeocoder, "fetch_json", side_effect=self.fetch):
+            results = geocoder.geocodeString("Thun", context(), feedback)
+        self.assertEqual(len(self.requests), 1)
+        self.assertEqual(len(results), 1)
+        self.assertFalse(results[0].isValid())
+        self.assertEqual(results[0].error(), "Request cancelled")
+
 
 # ---------------------------------------------------------------------------
 # Network layer: retries, client errors and cancellation
