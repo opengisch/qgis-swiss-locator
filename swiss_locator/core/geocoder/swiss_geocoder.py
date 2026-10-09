@@ -86,6 +86,10 @@ FIELD_PREFIX = "geocode_"
 QUALITY_EXACT = "exact"
 QUALITY_FUZZY = "fuzzy"
 
+# Additional attribute holding the label as returned by the service, with
+# its HTML markup. It is not an appended field, batch geocoding ignores it.
+HTML_LABEL_ATTRIBUTE = "html_label"
+
 # The "detail" attribute returned by the service transliterates umlauts the
 # Swiss way (ö -> oe), so queries are normalised in the same manner before
 # being compared.
@@ -402,6 +406,7 @@ class SwissGeocoder(QgsGeocoderInterface):
                     else None,
                     f"{FIELD_PREFIX}rank": attrs.get("rank"),
                     f"{FIELD_PREFIX}weight": item.get("weight"),
+                    HTML_LABEL_ATTRIBUTE: label,
                 }
             )
             results.append(result)

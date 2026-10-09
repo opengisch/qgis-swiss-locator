@@ -24,6 +24,7 @@ from qgis.testing import start_app, unittest
 from swiss_locator.core.constants import SEARCH_URL
 from swiss_locator.core.geocoder import swiss_geocoder
 from swiss_locator.core.geocoder.swiss_geocoder import (
+    HTML_LABEL_ATTRIBUTE,
     MAX_API_LIMIT,
     QUALITY_EXACT,
     QUALITY_FUZZY,
@@ -246,7 +247,11 @@ class TestSwissGeocoderParse(unittest.TestCase):
             WABERN_RESPONSE, "Seftigenstrasse 264 Wabern"
         )[0]
         attributes = result.additionalAttributes()
-        self.assertEqual(set(attributes.keys()), set(SwissGeocoder.FIELD_NAMES))
+        self.assertEqual(
+            set(attributes.keys()),
+            set(SwissGeocoder.FIELD_NAMES) | {HTML_LABEL_ATTRIBUTE},
+        )
+        self.assertEqual(attributes[HTML_LABEL_ATTRIBUTE], WABERN_LABEL)
         self.assertEqual(attributes["geocode_quality"], QUALITY_EXACT)
         self.assertEqual(attributes["geocode_label"], "Seftigenstrasse 264 3084 Wabern")
         self.assertEqual(attributes["geocode_detail"], WABERN_DETAIL)
