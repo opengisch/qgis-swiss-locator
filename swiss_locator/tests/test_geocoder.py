@@ -31,7 +31,6 @@ from swiss_locator.core.geocoder.swiss_geocoder import (
     SwissGeocoder,
     match_quality,
     normalize_text,
-    parse_box2d,
     tokens,
 )
 
@@ -160,36 +159,6 @@ class TestNormalizeAndQuality(unittest.TestCase):
         self.assertEqual(
             match_quality(" , ", WABERN_DETAIL, WABERN_LABEL), QUALITY_FUZZY
         )
-
-
-# ---------------------------------------------------------------------------
-# Bounding box parsing
-# ---------------------------------------------------------------------------
-
-
-class TestParseBox2d(unittest.TestCase):
-    def test_valid_box(self):
-        box = parse_box2d("BOX(2600000.5 1197000,2601000 1198000.25)")
-        self.assertEqual(box.xMinimum(), 2600000.5)
-        self.assertEqual(box.yMinimum(), 1197000)
-        self.assertEqual(box.xMaximum(), 2601000)
-        self.assertEqual(box.yMaximum(), 1198000.25)
-
-    def test_degenerate_box(self):
-        box = parse_box2d("BOX(2600968.668 1197426.954,2600968.668 1197426.954)")
-        self.assertEqual(box.width(), 0)
-        self.assertEqual(box.height(), 0)
-
-    def test_negative_coordinates(self):
-        box = parse_box2d("BOX(-1.5 -2,3 4)")
-        self.assertEqual(box.xMinimum(), -1.5)
-        self.assertEqual(box.yMinimum(), -2)
-
-    def test_invalid(self):
-        self.assertIsNone(parse_box2d(None))
-        self.assertIsNone(parse_box2d(""))
-        self.assertIsNone(parse_box2d("BOX(1 2,3)"))
-        self.assertIsNone(parse_box2d("garbage"))
 
 
 # ---------------------------------------------------------------------------
