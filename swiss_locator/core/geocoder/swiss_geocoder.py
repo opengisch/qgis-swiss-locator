@@ -448,7 +448,8 @@ class SwissGeocoder(QgsGeocoderInterface):
 
         if self._last_request is not None and self.delay_s > 0:
             elapsed = time.monotonic() - self._last_request
-            sleep_cancellable(self.delay_s - elapsed, feedback)
+            if not sleep_cancellable(self.delay_s - elapsed, feedback):
+                return [QgsGeocoderResult.errorResult("Request cancelled")]
         try:
             data = self.fetch_json(self.request(query, bbox), feedback)
         except GeocoderRequestError as e:
