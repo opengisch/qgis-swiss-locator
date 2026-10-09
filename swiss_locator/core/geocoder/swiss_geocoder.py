@@ -120,7 +120,10 @@ def normalize_text(text: str | None) -> str:
     """
     if not text:
         return ""
-    text = strip_tags(text).casefold().translate(_UMLAUTS)
+    # Compose decomposed characters (e.g. "u" + combining diaeresis) first,
+    # otherwise they would not match the precomposed umlauts to transliterate
+    text = unicodedata.normalize("NFC", strip_tags(text))
+    text = text.casefold().translate(_UMLAUTS)
     text = unicodedata.normalize("NFKD", text)
     text = "".join(c for c in text if not unicodedata.combining(c))
     return " ".join(_NON_WORD.sub(" ", text).split())
