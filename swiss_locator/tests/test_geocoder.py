@@ -108,6 +108,11 @@ class TestNormalizeAndQuality(unittest.TestCase):
             normalize_text("Zürich Köniz Füllinsdorf"), "zuerich koeniz fuellinsdorf"
         )
 
+    def test_transliterates_decomposed_umlauts(self):
+        # "u" followed by a combining diaeresis, as produced e.g. by macOS
+        self.assertEqual(normalize_text("Zu\u0308rich"), "zuerich")
+        self.assertEqual(normalize_text("Zu\u0308rich"), normalize_text("Zürich"))
+
     def test_strips_accents(self):
         self.assertEqual(normalize_text("Genève Délémont"), "geneve delemont")
 
