@@ -11,6 +11,8 @@ from qgis.PyQt.QtCore import QUrlQuery
 from qgis.core import (
     QgsApplication,
     QgsFeature,
+    QgsGeometry,
+    QgsPointXY,
     QgsProcessing,
     QgsProcessingContext,
     QgsProcessingFeedback,
@@ -20,12 +22,12 @@ from qgis.core import (
 from qgis.testing import start_app, unittest
 
 from swiss_locator.core.geocoder.swiss_geocoder import (
+    MAX_CONSECUTIVE_ERRORS,
     QUALITY_EXACT,
     GeocoderRequestError,
     SwissGeocoder,
 )
 from swiss_locator.processing.geocode_addresses_algorithm import (
-    MAX_CONSECUTIVE_ERRORS,
     GeocodeAddressesAlgorithm,
 )
 from swiss_locator.processing.provider import SwissLocatorProcessingProvider
@@ -40,42 +42,33 @@ from swiss_locator.tests.test_geocoder import (
 
 start_app()
 
-ADDRESS_EXPRESSION = 'concat("street", \' \', "number", \', \', "zip", \' \', "city")'
-APPENDED_FIELDS = (
-    "geocode_query",
-    "geocode_status",
-    "geocode_candidates",
-    "geocode_candidate",
-    "geocode_quality",
-    "geocode_label",
-    "geocode_detail",
-    "geocode_origin",
-    "geocode_feature_id",
-    "geocode_rank",
-    "geocode_weight",
-    "geocode_message",
-)
 
-
-def address_table(rows) -> QgsVectorLayer:
-    """Builds a geometry-less table with street, number, zip and city columns."""
+def address_table(rows, geometry="None") -> QgsVectorLayer:
+    """
+    Builds a table with an address and a remark column.
+    :param rows: (address, remark) tuples, or (address, remark, QgsPointXY)
+        when the layer has a geometry
+    :param geometry: the memory provider geometry definition, e.g. "Point?crs=EPSG:4326"
+    """
     layer = QgsVectorLayer(
-        "None?field=street:string&field=number:string&field=zip:string&field=city:string",
+        f"{geometry}{'&' if '?' in geometry else '?'}field=address:string&field=remark:string",
         "addresses",
         "memory",
     )
     for row in rows:
         feature = QgsFeature(layer.fields())
-        feature.setAttributes(list(row))
+        feature.setAttributes(list(row[:2]))
+        if len(row) > 2:
+            feature.setGeometry(QgsGeometry.fromPointXY(row[2]))
         layer.dataProvider().addFeature(feature)
     return layer
 
 
 DEFAULT_ROWS = (
-    ("Seftigenstrasse", "264", "3084", "Wabern"),
-    ("seftigenstrasse", "264", "3084", "wabern"),
-    (None, None, None, None),
-    ("Xyzzy", "1", "9999", "Nowhere"),
+    ("Seftigenstrasse 264, 3084 Wabern", "first"),
+    ("seftigenstrasse 264, 3084 wabern", "same address, other case"),
+    (None, "no address"),
+    ("Xyzzy 1, 9999 Nowhere", "unknown"),
 )
 
 
@@ -106,6 +99,25 @@ class FakeService:
         return EMPTY_RESPONSE
 
 
+class CollectingFeedback(QgsProcessingFeedback):
+    """Keeps the warnings and errors reported by the algorithm."""
+
+    def __init__(self):
+        super().__init__()
+        self.infos = []
+        self.warnings = []
+        self.errors = []
+
+    def pushInfo(self, message):
+        self.infos.append(message)
+
+    def pushWarning(self, message):
+        self.warnings.append(message)
+
+    def reportError(self, message, fatalError=False):
+        self.errors.append(message)
+
+
 class TestProvider(unittest.TestCase):
     def test_provider(self):
         provider = SwissLocatorProcessingProvider()
@@ -129,20 +141,20 @@ class TestProvider(unittest.TestCase):
 
 
 class TestGeocodeAddressesAlgorithm(unittest.TestCase):
-    def run_algorithm(self, service, rows=DEFAULT_ROWS, **parameters):
+    def run_algorithm(self, service, rows=DEFAULT_ROWS, layer=None, **parameters):
         """Runs the algorithm with the canned service and returns (results, ok, layer)."""
         algorithm = GeocodeAddressesAlgorithm()
         algorithm.initAlgorithm({})
         params = {
-            "INPUT": address_table(rows),
-            "ADDRESS": ADDRESS_EXPRESSION,
+            "INPUT": layer if layer is not None else address_table(rows),
+            "FIELD": "address",
             "REQUEST_DELAY": 0,
             "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT,
         }
         params.update(parameters)
         # The temporary output layer is owned by the context, keep it alive
         self.context = QgsProcessingContext()
-        self.feedback = QgsProcessingFeedback()
+        self.feedback = CollectingFeedback()
         with patch.object(SwissGeocoder, "fetch_json", side_effect=service):
             results, ok = algorithm.run(params, self.context, self.feedback)
         layer = (
@@ -159,15 +171,32 @@ class TestGeocodeAddressesAlgorithm(unittest.TestCase):
             for f in layer.getFeatures()
         ]
 
+    def test_parameters(self):
+        algorithm = GeocodeAddressesAlgorithm()
+        algorithm.initAlgorithm({})
+        names = [p.name() for p in algorithm.parameterDefinitions()]
+        self.assertEqual(
+            names,
+            [
+                "INPUT",
+                "FIELD",
+                "ORIGINS",
+                "CRS",
+                "EXTENT",
+                "LANGUAGE",
+                "REQUEST_DELAY",
+                "OUTPUT",
+            ],
+        )
+
     def test_output_layer_definition(self):
-        service = FakeService()
-        results, ok, layer = self.run_algorithm(service)
+        results, ok, layer = self.run_algorithm(FakeService())
         self.assertTrue(ok)
         self.assertEqual(layer.crs().authid(), "EPSG:2056")
         self.assertEqual(layer.wkbType(), 1)  # Point
         self.assertEqual(
             tuple(layer.fields().names()),
-            ("street", "number", "zip", "city") + APPENDED_FIELDS,
+            ("address", "remark") + SwissGeocoder.FIELD_NAMES,
         )
 
     def test_default_request_parameters(self):
@@ -180,72 +209,62 @@ class TestGeocodeAddressesAlgorithm(unittest.TestCase):
         # At least 10 candidates are requested to detect ambiguous addresses
         self.assertEqual(params["limit"], "10")
 
-    def test_expression_and_matched_row(self):
-        service = FakeService()
-        results, ok, layer = self.run_algorithm(service)
+    def test_matched_row(self):
+        results, ok, layer = self.run_algorithm(FakeService())
         attributes, geometry = self.rows(layer)[0]
-        self.assertEqual(
-            attributes["geocode_query"], "Seftigenstrasse 264, 3084 Wabern"
-        )
-        self.assertEqual(attributes["geocode_status"], "matched")
-        self.assertEqual(attributes["geocode_candidates"], 1)
-        self.assertEqual(attributes["geocode_candidate"], 1)
+        self.assertEqual(attributes["remark"], "first")
         self.assertEqual(attributes["geocode_quality"], QUALITY_EXACT)
+        self.assertEqual(attributes["geocode_candidates"], 1)
         self.assertEqual(attributes["geocode_label"], "Seftigenstrasse 264 3084 Wabern")
         self.assertEqual(attributes["geocode_detail"], WABERN_DETAIL)
         self.assertEqual(attributes["geocode_origin"], "address")
         self.assertEqual(attributes["geocode_feature_id"], "1272199_0")
         self.assertEqual(attributes["geocode_rank"], 7)
         self.assertEqual(attributes["geocode_weight"], 100)
-        self.assertIsNone(attributes["geocode_message"])
         self.assertAlmostEqual(geometry.asPoint().x(), WABERN_EASTING, places=3)
         self.assertAlmostEqual(geometry.asPoint().y(), WABERN_NORTHING, places=3)
 
     def test_identical_addresses_are_requested_once(self):
         service = FakeService()
-        results, ok, layer = self.run_algorithm(service)
+        self.run_algorithm(service)
         self.assertEqual(
             service.queries,
             ["Seftigenstrasse 264, 3084 Wabern", "Xyzzy 1, 9999 Nowhere"],
         )
-        self.assertEqual(results["REQUEST_COUNT"], 2)
-        self.assertEqual(results["GEOCODED_COUNT"], 2)
-        self.assertEqual(results["UNMATCHED_COUNT"], 1)
-        self.assertEqual(results["ERROR_COUNT"], 0)
+        self.assertIn(
+            "Requests sent: 2, identical addresses reused: 1.", self.feedback.infos
+        )
 
-    def test_unmatched_rows_are_kept_by_default(self):
+    def test_unmatched_and_empty_rows_are_kept(self):
         results, ok, layer = self.run_algorithm(FakeService())
         rows = self.rows(layer)
         self.assertEqual(len(rows), 4)
         self.assertEqual(
-            [r[0]["geocode_status"] for r in rows],
-            ["matched", "matched", "empty", "unmatched"],
+            [r[0]["remark"] for r in rows],
+            ["first", "same address, other case", "no address", "unknown"],
         )
-        empty, unmatched = rows[2], rows[3]
-        self.assertTrue(empty[1].isNull())
-        self.assertIsNone(empty[0]["geocode_candidates"])
-        self.assertTrue(unmatched[1].isNull())
-        self.assertEqual(unmatched[0]["geocode_candidates"], 0)
-        self.assertIsNone(unmatched[0]["geocode_quality"])
+        for attributes, geometry in rows[2:]:
+            self.assertTrue(geometry.isNull())
+            for name in SwissGeocoder.FIELD_NAMES:
+                self.assertIsNone(attributes[name], name)
+        # One warning for the empty address, one for the unknown one
+        self.assertEqual(len(self.feedback.warnings), 2)
+        self.assertEqual(self.feedback.errors, [])
 
-    def test_unmatched_rows_can_be_dropped(self):
-        results, ok, layer = self.run_algorithm(FakeService(), KEEP_UNMATCHED=False)
-        rows = self.rows(layer)
-        self.assertEqual(len(rows), 2)
-        self.assertTrue(all(r[0]["geocode_status"] == "matched" for r in rows))
+    def test_lv03(self):
+        service = FakeService()
+        results, ok, layer = self.run_algorithm(service, CRS=1)
+        self.assertEqual(service.params[0]["sr"], "21781")
+        self.assertEqual(layer.crs().authid(), "EPSG:21781")
 
-    def test_target_crs(self):
-        results, ok, layer = self.run_algorithm(FakeService(), TARGET_CRS="EPSG:4326")
+    def test_input_layer_crs_is_kept(self):
+        rows = (("Seftigenstrasse 264, 3084 Wabern", "first", QgsPointXY(7, 46)),)
+        layer = address_table(rows, geometry="Point?crs=EPSG:4326")
+        results, ok, layer = self.run_algorithm(FakeService(), layer=layer)
         self.assertEqual(layer.crs().authid(), "EPSG:4326")
         point = self.rows(layer)[0][1].asPoint()
         self.assertAlmostEqual(point.x(), 7.4514, places=3)
         self.assertAlmostEqual(point.y(), 46.9279, places=3)
-
-    def test_lv03_is_requested_from_the_service(self):
-        service = FakeService()
-        results, ok, layer = self.run_algorithm(service, TARGET_CRS="EPSG:21781")
-        self.assertEqual(service.params[0]["sr"], "21781")
-        self.assertEqual(layer.crs().authid(), "EPSG:21781")
 
     def test_origins_and_language(self):
         service = FakeService()
@@ -262,7 +281,7 @@ class TestGeocodeAddressesAlgorithm(unittest.TestCase):
             service.params[0]["bbox"], "2598000.000,1195000.000,2602000.000,1200000.000"
         )
 
-    def test_several_candidates(self):
+    def test_best_candidate_is_written(self):
         ambiguous = {
             "results": [
                 make_result(
@@ -286,45 +305,35 @@ class TestGeocodeAddressesAlgorithm(unittest.TestCase):
             ]
         }
         service = FakeService(responses={"bahnhofstrasse": ambiguous})
-        rows = (("Bahnhofstrasse", "1", None, None),)
-        results, ok, layer = self.run_algorithm(service, rows=rows, MAX_CANDIDATES=2)
+        rows = (("Bahnhofstrasse 1, 7477 Filisur", ""),)
+        results, ok, layer = self.run_algorithm(service, rows=rows)
         output = self.rows(layer)
-        self.assertEqual(len(output), 2)
-        self.assertEqual([r[0]["geocode_candidate"] for r in output], [1, 2])
-        self.assertEqual([r[0]["geocode_candidates"] for r in output], [3, 3])
-        self.assertEqual(
-            [r[0]["geocode_label"] for r in output],
-            ["Bahnhofstrasse 1 4125 Riehen", "Bahnhofstrasse 1 7477 Filisur"],
-        )
-        self.assertEqual(results["GEOCODED_COUNT"], 1)
+        self.assertEqual(len(output), 1)
+        attributes, geometry = output[0]
+        # The exact match comes first even if the service ranked it second
+        self.assertEqual(attributes["geocode_label"], "Bahnhofstrasse 1 7477 Filisur")
+        self.assertEqual(attributes["geocode_quality"], QUALITY_EXACT)
+        self.assertEqual(attributes["geocode_candidates"], 3)
 
     def test_request_error_row(self):
         service = FakeService(
             error=GeocoderRequestError("Service unavailable (HTTP 503)", 503)
         )
-        rows = (("Seftigenstrasse", "264", "3084", "Wabern"),)
-        results, ok, layer = self.run_algorithm(
-            service, rows=rows, KEEP_UNMATCHED=False
-        )
+        rows = (("Seftigenstrasse 264, 3084 Wabern", ""),)
+        results, ok, layer = self.run_algorithm(service, rows=rows)
         self.assertTrue(ok)
-        output = self.rows(layer)
-        # Failed rows are written even when unmatched rows are dropped
-        self.assertEqual(len(output), 1)
-        attributes, geometry = output[0]
-        self.assertEqual(attributes["geocode_status"], "error")
-        self.assertEqual(
-            attributes["geocode_message"], "Service unavailable (HTTP 503)"
-        )
+        attributes, geometry = self.rows(layer)[0]
         self.assertTrue(geometry.isNull())
-        self.assertEqual(results["ERROR_COUNT"], 1)
+        self.assertIsNone(attributes["geocode_label"])
+        self.assertEqual(len(self.feedback.errors), 1)
+        self.assertIn("Service unavailable (HTTP 503)", self.feedback.errors[0])
 
     def test_consecutive_errors_abort(self):
         service = FakeService(
             error=GeocoderRequestError("Service unavailable (HTTP 503)", 503)
         )
         rows = tuple(
-            ("Street", str(i), "3000", "Bern")
-            for i in range(MAX_CONSECUTIVE_ERRORS + 3)
+            (f"Street {i}, 3000 Bern", "") for i in range(MAX_CONSECUTIVE_ERRORS + 3)
         )
         results, ok, layer = self.run_algorithm(service, rows=rows)
         self.assertFalse(ok)
@@ -337,9 +346,9 @@ class TestGeocodeAddressesAlgorithm(unittest.TestCase):
         algorithm.initAlgorithm({})
         params = {
             "INPUT": address_table(
-                tuple(("Street", str(i), "3000", "Bern") for i in range(5))
+                tuple((f"Street {i}, 3000 Bern", "") for i in range(5))
             ),
-            "ADDRESS": ADDRESS_EXPRESSION,
+            "FIELD": "address",
             "REQUEST_DELAY": 0,
             "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT,
         }
@@ -347,19 +356,11 @@ class TestGeocodeAddressesAlgorithm(unittest.TestCase):
             results, ok = algorithm.run(params, QgsProcessingContext(), feedback)
         self.assertEqual(len(service.queries), 1)
 
-    def test_invalid_expression(self):
-        results, ok, layer = self.run_algorithm(
-            FakeService(), ADDRESS='concat("street", '
-        )
-        self.assertFalse(ok)
-
-    def test_punctuation_only_address_is_empty(self):
+    def test_empty_address_sends_no_request(self):
         service = FakeService()
-        results, ok, layer = self.run_algorithm(
-            service, rows=((None, None, None, None),)
-        )
+        results, ok, layer = self.run_algorithm(service, rows=((None, ""), ("", "")))
         self.assertEqual(service.queries, [])
-        self.assertEqual(self.rows(layer)[0][0]["geocode_status"], "empty")
+        self.assertEqual(len(self.rows(layer)), 2)
 
 
 if __name__ == "__main__":

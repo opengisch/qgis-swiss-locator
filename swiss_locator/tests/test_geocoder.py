@@ -388,6 +388,123 @@ class TestSwissGeocoderGeocodeString(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
+# Options: all origins, extent, truncation and cache
+# ---------------------------------------------------------------------------
+
+
+class TestSwissGeocoderOptions(unittest.TestCase):
+    AMBIGUOUS = {
+        "results": [
+            make_result(
+                "Bahnhofstrasse 1 <b>4125 Riehen</b>",
+                "bahnhofstrasse 1 4125 riehen",
+                2616082.606,
+                1270433.993,
+            ),
+            make_result(
+                "Bahnhofstrasse 1 <b>7477 Filisur</b>",
+                "bahnhofstrasse 1 7477 filisur",
+                2771830.615,
+                1171628.225,
+            ),
+            make_result(
+                "Bahnhofstrasse 1 <b>7304 Maienfeld</b>",
+                "bahnhofstrasse 1 7304 maienfeld",
+                2759018.821,
+                1208081.156,
+            ),
+        ]
+    }
+
+    def setUp(self):
+        self.requests = []
+
+    def fetch(self, request, feedback=None):
+        self.requests.append(request)
+        return self.AMBIGUOUS
+
+    def geocode(self, geocoder, query, ctx=None):
+        with patch.object(SwissGeocoder, "fetch_json", side_effect=self.fetch):
+            return geocoder.geocodeString(query, ctx or context())
+
+    def test_all_origins(self):
+        request = SwissGeocoder(origins=None).request("Bern")
+        self.assertNotIn("origins", query_items(request))
+
+    def test_configure_resets_counters_and_validates(self):
+        geocoder = SwissGeocoder()
+        self.geocode(geocoder, "Bahnhofstrasse 1")
+        self.assertEqual(geocoder.requests, 1)
+        geocoder.configure(origins=("zipcode",), sr="21781", lang="it", limit=3)
+        self.assertEqual(geocoder.requests, 0)
+        self.assertEqual(geocoder.crs.authid(), "EPSG:21781")
+        params = query_items(geocoder.request("Bern"))
+        self.assertEqual(params["origins"], "zipcode")
+        self.assertEqual(params["limit"], "3")
+        with self.assertRaises(ValueError):
+            geocoder.configure(sr="4326")
+
+    def test_bbox_option(self):
+        geocoder = SwissGeocoder(bbox=QgsRectangle(2598000, 1195000, 2602000, 1200000))
+        self.geocode(geocoder, "Bahnhofstrasse 1")
+        self.assertEqual(
+            query_items(self.requests[0])["bbox"],
+            "2598000.000,1195000.000,2602000.000,1200000.000",
+        )
+
+    def test_area_of_interest_overrides_bbox_option(self):
+        geocoder = SwissGeocoder(bbox=QgsRectangle(2598000, 1195000, 2602000, 1200000))
+        ctx = context()
+        ctx.setAreaOfInterest(
+            QgsGeometry.fromRect(QgsRectangle(2700000, 1100000, 2710000, 1110000))
+        )
+        ctx.setAreaOfInterestCrs(QgsCoordinateReferenceSystem("EPSG:2056"))
+        self.geocode(geocoder, "Bahnhofstrasse 1", ctx)
+        self.assertEqual(
+            query_items(self.requests[0])["bbox"],
+            "2700000.000,1100000.000,2710000.000,1110000.000",
+        )
+
+    def test_max_results_keeps_the_candidates_count(self):
+        geocoder = SwissGeocoder(max_results=1)
+        results = self.geocode(geocoder, "Bahnhofstrasse 1, 7477 Filisur")
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].description(), "Bahnhofstrasse 1 7477 Filisur")
+        self.assertEqual(results[0].additionalAttributes()["geocode_candidates"], 3)
+
+    def test_identical_queries_are_requested_once(self):
+        geocoder = SwissGeocoder()
+        first = self.geocode(geocoder, "Bahnhofstrasse 1")
+        second = self.geocode(geocoder, "  bahnhofstrasse  1 ")
+        self.assertEqual(len(self.requests), 1)
+        self.assertEqual(
+            [r.description() for r in first], [r.description() for r in second]
+        )
+        self.assertEqual(geocoder.requests, 1)
+        self.assertEqual(geocoder.cache_hits, 1)
+
+    def test_consecutive_errors_counter(self):
+        geocoder = SwissGeocoder()
+        error = GeocoderRequestError("Service unavailable (HTTP 503)", 503)
+        with patch.object(SwissGeocoder, "fetch_json", side_effect=error):
+            geocoder.geocodeString("Bern", context())
+            geocoder.geocodeString("Thun", context())
+        self.assertEqual(geocoder.consecutive_errors, 2)
+        self.geocode(geocoder, "Bahnhofstrasse 1")
+        self.assertEqual(geocoder.consecutive_errors, 0)
+        self.assertEqual(geocoder.requests, 3)
+
+    def test_pause_between_requests(self):
+        geocoder = SwissGeocoder(delay_s=0.05)
+        with patch.object(swiss_geocoder, "sleep_cancellable") as sleep:
+            self.geocode(geocoder, "Bern")
+            self.geocode(geocoder, "Thun")
+        # No pause before the first request, one before the second
+        self.assertEqual(sleep.call_count, 1)
+        self.assertLessEqual(sleep.call_args[0][0], 0.05)
+
+
+# ---------------------------------------------------------------------------
 # Network layer: retries, client errors and cancellation
 # ---------------------------------------------------------------------------
 
@@ -503,6 +620,14 @@ class TestSwissGeocoderFetchRetry(unittest.TestCase):
             self.geocoder.fetch_json(self.request)
         self.assertEqual(cm.exception.status, 400)
         self.assertEqual(str(cm.exception), "Please provide a search text (HTTP 400)")
+        self.assertEqual(FakeBlockingRequest.calls, 1)
+
+    def test_no_retry(self):
+        FakeBlockingRequest.script = [
+            (QgsBlockingNetworkRequest.ErrorCode.ServerExceptionError, FakeReply(503))
+        ] * 2
+        with self.assertRaises(GeocoderRequestError):
+            SwissGeocoder(retries=0).fetch_json(self.request)
         self.assertEqual(FakeBlockingRequest.calls, 1)
 
     def test_server_errors_exhaust_retries(self):
