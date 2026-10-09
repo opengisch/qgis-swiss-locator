@@ -472,6 +472,15 @@ class TestSwissGeocoderOptions(unittest.TestCase):
         self.assertEqual(results[0].description(), "Bahnhofstrasse 1 7477 Filisur")
         self.assertEqual(results[0].additionalAttributes()["geocode_candidates"], 3)
 
+    def test_cache_holds_only_the_returned_results(self):
+        geocoder = SwissGeocoder(max_results=1)
+        self.geocode(geocoder, "Bahnhofstrasse 1, 7477 Filisur")
+        self.assertEqual([len(r) for r in geocoder._cache.values()], [1])
+        results = self.geocode(geocoder, "Bahnhofstrasse 1, 7477 Filisur")
+        self.assertEqual(len(self.requests), 1)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].additionalAttributes()["geocode_candidates"], 3)
+
     def test_identical_queries_are_requested_once(self):
         geocoder = SwissGeocoder()
         first = self.geocode(geocoder, "Bahnhofstrasse 1")
