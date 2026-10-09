@@ -87,7 +87,7 @@ class GeocodeAddressesAlgorithm(QgsBatchGeocodeAlgorithm):
         return "geocodeaddresses"
 
     def displayName(self) -> str:
-        return self.tr("Geocode addresses (geo.admin.ch)")
+        return self.tr("Geocode addresses")
 
     def group(self) -> str:
         return self.tr("Geocoding")
