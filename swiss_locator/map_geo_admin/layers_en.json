@@ -878,7 +878,7 @@
     "ch.swisstopo.vec25-einzelobjekte": "Single objects VECTOR25",
     "ch.swisstopo.vec25-gebaeude": "Buildings VECTOR25",
     "ch.swisstopo.vec25-gewaessernetz_referenz": "Hydrological network VECTOR25",
-    "ch.swisstopo.vec25-heckenbaeume": "Hedges and trees  VECTOR25",
+    "ch.swisstopo.vec25-heckenbaeume": "Hedges and trees VECTOR25",
     "ch.swisstopo.vec25-primaerflaechen": "Primary surfaces VECTOR25",
     "ch.swisstopo.verschiebungsvektoren-tsp1": "LV95 Displacement vectors TSP1",
     "ch.swisstopo.verschiebungsvektoren-tsp2": "LV95 Displacement vectors TSP2",
