@@ -17,7 +17,6 @@
 """
 
 import os
-import re
 import sys
 import traceback
 
@@ -77,10 +76,6 @@ def result_from_data(result: QgsLocatorResult):
     else:
         definition = result.userData
     return _result_from_data(definition)
-
-
-class InvalidBox(Exception):
-    pass
 
 
 class SwissLocatorFilter(QgsLocatorFilter):
@@ -220,20 +215,6 @@ class SwissLocatorFilter(QgsLocatorFilter):
         :return: the priority as a float from 0 to 1, 1 being a perfect match
         """
         return float(-rank / 7 + 1)
-
-    @staticmethod
-    def box2geometry(box: str) -> QgsRectangle:
-        """
-        Creates a rectangle from a Box definition as string
-        :param box: the box as a string
-        :return: the rectangle
-        """
-        coords = re.findall(r"\b(\d+(?:\.\d+)?)\b", box)
-        if len(coords) != 4:
-            raise InvalidBox(f"Could not parse: {box}")
-        return QgsRectangle(
-            float(coords[0]), float(coords[1]), float(coords[2]), float(coords[3])
-        )
 
     @staticmethod
     def request_for_url(url, params, headers) -> QNetworkRequest:
