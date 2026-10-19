@@ -22,9 +22,13 @@ from qgis.PyQt.QtCore import QUrl
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtNetwork import QNetworkRequest
 from qgis.core import (
+    Qgis,
+    QgsCoordinateTransformContext,
+    QgsGeocoderContext,
     QgsLocatorResult,
     QgsPointXY,
     QgsGeometry,
+    QgsRectangle,
     QgsWkbTypes,
     QgsFeedback,
 )
@@ -32,10 +36,13 @@ from qgis.gui import QgisInterface
 
 from swiss_locator.core.constants import MAP_SERVER_URL
 from swiss_locator.core.filters.filter_type import FilterType
-from swiss_locator.core.filters.map_geo_admin import map_geo_admin_url
 from swiss_locator.core.filters.swiss_locator_filter import SwissLocatorFilter
+from swiss_locator.core.geocoder.swiss_geocoder import (
+    FIELD_PREFIX,
+    HTML_LABEL_ATTRIBUTE,
+    SwissGeocoder,
+)
 from swiss_locator.core.results import LocationResult
-from swiss_locator.utils.html_stripper import strip_tags
 from swiss_locator.utils.utils import url_with_param, get_icon_path
 
 
@@ -53,40 +60,38 @@ class SwissLocatorFilterLocation(SwissLocatorFilter):
         return "chs"
 
     def perform_fetch_results(self, search: str, feedback: QgsFeedback):
-        limit = self.settings.filters[self.type.value]["limit"].value()
-        url, params = map_geo_admin_url(
-            search, self.type.value, self.crs, self.lang, limit
+        # Same request and parsing as the batch geocoding, all kinds of
+        # locations, no retry so that the locator stays responsive
+        geocoder = SwissGeocoder(
+            origins=None,
+            sr=self.crs,
+            lang=self.lang,
+            limit=self.settings.filters[self.type.value]["limit"].value(),
+            retries=0,
         )
-        request = self.request_for_url(url, params, self.HEADERS)
-        self.fetch_request(request, feedback, self.handle_content)
+        results = geocoder.geocodeString(
+            search, QgsGeocoderContext(QgsCoordinateTransformContext()), feedback
+        )
+        for geocoder_result in results:
+            if not geocoder_result.isValid():
+                self.info(
+                    f"could not search locations: {geocoder_result.error()}",
+                    Qgis.MessageLevel.Warning,
+                )
+                return
+            attributes = geocoder_result.additionalAttributes()
+            group_name, group_layer = self.group_info(geocoder_result.group())
 
-    def handle_content(self, content: str, feedback: QgsFeedback):
-        data = json.loads(content)
-        for loc in data["results"]:
             result = QgsLocatorResult()
             result.filter = self
-            result.group = self.tr("Swiss Geoportal")
-            for key, val in loc["attrs"].items():
-                self.dbg_info(f"{key}: {val}")
-            group_name, group_layer = self.group_info(loc["attrs"]["origin"])
-            if "layerBodId" in loc["attrs"]:
-                self.dbg_info("layer: {}".format(loc["attrs"]["layerBodId"]))
-            if "featureId" in loc["attrs"]:
-                self.dbg_info("feature: {}".format(loc["attrs"]["featureId"]))
-
-            result.displayString = strip_tags(loc["attrs"]["label"])
-            # result.description = loc['attrs']['detail']
-            # if 'featureId' in loc['attrs']:
-            #     result.description = loc['attrs']['featureId']
+            result.displayString = geocoder_result.description()
             result.group = group_name
             result.userData = LocationResult(
-                point=QgsPointXY(loc["attrs"]["y"], loc["attrs"]["x"]),
-                bbox=self.box2geometry(loc["attrs"]["geom_st_box2d"]),
+                point=geocoder_result.geometry().asPoint(),
+                bbox=geocoder_result.viewport() or QgsRectangle(),
                 layer=group_layer,
-                feature_id=loc["attrs"]["featureId"]
-                if "featureId" in loc["attrs"]
-                else None,
-                html_label=loc["attrs"]["label"],
+                feature_id=attributes.get(f"{FIELD_PREFIX}feature_id"),
+                html_label=attributes.get(HTML_LABEL_ATTRIBUTE),
             ).as_definition()
             result.icon = QIcon(get_icon_path("swiss_locator.png"))
             self.result_found = True

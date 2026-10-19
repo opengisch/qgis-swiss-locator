@@ -3,17 +3,18 @@
 name=Swiss Locator
 qgisMinimumVersion=3.44
 qgisMaximumVersion=4.99
-description=A locator filter for Swiss Geoportal (geo.admin.ch) and opendata.swiss resources
-about=Search for locations, WMS layers of features in the whole Swiss Geoportal catalog as well as in opendata.swiss
+description=A locator filter and a batch geocoder for Swiss Geoportal (geo.admin.ch) and opendata.swiss resources
+about=Search for locations, WMS layers of features in the whole Swiss Geoportal catalog as well as in opendata.swiss. Geocode tables of addresses into point layers with a Processing algorithm.
 version=dev
 author=OPENGIS.ch
 email=info@opengis.ch
 
 supportsQt6=True
+hasProcessingProvider=yes
 
 
 # Tags are comma separated with spaces allowed
-tags=swiss, suisse, schweiz, locator, geoadmin, geoportal, opendata.swiss
+tags=swiss, suisse, schweiz, locator, geoadmin, geoportal, opendata.swiss, geocoding, geocoder, address, processing
 
 tracker=https://github.com/opengisch/qgis-swiss-locator
 homepage=https://github.com/opengisch/qgis-swiss-locator
