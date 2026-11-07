@@ -26,12 +26,10 @@ from swiss_locator.core.filters.map_geo_admin_stac import (
     map_geo_admin_stac_items_url,
 )
 from swiss_locator.core.filters.opendata_swiss import opendata_swiss_url
-from swiss_locator.core.filters.swiss_locator_filter import (
-    InvalidBox,
-    SwissLocatorFilter,
-)
+from swiss_locator.core.filters.swiss_locator_filter import SwissLocatorFilter
 from swiss_locator.core.profiles.profile_url import profile_url
 from swiss_locator.utils.html_stripper import strip_tags
+from swiss_locator.utils.utils import InvalidBox, box2geometry
 
 start_app()
 
@@ -80,10 +78,10 @@ class TestConstants(unittest.TestCase):
 
 
 class TestBox2Geometry(unittest.TestCase):
-    """Test SwissLocatorFilter.box2geometry static method."""
+    """Test the box2geometry utility."""
 
     def test_valid_box(self):
-        rect = SwissLocatorFilter.box2geometry("BOX(2599000 1199000,2601000 1201000)")
+        rect = box2geometry("BOX(2599000 1199000,2601000 1201000)")
         self.assertIsInstance(rect, QgsRectangle)
         self.assertAlmostEqual(rect.xMinimum(), 2599000.0)
         self.assertAlmostEqual(rect.yMinimum(), 1199000.0)
@@ -91,17 +89,31 @@ class TestBox2Geometry(unittest.TestCase):
         self.assertAlmostEqual(rect.yMaximum(), 1201000.0)
 
     def test_valid_box_with_decimals(self):
-        rect = SwissLocatorFilter.box2geometry("BOX(7.123 46.456,8.789 47.012)")
+        rect = box2geometry("BOX(7.123 46.456,8.789 47.012)")
         self.assertAlmostEqual(rect.xMinimum(), 7.123, places=3)
         self.assertAlmostEqual(rect.yMaximum(), 47.012, places=3)
 
+    def test_degenerate_box(self):
+        rect = box2geometry("BOX(2600968.668 1197426.954,2600968.668 1197426.954)")
+        self.assertEqual(rect.width(), 0)
+        self.assertEqual(rect.height(), 0)
+
+    def test_negative_coordinates(self):
+        rect = box2geometry("BOX(-1.5 -2,3 4)")
+        self.assertEqual(rect.xMinimum(), -1.5)
+        self.assertEqual(rect.yMinimum(), -2)
+
     def test_invalid_box_raises(self):
         with self.assertRaises(InvalidBox):
-            SwissLocatorFilter.box2geometry("not a box")
+            box2geometry(None)
+        with self.assertRaises(InvalidBox):
+            box2geometry("")
+        with self.assertRaises(InvalidBox):
+            box2geometry("not a box")
 
     def test_incomplete_box_raises(self):
         with self.assertRaises(InvalidBox):
-            SwissLocatorFilter.box2geometry("BOX(100 200)")
+            box2geometry("BOX(100 200)")
 
 
 # ---------------------------------------------------------------------------
