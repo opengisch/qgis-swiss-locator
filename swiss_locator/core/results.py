@@ -292,3 +292,7 @@ class NoResult(ResultBase):
     def as_definition():
         definition = {"type": "NoResult"}
         return json.dumps(definition)
+
+    @staticmethod
+    def from_dict(dict_data: dict):
+        return NoResult()
