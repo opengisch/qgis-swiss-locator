@@ -19,8 +19,6 @@
  ***************************************************************************/
 """
 
-import os
-
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.analysis import QgsBatchGeocodeAlgorithm
@@ -33,7 +31,6 @@ from qgis.core import (
     QgsProcessingParameterNumber,
 )
 
-from swiss_locator import PLUGIN_PATH
 from swiss_locator.core.geocoder.swiss_geocoder import (
     GEOCODE_ORIGINS,
     MAX_CONSECUTIVE_ERRORS,
@@ -41,12 +38,11 @@ from swiss_locator.core.geocoder.swiss_geocoder import (
     SwissGeocoder,
 )
 from swiss_locator.core.language import get_language
+from swiss_locator.core.parameters import AVAILABLE_CRS
+from swiss_locator.utils.utils import get_icon_path
 
 # Index 0 is "automatic": the language configured in the plugin settings
 LANGUAGE_CODES = (None, "de", "fr", "it", "rm", "en")
-
-# Spatial references offered for the output, in the order of the CRS enum
-SWISS_SR = ("2056", "21781")
 
 
 class GeocodeAddressesAlgorithm(QgsBatchGeocodeAlgorithm):
@@ -101,7 +97,7 @@ class GeocodeAddressesAlgorithm(QgsBatchGeocodeAlgorithm):
         ).split(",")
 
     def icon(self) -> QIcon:
-        return QIcon(os.path.join(PLUGIN_PATH, "icons", "swiss_locator.png"))
+        return QIcon(get_icon_path("swiss_locator.png"))
 
     def helpUrl(self) -> str:
         return "https://github.com/opengisch/qgis-swiss-locator#batch-geocoding"
@@ -138,7 +134,8 @@ class GeocodeAddressesAlgorithm(QgsBatchGeocodeAlgorithm):
             "<li><b>Language</b>: language of the labels returned by the "
             "service.</li>"
             "<li><b>Pause between requests</b>: minimum delay between two "
-            "requests, to spread the load on the service.</li>"
+            "requests, to spread the load on the service. The default of 3 "
+            "seconds keeps to its fair use policy.</li>"
             "</ul>"
             "<h3>Added attributes</h3>"
             "<ul>"
@@ -200,6 +197,7 @@ class GeocodeAddressesAlgorithm(QgsBatchGeocodeAlgorithm):
             QgsProcessingParameterEnum(
                 self.CRS,
                 self.tr("Coordinate reference system (tables without geometry)"),
+                # In the order of AVAILABLE_CRS
                 options=["LV95 (EPSG:2056)", "LV03 (EPSG:21781)"],
                 defaultValue=0,
             )
@@ -227,7 +225,7 @@ class GeocodeAddressesAlgorithm(QgsBatchGeocodeAlgorithm):
             self.REQUEST_DELAY,
             self.tr("Pause between requests (milliseconds)"),
             Qgis.ProcessingNumberParameterType.Integer,
-            defaultValue=100,
+            defaultValue=3000,
             minValue=0,
             maxValue=10000,
         )
@@ -257,7 +255,7 @@ class GeocodeAddressesAlgorithm(QgsBatchGeocodeAlgorithm):
             for index in self.parameterAsEnums(parameters, self.ORIGINS, context)
             if 0 <= index < len(GEOCODE_ORIGINS)
         ] or ["address"]
-        sr = SWISS_SR[self.parameterAsEnum(parameters, self.CRS, context)]
+        sr = AVAILABLE_CRS[self.parameterAsEnum(parameters, self.CRS, context)]
         language_index = self.parameterAsEnum(parameters, self.LANGUAGE, context)
         lang = LANGUAGE_CODES[language_index] or get_language()
         delay_s = self.parameterAsInt(parameters, self.REQUEST_DELAY, context) / 1000.0

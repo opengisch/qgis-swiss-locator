@@ -26,7 +26,7 @@ import re
 import time
 import unicodedata
 
-from qgis.PyQt.QtCore import QMetaType, QUrl, QUrlQuery
+from qgis.PyQt.QtCore import QMetaType
 from qgis.PyQt.QtNetwork import QNetworkRequest
 from qgis.core import (
     Qgis,
@@ -41,15 +41,16 @@ from qgis.core import (
     QgsGeocoderInterface,
     QgsGeocoderResult,
     QgsGeometry,
+    QgsNetworkRequestParameters,
     QgsPointXY,
     QgsRectangle,
 )
 
-from swiss_locator.core.constants import USER_AGENT
+from swiss_locator.core.constants import USER_AGENT_SUFFIX
 from swiss_locator.core.filters.map_geo_admin import map_geo_admin_url
 from swiss_locator.core.parameters import AVAILABLE_CRS
 from swiss_locator.utils.html_stripper import strip_tags
-from swiss_locator.utils.utils import InvalidBox, box2geometry
+from swiss_locator.utils.utils import InvalidBox, box2geometry, url_with_param
 
 # Origins accepted by the SearchServer "locations" search, see
 # https://api3.geo.admin.ch/services/sdiservices.html#search
@@ -65,6 +66,10 @@ GEOCODE_ORIGINS = (
 
 # Largest value accepted by the "limit" parameter of the SearchServer
 MAX_API_LIMIT = 50
+
+# The SearchServer rejects a search text of more than 10 words, a word being
+# anything between spaces
+MAX_SEARCH_WORDS = 10
 
 # Retry policy for transient failures (network errors, HTTP 429 and 5xx)
 MAX_RETRIES = 3
@@ -123,15 +128,15 @@ def sleep_cancellable(seconds: float, feedback: QgsFeedback | None = None) -> bo
 
 def normalize_text(text: str | None) -> str:
     """
-    Normalises a label or a query for comparison: HTML tags removed,
-    case folded, umlauts transliterated, accents stripped and punctuation
-    replaced by single spaces.
+    Normalises a plain text, such as a query, for comparison: case folded,
+    umlauts transliterated, accents stripped and punctuation replaced by
+    single spaces.
     """
     if not text:
         return ""
     # Compose decomposed characters (e.g. "u" + combining diaeresis) first,
     # otherwise they would not match the precomposed umlauts to transliterate
-    text = unicodedata.normalize("NFC", strip_tags(text))
+    text = unicodedata.normalize("NFC", text)
     text = text.casefold().translate(_UMLAUTS)
     text = unicodedata.normalize("NFKD", text)
     text = "".join(c for c in text if not unicodedata.combining(c))
@@ -148,13 +153,21 @@ def match_quality(query: str, detail: str | None, label: str | None) -> str:
     Rates how well a result matches the query. The service performs a fuzzy
     search and always tries to return something, so a result is only rated
     "exact" when every word of the query appears in the result.
+
+    The label, in HTML, holds the location as found, e.g. the street, house
+    number, postal code and locality of an address. The detail adds the
+    municipality and the canton, but also the number of the municipality:
+    a word with a digit, such as a house number, must be in the label.
     """
     query_tokens = tokens(query)
     if not query_tokens:
         return QUALITY_FUZZY
-    if query_tokens <= tokens(detail) | tokens(label):
-        return QUALITY_EXACT
-    return QUALITY_FUZZY
+    label_tokens = tokens(strip_tags(label or ""))
+    detail_tokens = tokens(detail)
+    for token in query_tokens - label_tokens:
+        if token not in detail_tokens or any(c.isdigit() for c in token):
+            return QUALITY_FUZZY
+    return QUALITY_EXACT
 
 
 class SwissGeocoder(QgsGeocoderInterface):
@@ -292,13 +305,16 @@ class SwissGeocoder(QgsGeocoderInterface):
             params["bbox"] = (
                 f"{bbox.xMinimum():.3f},{bbox.yMinimum():.3f},{bbox.xMaximum():.3f},{bbox.yMaximum():.3f}"
             )
-        qurl = QUrl(url)
-        query = QUrlQuery()
-        for key, value in params.items():
-            query.addQueryItem(key, str(value))
-        qurl.setQuery(query)
-        request = QNetworkRequest(qurl)
-        request.setRawHeader(b"User-Agent", USER_AGENT)
+        request = QNetworkRequest(url_with_param(url, params))
+        # QgsNetworkAccessManager replaces a User-Agent header with the one of
+        # QGIS, to which QGIS 4 appends this suffix
+        if hasattr(QgsNetworkRequestParameters, "AttributeUserAgentSuffix"):
+            request.setAttribute(
+                QNetworkRequest.Attribute(
+                    QgsNetworkRequestParameters.AttributeUserAgentSuffix
+                ),
+                USER_AGENT_SUFFIX,
+            )
         return request
 
     def fetch_json(
@@ -357,32 +373,45 @@ class SwissGeocoder(QgsGeocoderInterface):
             message = f"{message} (HTTP {status})"
         raise GeocoderRequestError(message, status)
 
+    @staticmethod
+    def parse_location(item) -> tuple[dict, QgsPointXY, QgsRectangle | None] | None:
+        """
+        Reads the attributes, point and bounding box of a SearchServer result.
+        :return: None when the result has no usable location
+        """
+        attrs = item.get("attrs") if isinstance(item, dict) else None
+        if not isinstance(attrs, dict):
+            return None
+        try:
+            box = box2geometry(attrs.get("geom_st_box2d"))
+        except (InvalidBox, TypeError):
+            box = None
+        if box is not None and box.width() < 0.01 and box.height() < 0.01:
+            # Single location: the box carries the full precision coordinates
+            return attrs, box.center(), box
+        try:
+            # In Swiss projections the service returns the northing as "x"
+            # and the easting as "y"
+            return attrs, QgsPointXY(float(attrs["y"]), float(attrs["x"])), box
+        except (KeyError, TypeError, ValueError):
+            return None
+
     def json_to_results(self, data: dict, query: str) -> list[QgsGeocoderResult]:
         """
         Converts a SearchServer response to geocoder results.
         Exact matches are listed first, the service order is kept otherwise.
         """
+        items = data.get("results") if isinstance(data, dict) else None
+        locations = [
+            (item, location)
+            for item in (items if isinstance(items, list) else [])
+            if (location := self.parse_location(item)) is not None
+        ]
         results = []
-        items = data.get("results", []) if isinstance(data, dict) else []
-        candidates = len(items)
-        for item in items:
-            attrs = item.get("attrs", {})
+        for item, (attrs, point, box) in locations:
             label = attrs.get("label") or ""
             detail = attrs.get("detail") or ""
-            try:
-                box = box2geometry(attrs.get("geom_st_box2d"))
-            except InvalidBox:
-                box = None
-            if box is not None and box.width() == 0 and box.height() == 0:
-                # Single location: the box carries the full precision coordinates
-                point = QgsPointXY(box.xMinimum(), box.yMinimum())
-            elif "x" in attrs and "y" in attrs:
-                # In Swiss projections the service returns the northing as "x"
-                # and the easting as "y"
-                point = QgsPointXY(float(attrs["y"]), float(attrs["x"]))
-            else:
-                continue
-
+            quality = match_quality(query, detail, label)
             feature_id = attrs.get("featureId")
             identifier = (
                 str(feature_id) if feature_id is not None else str(item.get("id", ""))
@@ -396,8 +425,8 @@ class SwissGeocoder(QgsGeocoderInterface):
                 result.setViewport(box)
             result.setAdditionalAttributes(
                 {
-                    f"{FIELD_PREFIX}quality": match_quality(query, detail, label),
-                    f"{FIELD_PREFIX}candidates": candidates,
+                    f"{FIELD_PREFIX}quality": quality,
+                    f"{FIELD_PREFIX}candidates": len(locations),
                     f"{FIELD_PREFIX}label": strip_tags(label),
                     f"{FIELD_PREFIX}detail": detail,
                     f"{FIELD_PREFIX}origin": attrs.get("origin"),
@@ -409,15 +438,11 @@ class SwissGeocoder(QgsGeocoderInterface):
                     HTML_LABEL_ATTRIBUTE: label,
                 }
             )
-            results.append(result)
+            results.append((quality, result))
 
         # sort() is stable: exact matches first, service order otherwise
-        results.sort(
-            key=lambda r: (
-                r.additionalAttributes()[f"{FIELD_PREFIX}quality"] != QUALITY_EXACT
-            )
-        )
-        return results
+        results.sort(key=lambda quality_result: quality_result[0] != QUALITY_EXACT)
+        return [result for _, result in results]
 
     def geocodeString(
         self,
@@ -451,15 +476,28 @@ class SwissGeocoder(QgsGeocoderInterface):
             self.cache_hits += 1
             return self._cache[key]
 
+        # Longer addresses are cut, the punctuation marks between spaces first
+        words = query.split()
+        if len(words) > MAX_SEARCH_WORDS:
+            words = [word for word in words if _NON_WORD.sub("", word)]
+        search_text = " ".join(words[:MAX_SEARCH_WORDS])
+
         if self._last_request is not None and self.delay_s > 0:
             elapsed = time.monotonic() - self._last_request
             if not sleep_cancellable(self.delay_s - elapsed, feedback):
                 return [QgsGeocoderResult.errorResult("Request cancelled")]
         try:
-            data = self.fetch_json(self.request(query, bbox), feedback)
+            data = self.fetch_json(self.request(search_text, bbox), feedback)
         except GeocoderRequestError as e:
-            self.consecutive_errors += 1
-            return [QgsGeocoderResult.errorResult(str(e))]
+            results = [QgsGeocoderResult.errorResult(str(e))]
+            if e.status is not None and 400 <= e.status < 500 and e.status != 429:
+                # The service rejected this search and would do it again, it
+                # says nothing about the next ones
+                self.consecutive_errors = 0
+                self._cache[key] = results
+            elif feedback is None or not feedback.isCanceled():
+                self.consecutive_errors += 1
+            return results
         finally:
             self.requests += 1
             self._last_request = time.monotonic()

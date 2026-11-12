@@ -19,17 +19,15 @@
  ***************************************************************************/
 """
 
-import os
-
 from qgis.PyQt.QtGui import QIcon
 from qgis.core import QgsProcessingProvider
 
-from swiss_locator import PLUGIN_PATH
 from swiss_locator.processing.geocode_addresses_algorithm import (
     GeocodeAddressesAlgorithm,
 )
+from swiss_locator.utils.utils import get_icon_path
 
-ICON_PATH = os.path.join(PLUGIN_PATH, "icons", "swiss_locator.png")
+ICON_PATH = get_icon_path("swiss_locator.png")
 
 
 class SwissLocatorProcessingProvider(QgsProcessingProvider):

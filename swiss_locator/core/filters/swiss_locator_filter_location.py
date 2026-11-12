@@ -28,7 +28,6 @@ from qgis.core import (
     QgsLocatorResult,
     QgsPointXY,
     QgsGeometry,
-    QgsRectangle,
     QgsWkbTypes,
     QgsFeedback,
 )
@@ -74,10 +73,12 @@ class SwissLocatorFilterLocation(SwissLocatorFilter):
         )
         for geocoder_result in results:
             if not geocoder_result.isValid():
-                self.info(
-                    f"could not search locations: {geocoder_result.error()}",
-                    Qgis.MessageLevel.Warning,
-                )
+                # The locator cancels the search each time the text changes
+                if not feedback.isCanceled():
+                    self.info(
+                        f"could not search locations: {geocoder_result.error()}",
+                        Qgis.MessageLevel.Warning,
+                    )
                 return
             attributes = geocoder_result.additionalAttributes()
             group_name, group_layer = self.group_info(geocoder_result.group())
@@ -88,7 +89,7 @@ class SwissLocatorFilterLocation(SwissLocatorFilter):
             result.group = group_name
             result.userData = LocationResult(
                 point=geocoder_result.geometry().asPoint(),
-                bbox=geocoder_result.viewport() or QgsRectangle(),
+                bbox=geocoder_result.viewport(),
                 layer=group_layer,
                 feature_id=attributes.get(f"{FIELD_PREFIX}feature_id"),
                 html_label=attributes.get(HTML_LABEL_ATTRIBUTE),

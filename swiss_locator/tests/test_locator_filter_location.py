@@ -28,7 +28,7 @@ import json
 from unittest.mock import patch
 
 from qgis.PyQt.QtCore import QUrlQuery
-from qgis.core import QgsFeedback, QgsLocatorContext
+from qgis.core import Qgis, QgsFeedback, QgsLocatorContext
 from qgis.testing import start_app, unittest
 
 from swiss_locator.core.filters.swiss_locator_filter_location import (
@@ -133,6 +133,39 @@ class TestLocatorFilterLocation(unittest.TestCase):
         self.assertEqual(len(requests), 1)
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0].displayString, "No result found.")
+
+    def warnings(self, error, cancel):
+        """Runs a failing search, returns the warnings logged by the filter."""
+        locator_filter = SwissLocatorFilterLocation(crs="2056")
+        feedback = QgsFeedback()
+
+        def fetch(request, feedback_=None):
+            if cancel:
+                feedback.cancel()
+            raise error
+
+        with (
+            patch.object(SwissGeocoder, "fetch_json", side_effect=fetch),
+            patch.object(SwissLocatorFilterLocation, "info") as info,
+        ):
+            locator_filter.fetchResults("Bern", QgsLocatorContext(), feedback)
+        return [
+            call.args[0]
+            for call in info.call_args_list
+            if Qgis.MessageLevel.Warning in call.args
+        ]
+
+    def test_failed_search_logs_a_warning(self):
+        error = GeocoderRequestError("Service unavailable (HTTP 503)", 503)
+        self.assertEqual(
+            self.warnings(error, cancel=False),
+            ["could not search locations: Service unavailable (HTTP 503)"],
+        )
+
+    def test_cancelled_search_logs_no_warning(self):
+        # The locator cancels the search each time the text changes
+        error = GeocoderRequestError("Request cancelled")
+        self.assertEqual(self.warnings(error, cancel=True), [])
 
     def test_short_search(self):
         results, requests = self.search("B", WABERN_RESPONSE)

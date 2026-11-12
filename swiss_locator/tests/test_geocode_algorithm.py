@@ -186,6 +186,10 @@ class TestGeocodeAddressesAlgorithm(unittest.TestCase):
                 "OUTPUT",
             ],
         )
+        # 20 requests per minute, as the fair use policy of the service asks
+        self.assertEqual(
+            algorithm.parameterDefinition("REQUEST_DELAY").defaultValue(), 3000
+        )
 
     def test_output_layer_definition(self):
         results, ok, layer = self.run_algorithm(FakeService())
@@ -336,6 +340,15 @@ class TestGeocodeAddressesAlgorithm(unittest.TestCase):
         results, ok, layer = self.run_algorithm(service, rows=rows)
         self.assertFalse(ok)
         self.assertEqual(len(service.queries), MAX_CONSECUTIVE_ERRORS)
+
+    def test_rejected_addresses_do_not_abort(self):
+        service = FakeService(error=GeocoderRequestError("Bad request (HTTP 400)", 400))
+        rows = tuple(
+            (f"Street {i}, 3000 Bern", "") for i in range(MAX_CONSECUTIVE_ERRORS + 3)
+        )
+        results, ok, layer = self.run_algorithm(service, rows=rows)
+        self.assertTrue(ok)
+        self.assertEqual(len(service.queries), MAX_CONSECUTIVE_ERRORS + 3)
 
     def test_cancel(self):
         feedback = QgsProcessingFeedback()

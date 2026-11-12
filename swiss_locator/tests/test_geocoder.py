@@ -17,11 +17,12 @@ from qgis.core import (
     QgsFeedback,
     QgsGeocoderContext,
     QgsGeometry,
+    QgsNetworkRequestParameters,
     QgsRectangle,
 )
 from qgis.testing import start_app, unittest
 
-from swiss_locator.core.constants import SEARCH_URL
+from swiss_locator.core.constants import SEARCH_URL, USER_AGENT_SUFFIX
 from swiss_locator.core.geocoder import swiss_geocoder
 from swiss_locator.core.geocoder.swiss_geocoder import (
     HTML_LABEL_ATTRIBUTE,
@@ -97,10 +98,17 @@ def context() -> QgsGeocoderContext:
 
 
 class TestNormalizeAndQuality(unittest.TestCase):
-    def test_strips_tags_case_and_punctuation(self):
+    def test_case_and_punctuation(self):
         self.assertEqual(
-            normalize_text("Rue du <b>Stand</b> 15, 1204 Genève"),
+            normalize_text("Rue du Stand 15, 1204 Genève"),
             "rue du stand 15 1204 geneve",
+        )
+
+    def test_query_is_plain_text(self):
+        # An HTML parser would hold back the text after "&" or "<"
+        self.assertEqual(tokens("Restaurant A&O"), {"restaurant", "a", "o"})
+        self.assertEqual(
+            tokens("Bahnhofstrasse 1 <Bern"), {"bahnhofstrasse", "1", "bern"}
         )
 
     def test_transliterates_umlauts(self):
@@ -155,6 +163,26 @@ class TestNormalizeAndQuality(unittest.TestCase):
             QUALITY_FUZZY,
         )
 
+    def test_number_of_the_municipality_is_not_a_house_number(self):
+        # Live response for "Seftigenstrasse 355 3084 Wabern": there is no
+        # number 355, the detail ends with the number of Köniz
+        self.assertEqual(
+            match_quality(
+                "Seftigenstrasse 355 3084 Wabern",
+                "seftigenstrasse 186a 3084 wabern 355 koeniz ch be",
+                "Seftigenstrasse 186a <b>3084 Wabern</b>",
+            ),
+            QUALITY_FUZZY,
+        )
+
+    def test_exact_with_canton(self):
+        self.assertEqual(
+            match_quality(
+                "Seftigenstrasse 264, Wabern BE", WABERN_DETAIL, WABERN_LABEL
+            ),
+            QUALITY_EXACT,
+        )
+
     def test_empty_query_is_never_exact(self):
         self.assertEqual(match_quality("", WABERN_DETAIL, WABERN_LABEL), QUALITY_FUZZY)
         self.assertEqual(
@@ -180,9 +208,16 @@ class TestSwissGeocoderRequest(unittest.TestCase):
         self.assertEqual(params["limit"], "10")
         self.assertNotIn("bbox", params)
 
-    def test_user_agent_header(self):
+    @unittest.skipUnless(
+        hasattr(QgsNetworkRequestParameters, "AttributeUserAgentSuffix"),
+        "QGIS 4 only",
+    )
+    def test_user_agent_suffix(self):
         request = SwissGeocoder().request("Bern")
-        self.assertTrue(request.hasRawHeader(b"User-Agent"))
+        attribute = QNetworkRequest.Attribute(
+            QgsNetworkRequestParameters.AttributeUserAgentSuffix
+        )
+        self.assertEqual(request.attribute(attribute), USER_AGENT_SUFFIX)
 
     def test_origins_language_and_sr(self):
         geocoder = SwissGeocoder(origins=("address", "zipcode"), sr="21781", lang="fr")
@@ -274,6 +309,16 @@ class TestSwissGeocoderParse(unittest.TestCase):
         self.assertEqual((point.x(), point.y()), (2600000.0, 1197000.0))
         self.assertEqual(result.viewport().width(), 2000)
 
+    def test_point_from_box_with_rounding_errors(self):
+        item = make_result("Wabern", "wabern", 2600000, 1197000)
+        item["attrs"]["geom_st_box2d"] = (
+            "BOX(2600968.6680000015 1197426.954,2600968.668 1197426.9540000004)"
+        )
+        result = self.geocoder.json_to_results({"results": [item]}, "Wabern")[0]
+        point = result.geometry().asPoint()
+        self.assertAlmostEqual(point.x(), 2600968.668, places=3)
+        self.assertAlmostEqual(point.y(), 1197426.954, places=3)
+
     def test_missing_feature_id_falls_back_to_id(self):
         item = copy.deepcopy(WABERN_RESULT)
         del item["attrs"]["featureId"]
@@ -287,6 +332,20 @@ class TestSwissGeocoderParse(unittest.TestCase):
         self.assertEqual(
             self.geocoder.json_to_results({"results": [{"attrs": {}}]}, "Bern"), []
         )
+        for response in (
+            {"results": None},
+            {"results": ["Bern"]},
+            {"results": [{"attrs": None}]},
+            {"results": [{"attrs": {"x": None, "y": None}}]},
+            {"results": [{"attrs": {"geom_st_box2d": 7, "x": "a", "y": "b"}}]},
+        ):
+            self.assertEqual(self.geocoder.json_to_results(response, "Bern"), [])
+
+    def test_candidates_count_only_usable_locations(self):
+        response = {"results": [WABERN_RESULT, {"attrs": {"label": "Nowhere"}}]}
+        results = self.geocoder.json_to_results(response, "Wabern")
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].additionalAttributes()["geocode_candidates"], 1)
 
     def test_exact_results_come_first(self):
         response = {
@@ -362,6 +421,19 @@ class TestSwissGeocoderGeocodeString(unittest.TestCase):
         self.assertEqual(
             query_items(self.requests[0])["searchText"],
             "Seftigenstrasse 264 3084 Wabern",
+        )
+
+    def test_long_query_is_cut_to_ten_words(self):
+        with patch.object(
+            SwissGeocoder, "fetch_json", side_effect=self.fake_fetch(EMPTY_RESPONSE)
+        ):
+            self.geocoder.geocodeString(
+                "Via alla Chiesa di San Pietro e Paolo 3 , 6900 Lugano Paradiso",
+                context(),
+            )
+        self.assertEqual(
+            query_items(self.requests[0])["searchText"],
+            "Via alla Chiesa di San Pietro e Paolo 3 6900",
         )
 
     def test_request_error_gives_error_result(self):
@@ -507,6 +579,37 @@ class TestSwissGeocoderOptions(unittest.TestCase):
         self.geocode(geocoder, "Bahnhofstrasse 1")
         self.assertEqual(geocoder.consecutive_errors, 0)
         self.assertEqual(geocoder.requests, 3)
+
+    def test_rejected_searches_are_not_service_failures(self):
+        geocoder = SwissGeocoder()
+        error = GeocoderRequestError("Bad request (HTTP 400)", 400)
+        with patch.object(SwissGeocoder, "fetch_json", side_effect=error) as fetch:
+            for query in ("Bern", "Thun", "Bern"):
+                results = geocoder.geocodeString(query, context())
+                self.assertFalse(results[0].isValid())
+        self.assertEqual(geocoder.consecutive_errors, 0)
+        # A rejected search would be rejected again
+        self.assertEqual(fetch.call_count, 2)
+
+    def test_network_errors_and_rate_limit_are_service_failures(self):
+        geocoder = SwissGeocoder()
+        errors = [
+            GeocoderRequestError("Connection refused"),
+            GeocoderRequestError("Too many requests (HTTP 429)", 429),
+        ]
+        with patch.object(SwissGeocoder, "fetch_json", side_effect=errors):
+            geocoder.geocodeString("Bern", context())
+            geocoder.geocodeString("Bern", context())
+        self.assertEqual(geocoder.consecutive_errors, 2)
+
+    def test_cancelled_request_is_not_a_service_failure(self):
+        geocoder = SwissGeocoder()
+        feedback = QgsFeedback()
+        feedback.cancel()
+        error = GeocoderRequestError("Request cancelled")
+        with patch.object(SwissGeocoder, "fetch_json", side_effect=error):
+            geocoder.geocodeString("Bern", context(), feedback)
+        self.assertEqual(geocoder.consecutive_errors, 0)
 
     def test_pause_between_requests(self):
         geocoder = SwissGeocoder(delay_s=0.05)
