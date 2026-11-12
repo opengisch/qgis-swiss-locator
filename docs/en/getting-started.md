@@ -36,6 +36,12 @@ Start with a prefix and a space to run only one of them:
 
 For instance, `chs Lausanne` only searches the places named Lausanne.
 
+No need to remember them: click in the locator bar without typing anything,
+it lists all the searches with their prefix. Double-click one: its prefix is
+typed for you.
+
+![The searches and their prefixes](assets/screenshots/search-prefixes.png)
+
 The prefixes, and which searches run without one, can be changed in the
 [options of QGIS](configuration.md#in-the-options-of-qgis).
 

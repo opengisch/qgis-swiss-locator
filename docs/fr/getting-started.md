@@ -38,6 +38,12 @@ celles de QGIS. Commencez par un préfixe et un espace pour n'en lancer qu'une :
 
 Par exemple, `chs Lausanne` ne recherche que les lieux nommés Lausanne.
 
+Inutile de les retenir : cliquez dans la barre de localisation sans rien
+taper, elle liste toutes les recherches avec leur préfixe. Double-cliquez sur
+l'une d'elles : son préfixe est tapé pour vous.
+
+![Les recherches et leurs préfixes](assets/screenshots/search-prefixes.png)
+
 Les préfixes, et les recherches lancées sans préfixe, peuvent être modifiés
 dans les [options de QGIS](configuration.md#in-the-options-of-qgis).
 

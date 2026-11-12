@@ -38,6 +38,12 @@ mit einem Präfix und einem Leerzeichen, um nur eine davon auszuführen:
 
 Beispielsweise sucht `chs Lausanne` nur nach Orten namens Lausanne.
 
+Sie müssen sie nicht kennen: Klicken Sie in die Suchleiste, ohne etwas
+einzugeben, sie listet alle Suchen mit ihrem Präfix auf. Doppelklicken Sie auf
+eine: Ihr Präfix wird für Sie eingegeben.
+
+![Die Suchen und ihre Präfixe](assets/screenshots/search-prefixes.png)
+
 Die Präfixe sowie die Auswahl der Suchen, die ohne Präfix laufen, lassen sich
 in den [Optionen von QGIS](configuration.md#in-the-options-of-qgis) ändern.
 

@@ -356,6 +356,17 @@ def close_locator():
 
 def shot_search_all():
     background(GREY)
+    # Without text, the locator lists the searches with their prefix
+    search("")
+    index = find_result(text=plugin_filter("locations").displayName())
+    save("search-prefixes", markers=[select(index)])
+    trigger(index)
+    prefix = find_widget("QgsLocatorLineEdit").text()
+    if prefix.strip() != "chs":
+        raise ValueError(f"the prefix was not set, the locator shows {prefix!r}")
+    close_locator()
+
+    background(GREY)
     search("Lausanne")
     save("search-all")
     close_locator()

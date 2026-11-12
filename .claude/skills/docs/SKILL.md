@@ -57,7 +57,9 @@ fails.
 - The settings of QGIS 4 are in `QGIS/QGIS4.ini`. The plugin takes its language from `locale/userLocale`,
   which `prepare.py` writes. The translations of the plugin are not in the repository: `prepare.py` takes those
   of the latest release.
-- `QgsLocatorWidget` comes back from `findChildren` as a `QWidget`: `sip.cast` it.
+- `QgsLocatorWidget` comes back from `findChildren` as a `QWidget`: `sip.cast` it. It keeps its text after
+  Escape, and `search("")` does not clear it: `new_project()` does.
+- Adding the first layer to an empty project zooms to its full extent: zoom after, as `background()` does.
 - The welcome page of QGIS 4 is a QML view: grabbing the window while it shows hangs QGIS under Xvfb.
   `prepare.py` starts QGIS on a new project, `main()` adds a layer before any shot.
 - The welcome page also hides the map of an empty project: add a layer, wait, then zoom, as `background()`
