@@ -231,6 +231,13 @@ class TestCommandLine(unittest.TestCase):
         self.assertEqual(code, 1)
         download.assert_called_once_with(self.tmp.name)
 
+    def test_fetch_site(self):
+        code, _, download, _ = self.run_cli("fetch", "--site", "_site")
+        self.assertEqual(code, 1)
+        download.assert_called_once_with(
+            os.path.join("_site", spec.DATA_PATH), spec.DATA_FILES + (spec.MANIFEST,)
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
