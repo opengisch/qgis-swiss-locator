@@ -1,4 +1,4 @@
-# Datei-Download
+# Daten herunterladen (STAC)
 
 Präfix: `chd`
 
@@ -12,7 +12,7 @@ berücksichtigt die Namen der Datensätze.
 Geben Sie `chd swissboundaries3d` ein. Hat ein Datensatz nur wenige Dateien,
 werden sie direkt mit ihrem Format aufgelistet.
 
-![Die Dateien von swissBOUNDARIES3D](../assets/screenshots/downloads-search.png)
+![Die Dateien von swissBOUNDARIES3D](assets/screenshots/downloads-search.png)
 
 Doppelklicken Sie auf eine Datei und wählen Sie einen Ordner: Die Datei wird
 heruntergeladen und dann zur Karte hinzugefügt. Archive (ZIP) werden nur
@@ -28,7 +28,7 @@ Geben Sie `chd swissalti3d` ein. Das Höhenmodell ist in Kacheln von einem
 Quadratkilometer unterteilt, zu viele für eine Liste: Das Resultat öffnet ein
 Filterfenster.
 
-![Suche nach swissALTI3D](../assets/screenshots/downloads-filter-search.png)
+![Suche nach swissALTI3D](assets/screenshots/downloads-filter-search.png)
 
 Im Bedienfeld **Swiss Locator: Filtere Dateien für den Download**:
 
@@ -40,7 +40,7 @@ Im Bedienfeld **Swiss Locator: Filtere Dateien für den Download**:
    Karte gezeichnet.
 3. Klicken Sie auf **Download**.
 
-![Die Dateien von swissALTI3D um Lausanne](../assets/screenshots/downloads-filter.png)
+![Die Dateien von swissALTI3D um Lausanne](assets/screenshots/downloads-filter.png)
 
 Wie viele Dateien direkt in der Suchleiste aufgelistet werden, lässt sich in
-der [Konfiguration](../configuration.md) einstellen.
+der [Konfiguration](configuration.md) einstellen.

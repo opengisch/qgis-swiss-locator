@@ -37,19 +37,19 @@ Each search, but the base maps, has its tab:
 **Maximum number of results**
 :   How many results the search lists.
 
-**Include data from opendata.swiss** (map layers)
+**Include data from opendata.swiss** (WMS layers)
 :   Also search the layers of the services referenced by opendata.swiss.
 
-**Maximum number of files per result** (file downloads)
+**Maximum number of files per result** (downloading data)
 :   A dataset with more files than this opens the filter panel instead.
 
 | Search | Priority | Results |
 |--------|----------|---------|
 | Locations | highest | 8 |
-| Map layers | high | 5 |
+| WMS layers | high | 5 |
 | WMTS layers | medium | 8 |
 | Features | high | 8 |
-| File downloads | low | 5, and 5 files per result |
+| Downloading data | low | 5, and 5 files per result |
 
 ### Feature search
 

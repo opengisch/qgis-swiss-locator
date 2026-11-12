@@ -30,11 +30,11 @@ mit einem Präfix und einem Leerzeichen, um nur eine davon auszuführen:
 | Präfix | Suche |
 |--------|-------|
 | `chs` | [Orte](search/locations.md) |
-| `chl` | [Kartenlayer](search/layers.md), aus dem Geoportal und von opendata.swiss |
-| `chw` | [WMTS-Layer](search/wmts.md) |
-| `chb` | [Basiskarten](search/base-maps.md), als Vektorkacheln |
+| `chl` | [WMS-Layer](layers/wms.md), aus dem Geoportal und von opendata.swiss |
+| `chw` | [WMTS-Layer](layers/wmts.md) |
+| `chb` | [Basiskarten](layers/base-maps.md), als Vektorkacheln |
 | `chf` | [Objekte](search/features.md) |
-| `chd` | [Datei-Download](search/downloads.md) |
+| `chd` | [Daten herunterladen](downloads.md) |
 
 Beispielsweise sucht `chs Lausanne` nur nach Orten namens Lausanne.
 

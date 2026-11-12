@@ -1,4 +1,4 @@
-# File downloads
+# Downloading data (STAC)
 
 Prefix: `chd`
 
@@ -12,7 +12,7 @@ the names of the datasets.
 Type `chd swissboundaries3d`. When a dataset has a few files, they are listed
 directly, with their format.
 
-![The files of swissBOUNDARIES3D](../assets/screenshots/downloads-search.png)
+![The files of swissBOUNDARIES3D](assets/screenshots/downloads-search.png)
 
 Double-click a file and choose a folder: the file is downloaded, then added to
 the map. Archives (ZIP) are only downloaded.
@@ -26,7 +26,7 @@ map without downloading it.
 Type `chd swissalti3d`. The elevation model is cut in tiles of one square
 kilometre, too many to list: the result opens a filter panel.
 
-![Searching for swissALTI3D](../assets/screenshots/downloads-filter-search.png)
+![Searching for swissALTI3D](assets/screenshots/downloads-filter-search.png)
 
 In the panel **Swiss Locator: Filter files to download**:
 
@@ -37,7 +37,7 @@ In the panel **Swiss Locator: Filter files to download**:
    and the **timestamp**. The footprints of the files are drawn on the map.
 3. **Download**.
 
-![The files of swissALTI3D around Lausanne](../assets/screenshots/downloads-filter.png)
+![The files of swissALTI3D around Lausanne](assets/screenshots/downloads-filter.png)
 
 The number of files listed directly in the locator bar can be set in the
-[configuration](../configuration.md).
+[configuration](configuration.md).

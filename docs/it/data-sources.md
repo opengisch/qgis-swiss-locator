@@ -9,7 +9,7 @@ cantoni. Richiede una connessione a Internet.
 | [wms.geo.admin.ch](https://wms.geo.admin.ch) | layer |
 | [wmts.geo.admin.ch](https://wmts.geo.admin.ch) | layer WMTS |
 | [vectortiles.geo.admin.ch](https://vectortiles.geo.admin.ch) | mappe di base |
-| [data.geo.admin.ch](https://data.geo.admin.ch) | download di file |
+| [data.geo.admin.ch](https://data.geo.admin.ch) | download di dati |
 | [opendata.swiss](https://opendata.swiss) e i servizi WMS che vi sono referenziati | layer |
 | [opengisch.github.io/qgis-swiss-locator](https://opengisch.github.io/qgis-swiss-locator/data/v1/index.json) | layer, oggetti |
 
@@ -18,7 +18,7 @@ verificarne le condizioni d'uso.
 
 ## Il catalogo dei dati (STAC)
 
-Il [download di file](search/downloads.md) attinge al catalogo dei dati del
+Il [download di dati](downloads.md) attinge al catalogo dei dati del
 geoportale federale, [data.geo.admin.ch](https://data.geo.admin.ch). Segue lo
 standard STAC (SpatioTemporal Asset Catalog) e organizza i dati in:
 
@@ -52,7 +52,7 @@ online sarebbe troppo lenta:
 - i layer di map.geo.admin.ch con oggetti ricercabili, per la
   [ricerca di oggetti](search/features.md);
 - i layer dei servizi WMS referenziati da opendata.swiss, per la ricerca di
-  [layer](search/layers.md).
+  [layer WMS](layers/wms.md).
 
 Un workflow GitHub del repository del plugin li genera regolarmente e li pubblica su
 [GitHub Pages](https://opengisch.github.io/qgis-swiss-locator/data/v1/index.json),

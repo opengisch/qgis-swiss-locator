@@ -5,20 +5,20 @@ and of the cantons. It needs an internet connection.
 
 | Service | Used by |
 |---------|---------|
-| [api3.geo.admin.ch](https://api3.geo.admin.ch) | locations, map layers, features, elevation profile |
-| [wms.geo.admin.ch](https://wms.geo.admin.ch) | map layers |
+| [api3.geo.admin.ch](https://api3.geo.admin.ch) | locations, WMS layers, features, elevation profile |
+| [wms.geo.admin.ch](https://wms.geo.admin.ch) | WMS layers |
 | [wmts.geo.admin.ch](https://wmts.geo.admin.ch) | WMTS layers |
 | [vectortiles.geo.admin.ch](https://vectortiles.geo.admin.ch) | base maps |
-| [data.geo.admin.ch](https://data.geo.admin.ch) | file downloads |
-| [opendata.swiss](https://opendata.swiss) and the WMS services it references | map layers |
-| [opengisch.github.io/qgis-swiss-locator](https://opengisch.github.io/qgis-swiss-locator/data/v1/index.json) | map layers, features |
+| [data.geo.admin.ch](https://data.geo.admin.ch) | downloads |
+| [opendata.swiss](https://opendata.swiss) and the WMS services it references | WMS layers |
+| [opengisch.github.io/qgis-swiss-locator](https://opengisch.github.io/qgis-swiss-locator/data/v1/index.json) | WMS layers, features |
 
 The data belongs to its publishers: check their terms of use before you
 publish it.
 
 ## The data catalogue (STAC)
 
-The [file downloads](search/downloads.md) come from the data catalogue of the
+The [downloads](downloads.md) come from the data catalogue of the
 federal geoportal, [data.geo.admin.ch](https://data.geo.admin.ch). It follows
 the STAC standard (SpatioTemporal Asset Catalog), and organises the data in:
 
@@ -51,7 +51,7 @@ be too slow:
 - the layers of map.geo.admin.ch whose features can be searched, for the
   [feature search](search/features.md);
 - the layers of the WMS services referenced by opendata.swiss, for the
-  [map layers](search/layers.md).
+  [WMS layers](layers/wms.md).
 
 A GitHub workflow of the repository of the plugin generates them regularly and publishes them on
 [GitHub Pages](https://opengisch.github.io/qgis-swiss-locator/data/v1/index.json),

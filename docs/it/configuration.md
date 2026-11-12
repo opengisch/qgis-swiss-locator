@@ -37,20 +37,20 @@ Ogni ricerca, tranne le mappe di base, ha la sua scheda:
 **Numero massimo di risultati**
 :   Quanti risultati elenca la ricerca.
 
-**Includi i dati di opendata.swiss** (layer)
+**Includi i dati di opendata.swiss** (layer WMS)
 :   Cerca anche i layer dei servizi referenziati da opendata.swiss.
 
-**Maximum number of files per result** (download di file)
+**Maximum number of files per result** (download di dati)
 :   Un set di dati con un numero maggiore di file apre il pannello di filtro
     invece di elencarli.
 
 | Ricerca | Priorità | Risultati |
 |---------|----------|-----------|
 | Località | molto alta | 8 |
-| Layer | alta | 5 |
+| Layer WMS | alta | 5 |
 | Layer WMTS | media | 8 |
 | Oggetti | alta | 8 |
-| Download di file | bassa | 5, e 5 file per risultato |
+| Scaricare dati | bassa | 5, e 5 file per risultato |
 
 ### Ricerca di oggetti {#feature-search}
 

@@ -24,7 +24,7 @@ swissALTI3D.
 !!! note
     The point cloud of this example is made up for the documentation. Real
     ones, such as swissSURFACE3D, can be downloaded with the
-    [file download](search/downloads.md) search.
+    [download](downloads.md) search.
 
 In the layer tree of the profile, uncheck **Swiss Profile** to hide the
 terrain, or drag it to change the drawing order.

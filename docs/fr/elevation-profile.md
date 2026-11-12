@@ -25,7 +25,7 @@ swissALTI3D.
 !!! note
     Le nuage de points de cet exemple est inventé pour la documentation. De
     vrais nuages de points, comme swissSURFACE3D, peuvent être téléchargés avec
-    la recherche [Téléchargement de fichiers](search/downloads.md).
+    la recherche [Télécharger des données](downloads.md).
 
 Dans l'arborescence des couches du profil, décochez **Swiss Profile** pour
 masquer le terrain, ou faites-le glisser pour changer l'ordre de dessin.

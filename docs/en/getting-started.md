@@ -28,11 +28,11 @@ Start with a prefix and a space to run only one of them:
 | Prefix | Search |
 |--------|--------|
 | `chs` | [Locations](search/locations.md) |
-| `chl` | [Map layers](search/layers.md), from the geoportal and opendata.swiss |
-| `chw` | [WMTS layers](search/wmts.md) |
-| `chb` | [Base maps](search/base-maps.md), as vector tiles |
+| `chl` | [WMS layers](layers/wms.md), from the geoportal and opendata.swiss |
+| `chw` | [WMTS layers](layers/wmts.md) |
+| `chb` | [Base maps](layers/base-maps.md), as vector tiles |
 | `chf` | [Features](search/features.md) |
-| `chd` | [File downloads](search/downloads.md) |
+| `chd` | [Downloading data](downloads.md) |
 
 For instance, `chs Lausanne` only searches the places named Lausanne.
 

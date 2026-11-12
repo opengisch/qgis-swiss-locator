@@ -38,20 +38,20 @@ Chaque recherche, sauf les fonds de plan, a son onglet :
 **Nombre maximum de résultats**
 :   Le nombre de résultats que la recherche liste.
 
-**Inclure les données de opendata.swiss** (couches)
+**Inclure les données de opendata.swiss** (couches WMS)
 :   Recherche aussi les couches des services référencés par opendata.swiss.
 
-**Nombre max. de fichiers par résultat** (téléchargement de fichiers)
+**Nombre max. de fichiers par résultat** (téléchargement de données)
 :   Un jeu de données qui a plus de fichiers ouvre le panneau de filtre au lieu
     de les lister.
 
 | Recherche | Priorité | Résultats |
 |-----------|----------|-----------|
 | Lieux | très haute | 8 |
-| Couches | haute | 5 |
+| Couches WMS | haute | 5 |
 | Couches WMTS | moyenne | 8 |
 | Objets | haute | 8 |
-| Téléchargement de fichiers | basse | 5, et 5 fichiers par résultat |
+| Télécharger des données | basse | 5, et 5 fichiers par résultat |
 
 ### Recherche d'objets {#feature-search}
 

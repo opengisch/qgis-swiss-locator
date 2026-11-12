@@ -14,14 +14,16 @@ theme:
 nav:
   - Startseite: index.md
   - Erste Schritte: getting-started.md
-  - Suche:
+  - Orte und Objekte suchen:
       - search/index.md
       - Orte: search/locations.md
-      - Kartenlayer: search/layers.md
-      - WMTS-Layer: search/wmts.md
-      - Basiskarten: search/base-maps.md
       - Objekte: search/features.md
-      - Datei-Download: search/downloads.md
+  - Layer hinzufügen:
+      - layers/index.md
+      - WMS-Layer: layers/wms.md
+      - WMTS-Layer: layers/wmts.md
+      - Basiskarten: layers/base-maps.md
+  - Daten herunterladen (STAC): downloads.md
   - Höhenprofil: elevation-profile.md
   - Konfiguration: configuration.md
   - Datenquellen: data-sources.md

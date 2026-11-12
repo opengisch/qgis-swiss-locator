@@ -1,16 +1,12 @@
-# Search
+# Search for locations and features
 
-The plugin adds six searches to the locator bar of QGIS. Each one has a prefix
-to run it alone.
+Find a place or a feature of the geoportal: the map moves to it and highlights
+it.
 
-| Search | Prefix | Finds | Source |
-|--------|--------|-------|--------|
-| [Locations](locations.md) | `chs` | cantons, municipalities, districts, ZIP codes, addresses, parcels, names of the national map | geo.admin.ch |
-| [Map layers](layers.md) | `chl` | WMS layers | geo.admin.ch, cantonal services referenced by opendata.swiss |
-| [WMTS layers](wmts.md) | `chw` | WMTS layers | geo.admin.ch |
-| [Base maps](base-maps.md) | `chb` | vector tile base maps | swisstopo |
-| [Features](features.md) | `chf` | features of the layers of the geoportal | geo.admin.ch |
-| [File downloads](downloads.md) | `chd` | files of the data catalogue | data.geo.admin.ch (STAC) |
+| Search | Prefix | Finds |
+|--------|--------|-------|
+| [Locations](locations.md) | `chs` | cantons, municipalities, districts, ZIP codes, addresses, parcels, names of the national map |
+| [Features](features.md) | `chf` | features of the layers of the geoportal, such as a public transport stop or a mountain hut |
 
 The number of results and the order of the searches can be set in the
 [configuration](../configuration.md).

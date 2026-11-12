@@ -1,4 +1,4 @@
-# Download di file
+# Scaricare dati (STAC)
 
 Prefisso: `chd`
 
@@ -12,7 +12,7 @@ considera i nomi dei set di dati.
 Digitare `chd swissboundaries3d`. Quando un set di dati ha pochi file, questi
 vengono elencati direttamente, con il loro formato.
 
-![I file di swissBOUNDARIES3D](../assets/screenshots/downloads-search.png)
+![I file di swissBOUNDARIES3D](assets/screenshots/downloads-search.png)
 
 Fare doppio clic su un file e scegliere una cartella: il file viene scaricato,
 poi aggiunto alla mappa. Gli archivi (ZIP) vengono solo scaricati.
@@ -27,7 +27,7 @@ Digitare `chd swissalti3d`. Il modello altimetrico è suddiviso in riquadri di u
 chilometro quadrato, troppi per essere elencati: il risultato apre un pannello
 di filtro.
 
-![Ricerca di swissALTI3D](../assets/screenshots/downloads-filter-search.png)
+![Ricerca di swissALTI3D](assets/screenshots/downloads-filter-search.png)
 
 Nel pannello **Swiss Locator: Filter files to download**:
 
@@ -39,7 +39,7 @@ Nel pannello **Swiss Locator: Filter files to download**:
    (**Timestamp**). I contorni dei file vengono disegnati sulla mappa.
 3. Fare clic su **Download**.
 
-![I file di swissALTI3D intorno a Losanna](../assets/screenshots/downloads-filter.png)
+![I file di swissALTI3D intorno a Losanna](assets/screenshots/downloads-filter.png)
 
 Il numero di file elencati direttamente nella barra di localizzazione può essere
-impostato nella [configurazione](../configuration.md).
+impostato nella [configurazione](configuration.md).

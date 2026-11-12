@@ -1,16 +1,12 @@
-# Recherche
+# Rechercher des lieux et des objets
 
-L'extension ajoute six recherches à la barre de localisation de QGIS. Chacune a
-un préfixe pour la lancer seule.
+Trouvez un lieu ou un objet du géoportail : la carte s'y déplace et le met en
+évidence.
 
-| Recherche | Préfixe | Trouve | Source |
-|-----------|---------|--------|--------|
-| [Lieux](locations.md) | `chs` | cantons, communes, districts, codes postaux, adresses, parcelles, noms de la carte nationale | geo.admin.ch |
-| [Couches](layers.md) | `chl` | couches WMS | geo.admin.ch, services cantonaux référencés par opendata.swiss |
-| [Couches WMTS](wmts.md) | `chw` | couches WMTS | geo.admin.ch |
-| [Fonds de plan](base-maps.md) | `chb` | fonds de plan en tuiles vectorielles | swisstopo |
-| [Objets](features.md) | `chf` | objets des couches du géoportail | geo.admin.ch |
-| [Téléchargement de fichiers](downloads.md) | `chd` | fichiers du catalogue de données | data.geo.admin.ch (STAC) |
+| Recherche | Préfixe | Trouve |
+|-----------|---------|--------|
+| [Lieux](locations.md) | `chs` | cantons, communes, districts, codes postaux, adresses, parcelles, noms de la carte nationale |
+| [Objets](features.md) | `chf` | objets des couches du géoportail, comme un arrêt de transports publics ou une cabane |
 
 Le nombre de résultats et l'ordre des recherches peuvent être définis dans la
 [configuration](../configuration.md).
