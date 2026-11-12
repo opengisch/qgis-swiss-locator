@@ -69,6 +69,10 @@ extra:
       link: /qgis-swiss-locator/it/
       lang: it
 
+# Shared by all languages, in overrides: the shortcuts of macOS on macOS
+extra_javascript:
+  - assets/javascripts/shortcuts.js
+
 markdown_extensions:
   - admonition
   - attr_list
