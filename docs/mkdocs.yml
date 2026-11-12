@@ -1,0 +1,98 @@
+# Documentation of the plugin, built with Zensical: python docs/build.py
+#
+# Zensical does not translate a site yet. Each language is a copy of the pages
+# in its own folder, built as a site of its own by mkdocs.<lang>.yml, which
+# inherits this file. This file builds English.
+
+site_name: Swiss Locator
+site_description: Search the Swiss Geoportal and opendata.swiss from the locator bar of QGIS
+site_author: OPENGIS.ch
+site_url: https://opengisch.github.io/qgis-swiss-locator/en/
+
+repo_name: opengisch/qgis-swiss-locator
+repo_url: https://github.com/opengisch/qgis-swiss-locator
+edit_uri: edit/main/docs/en/
+
+docs_dir: en
+site_dir: site/en
+
+theme:
+  name: material
+  # Shared by all languages: the logo
+  custom_dir: overrides
+  language: en
+  logo: assets/images/logo.png
+  favicon: assets/images/logo.png
+  features:
+    - content.action.edit
+    - navigation.footer
+    - navigation.indexes
+    - navigation.instant
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: lucide/sun-moon
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: red
+      accent: red
+      toggle:
+        icon: lucide/sun
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: red
+      accent: red
+      toggle:
+        icon: lucide/moon
+        name: Switch to system preference
+
+extra:
+  generator: false
+  # The language selector. Each language lives in a folder of its own, so
+  # that the selector stays on the same page.
+  alternate:
+    - name: English
+      link: /qgis-swiss-locator/en/
+      lang: en
+    - name: Français
+      link: /qgis-swiss-locator/fr/
+      lang: fr
+    - name: Deutsch
+      link: /qgis-swiss-locator/de/
+      lang: de
+    - name: Italiano
+      link: /qgis-swiss-locator/it/
+      lang: it
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.keys
+  - pymdownx.superfences
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - Search:
+      - search/index.md
+      - Locations: search/locations.md
+      - Map layers: search/layers.md
+      - WMTS layers: search/wmts.md
+      - Base maps: search/base-maps.md
+      - Features: search/features.md
+      - File downloads: search/downloads.md
+  - Elevation profile: elevation-profile.md
+  - Configuration: configuration.md
+  - Data sources: data-sources.md

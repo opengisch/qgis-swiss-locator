@@ -1,0 +1,27 @@
+# The pages in it, see mkdocs.yml
+INHERIT: mkdocs.yml
+
+site_description: Cercate nel geoportale federale e su opendata.swiss dalla barra di localizzazione di QGIS
+site_url: https://opengisch.github.io/qgis-swiss-locator/it/
+edit_uri: edit/main/docs/it/
+
+docs_dir: it
+site_dir: site/it
+
+theme:
+  language: it
+
+nav:
+  - Home: index.md
+  - Primi passi: getting-started.md
+  - Ricerca:
+      - search/index.md
+      - Località: search/locations.md
+      - Layer: search/layers.md
+      - Layer WMTS: search/wmts.md
+      - Mappe di base: search/base-maps.md
+      - Oggetti: search/features.md
+      - Download di file: search/downloads.md
+  - Profilo altimetrico: elevation-profile.md
+  - Configurazione: configuration.md
+  - Fonti dei dati: data-sources.md

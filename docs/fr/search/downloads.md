@@ -1,0 +1,46 @@
+# Téléchargement de fichiers
+
+Préfixe : `chd`
+
+Téléchargez des fichiers du catalogue de données du géoportail,
+[data.geo.admin.ch](https://data.geo.admin.ch), et ajoutez-les à la carte :
+modèles altimétriques, images aériennes, limites, cartes et plus encore. La
+recherche porte sur les noms des jeux de données.
+
+## Un jeu de données de quelques fichiers
+
+Tapez `chd swissboundaries3d`. Quand un jeu de données a peu de fichiers, ils
+sont listés directement, avec leur format.
+
+![Les fichiers de swissBOUNDARIES3D](../assets/screenshots/downloads-search.png)
+
+Double-cliquez sur un fichier et choisissez un dossier : le fichier est
+téléchargé, puis ajouté à la carte. Les archives (ZIP) sont seulement
+téléchargées.
+
+Les fichiers que QGIS peut lire par le réseau, comme les Cloud Optimized
+GeoTIFF, sont listés deux fois : la seconde entrée, marquée *streamed*, ajoute
+le fichier à la carte sans le télécharger.
+
+## Un jeu de données de nombreux fichiers
+
+Tapez `chd swissalti3d`. Le modèle altimétrique est découpé en tuiles d'un
+kilomètre carré, trop nombreuses pour être listées : le résultat ouvre un
+panneau de filtre.
+
+![La recherche de swissALTI3D](../assets/screenshots/downloads-filter-search.png)
+
+Dans le panneau **Swiss Locator : Filtrer les fichiers à télécharger** :
+
+1. **Étendue** : par défaut, les fichiers qui couvrent la vue de la carte. Ce
+   peut aussi être l'emprise complète du jeu de données, l'étendue d'une
+   couche, d'une carte de mise en page ou d'un signet.
+2. Cliquez sur **Demander la liste des fichiers**, puis choisissez le
+   **Type de données**, la **Résolution [m]** et la **Date**. Les emprises des
+   fichiers sont dessinées sur la carte.
+3. Cliquez sur **Télécharger**.
+
+![Les fichiers de swissALTI3D autour de Lausanne](../assets/screenshots/downloads-filter.png)
+
+Le nombre de fichiers listés directement dans la barre de localisation peut
+être défini dans la [configuration](../configuration.md).

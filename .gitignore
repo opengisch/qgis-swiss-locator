@@ -10,3 +10,6 @@ swiss_locator/resources_rc.py
 # data files bundled at packaging or generated locally (python -m scripts --help)
 swiss_locator/remote_data/bundled/
 _site/
+
+# documentation built by python docs/build.py
+docs/site/
