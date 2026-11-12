@@ -14,7 +14,8 @@ et trouvez :
 - des **fichiers à télécharger** du catalogue de données du géoportail (STAC).
 
 Elle dessine aussi le terrain de swissALTI3D dans les **profils d'élévation**
-de QGIS.
+de QGIS, et [géocode](geocoding.md) des **tables d'adresses** avec les
+traitements.
 
 ![Les chemins de randonnée du géoportail, ajoutés depuis la barre de localisation](assets/screenshots/layers-result.png)
 

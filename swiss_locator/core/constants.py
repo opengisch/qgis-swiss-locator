@@ -23,3 +23,6 @@ MAP_GEO_ADMIN_URL = "https://map.geo.admin.ch"
 PAGES_URL = "https://opengisch.github.io/qgis-swiss-locator"
 
 USER_AGENT = b"Mozilla/5.0 QGIS Swiss Geoportal Locator Filter"
+# QgsNetworkAccessManager replaces the User-Agent of a request with its own,
+# QGIS 4 appends this suffix to it
+USER_AGENT_SUFFIX = USER_AGENT.decode().removeprefix("Mozilla/5.0 ")

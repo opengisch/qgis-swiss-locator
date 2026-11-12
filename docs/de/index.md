@@ -15,7 +15,8 @@ Suchleiste von QGIS einen Begriff ein, wie auf
 - **Dateien zum Herunterladen** aus dem Datenkatalog des Geoportals (STAC).
 
 Zudem zeichnet das Plugin das Gelände von swissALTI3D in die **Höhenprofile**
-von QGIS.
+von QGIS und [geokodiert](geocoding.md) **Adresstabellen** mit der
+Verarbeitung.
 
 ![Wanderwege des Geoportals, über die Suchleiste hinzugefügt](assets/screenshots/layers-result.png)
 

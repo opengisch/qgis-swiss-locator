@@ -18,6 +18,7 @@ nav:
       - search/index.md
       - Orte: search/locations.md
       - Objekte: search/features.md
+  - Geokodierung: geocoding.md
   - Layer hinzufügen:
       - layers/index.md
       - WMS-Layer: layers/wms.md

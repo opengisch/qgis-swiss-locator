@@ -14,7 +14,7 @@ per trovare:
 - **file da scaricare** dal catalogo dei dati del geoportale (STAC).
 
 Il plugin disegna inoltre il terreno di swissALTI3D nei **profili altimetrici**
-di QGIS.
+di QGIS, e [geocodifica](geocoding.md) **tabelle di indirizzi** con Processing.
 
 ![I percorsi escursionistici del geoportale, aggiunti dalla barra di localizzazione](assets/screenshots/layers-result.png)
 

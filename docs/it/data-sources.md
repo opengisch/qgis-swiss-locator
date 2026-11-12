@@ -5,7 +5,7 @@ cantoni. Richiede una connessione a Internet.
 
 | Servizio | Usato da |
 |----------|----------|
-| [api3.geo.admin.ch](https://api3.geo.admin.ch) | località, layer, oggetti, profilo altimetrico |
+| [api3.geo.admin.ch](https://api3.geo.admin.ch) | località, geocodifica, layer, oggetti, profilo altimetrico |
 | [wms.geo.admin.ch](https://wms.geo.admin.ch) | layer |
 | [wmts.geo.admin.ch](https://wmts.geo.admin.ch) | layer WMTS |
 | [vectortiles.geo.admin.ch](https://vectortiles.geo.admin.ch) | mappe di base |

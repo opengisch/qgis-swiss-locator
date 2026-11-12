@@ -13,7 +13,7 @@ QGIS, as you would on [map.geo.admin.ch](https://map.geo.admin.ch), and find:
 - **files to download** from the data catalogue of the geoportal (STAC).
 
 It also draws the terrain of swissALTI3D in the **elevation profiles** of
-QGIS.
+QGIS, and [geocodes](geocoding.md) **tables of addresses** with Processing.
 
 ![Hiking trails of the geoportal, added from the locator bar](assets/screenshots/layers-result.png)
 

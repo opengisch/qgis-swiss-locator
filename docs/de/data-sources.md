@@ -5,7 +5,7 @@ der Kantone ab. Es benötigt eine Internetverbindung.
 
 | Dienst | Verwendet von |
 |--------|---------------|
-| [api3.geo.admin.ch](https://api3.geo.admin.ch) | Orte, WMS-Layer, Objekte, Höhenprofil |
+| [api3.geo.admin.ch](https://api3.geo.admin.ch) | Orte, Geokodierung, WMS-Layer, Objekte, Höhenprofil |
 | [wms.geo.admin.ch](https://wms.geo.admin.ch) | WMS-Layer |
 | [wmts.geo.admin.ch](https://wmts.geo.admin.ch) | WMTS-Layer |
 | [vectortiles.geo.admin.ch](https://vectortiles.geo.admin.ch) | Basiskarten |

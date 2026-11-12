@@ -41,6 +41,7 @@ from qgis.core import (
     QgsApplication,
     QgsCoordinateReferenceSystem,
     QgsCoordinateTransform,
+    QgsFeature,
     QgsFeedback,
     QgsLocatorModel,
     QgsPointCloudClassifiedRenderer,
@@ -48,6 +49,7 @@ from qgis.core import (
     QgsPointXY,
     QgsProject,
     QgsSettingsTree,
+    QgsVectorLayer,
 )
 from qgis.gui import QgsLocatorWidget
 from qgis.utils import iface, plugins
@@ -104,6 +106,24 @@ FEATURE_LAYERS = [
 ]
 # The line of fake_lidar.py
 PROFILE_LINE = ((2626300.0, 1197200.0), (2627500.0, 1198000.0))
+# The table of the geocoding example: there is no Seftigenstrasse 355, and
+# there are many Bahnhofstrasse 1
+ADDRESSES = (
+    "Bundesplatz 3, 3011 Bern",
+    "Seftigenstrasse 264, 3084 Wabern",
+    "Rue du Stand 15, 1204 Genève",
+    "Piazza Grande 1, 6600 Locarno",
+    "Seftigenstrasse 355, 3084 Wabern",
+    "Bahnhofstrasse 1",
+)
+# The attributes of the geocoding result shown in its table
+GEOCODING_COLUMNS = (
+    "id",
+    "address",
+    "geocode_quality",
+    "geocode_candidates",
+    "geocode_label",
+)
 
 
 # --------------------------------------------------------------------------
@@ -477,6 +497,58 @@ def shot_downloads():
     dock.close()
 
 
+def shot_geocoding():
+    import processing
+
+    background(GREY)
+    # A table without geometry, as loaded from a CSV file
+    table = QgsVectorLayer(
+        "None?field=id:integer&field=address:string", "addresses", "memory"
+    )
+    for number, address in enumerate(ADDRESSES, 1):
+        feature = QgsFeature(table.fields())
+        feature.setAttributes([number, address])
+        table.dataProvider().addFeature(feature)
+    QgsProject.instance().addMapLayer(table)
+
+    algorithm = "swiss_locator:geocodeaddresses"
+    dialog = processing.createAlgorithmDialog(
+        algorithm, {"INPUT": table.id(), "FIELD": "address"}
+    )
+    # QGIS restores the last size of the dialog, a minimum overrides it
+    dialog.setMinimumSize(1000, 640)
+    dialog.show()
+    wait(1500)
+    save("geocoding-dialog", widget=dialog)
+    dialog.close()
+
+    output = processing.runAndLoadResults(
+        algorithm,
+        {"INPUT": table, "FIELD": "address", "OUTPUT": "TEMPORARY_OUTPUT"},
+    )["OUTPUT"]
+    layer = (
+        output
+        if isinstance(output, QgsVectorLayer)
+        else QgsProject.instance().mapLayer(output)
+    )
+    for feature in layer.getFeatures():
+        log(f"    {[feature[name] for name in GEOCODING_COLUMNS]}")
+    config = layer.attributeTableConfig()
+    columns = config.columns()
+    for column in columns:
+        column.hidden = column.name not in GEOCODING_COLUMNS
+    config.setColumns(columns)
+    layer.setAttributeTableConfig(config)
+    table_dialog = iface.showAttributeTable(layer)
+    wait(1500)
+    table_dialog.resize(760, 300)
+    wait(500)
+    find_widget("QgsAttributeTableView", table_dialog).resizeColumnsToContents()
+    wait(500)
+    save("geocoding-table", widget=table_dialog)
+    table_dialog.close()
+
+
 def shot_profile():
     background()
     lidar = QgsPointCloudLayer(LIDAR, "Lidar", "ept")
@@ -576,6 +648,7 @@ SHOTS = {
     "base_maps": shot_base_maps,
     "features": shot_features,
     "downloads": shot_downloads,
+    "geocoding": shot_geocoding,
     "profile": shot_profile,
     "configuration": shot_configuration,
 }

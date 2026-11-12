@@ -21,6 +21,8 @@ Similarly to the online geoportal [https://map.geo.admin.ch](https://map.geo.adm
 
 Elevation profiles can be displayed in QGIS and included in layouts. These profiles use the Elevation Profile service (swissALTI3D height model).
 
+Tables of addresses (for instance a CSV file) can be geocoded in bulk into a point layer with the **Geocode addresses** Processing algorithm, see [Geocoding](https://opengisch.github.io/qgis-swiss-locator/en/geocoding/).
+
 ## How
 
 Type the text to search in the locator bar of QGIS, and double-click a result.
