@@ -31,7 +31,7 @@ tables of addresses with Processing.
 
 ## Data files
 
-Some searches rely on data files generated weekly by the
+Some searches rely on data files generated nightly by the
 [Update data](.github/workflows/update-data.yml) workflow and published on
 [GitHub Pages](https://opengisch.github.io/qgis-swiss-locator/data/v1/index.json):
 * the searchable layers of map.geo.admin.ch (feature search)
@@ -40,8 +40,8 @@ Some searches rely on data files generated weekly by the
 
 The plugin updates its cache from there at most once a day, in the background,
 and falls back on the copy bundled in each release when GitHub is unreachable.
-A WMS service offline during the weekly run keeps its published layers for up
-to 30 days.
+A WMS service that cannot be reached keeps its published layers for up to 30
+days.
 See [swiss_locator/remote_data](swiss_locator/remote_data).
 
 When running the plugin from the sources (e.g. symlinked in the QGIS plugins
