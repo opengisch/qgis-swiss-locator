@@ -6,8 +6,8 @@ name: 📦 Update data
 
 on:
   schedule:
-    # weekly
-    - cron: '0 0 * * 0'
+    # nightly, off the top of the hour when GitHub delays scheduled runs
+    - cron: '30 2 * * *'
   push:
     branches:
       - main
