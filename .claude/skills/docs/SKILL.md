@@ -28,7 +28,7 @@ fails.
 | `docs/en`, `fr`, `de`, `it`       | The pages, one copy per language, with the same file names            |
 | `docs/<lang>/assets/screenshots`  | The screenshots of that language, generated                           |
 | `docs/mkdocs.yml`                 | The configuration, English; `mkdocs.<lang>.yml` inherit it, with the titles of the navigation |
-| `docs/overrides`                  | What all languages share: the logo                                    |
+| `docs/overrides`                  | What all languages share: the logo, `shortcuts.js`                    |
 | `docs/build.py`                   | Builds each language into `docs/site/<lang>`, and the root page, which sends visitors to the language of their browser |
 | `docs/screenshots`                | `run.sh` starts QGIS in Docker, `prepare.py` installs the plugin, `take_screenshots.py` drives QGIS, `fake_lidar.py` makes the point cloud of the profile |
 
@@ -40,6 +40,8 @@ fails.
   keeps the English id on the translated heading: `## Dans les options de QGIS {#in-the-options-of-qgis}`.
 - A label in bold is the one QGIS and the plugin show in the language of the page: read it on the screenshot of
   that language. When QGIS or the plugin has no translation for it, it shows English, and so does the page.
+- A shortcut is written as on Windows and Linux, `++ctrl+k++`, `++alt+x++`, `++enter++`. On macOS,
+  `shortcuts.js` shows Cmd, Option and Return, as QGIS takes them there.
 - A screenshot is taken by `take_screenshots.py`, never by hand: a function of `SHOTS` saves
   `docs/<lang>/assets/screenshots/<name>.png`. What is typed in the locator differs by language
   (`LAYER_SEARCH`, `OPENDATA_SEARCH`): the example of a page matches its screenshots.
