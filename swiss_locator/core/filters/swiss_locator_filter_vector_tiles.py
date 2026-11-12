@@ -35,19 +35,19 @@ class SwissLocatorFilterVectorTiles(SwissLocatorFilter):
         tiles_url = f"{VECTOR_TILES_BASE_URL}/tiles/ch.swisstopo.base.vt/v1.0.0/{{z}}/{{x}}/{{y}}.pbf"
         data = {
             "base map": {
-                "title": "Base map",
+                "title": self.tr("Base map"),
                 "description": "",
                 "url": tiles_url,
                 "style": f"{VECTOR_TILES_BASE_URL}/styles/ch.swisstopo.basemap.vt/style.json",
             },
             "light base map": {
-                "title": "Light base map",
+                "title": self.tr("Light base map"),
                 "description": "",
                 "url": tiles_url,
                 "style": f"{VECTOR_TILES_BASE_URL}/styles/ch.swisstopo.lightbasemap.vt/style.json",
             },
             "imagery base map": {
-                "title": "Imagery base map",
+                "title": self.tr("Imagery base map"),
                 "description": "",
                 "url": tiles_url,
                 "style": f"{VECTOR_TILES_BASE_URL}/styles/ch.swisstopo.imagerybasemap.vt/style.json",
@@ -57,7 +57,9 @@ class SwissLocatorFilterVectorTiles(SwissLocatorFilter):
         for keyword in list(data.keys()):
             results = {}
             score = 1
-            if not search or search.lower() in keyword:
+            # in English or in the language of QGIS
+            title = data[keyword]["title"].lower()
+            if not search or search.lower() in keyword or search.lower() in title:
                 result = QgsLocatorResult()
                 result.filter = self
                 result.icon = QgsApplication.getThemeIcon(
