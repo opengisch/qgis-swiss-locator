@@ -93,9 +93,9 @@ class SwissLocatorFilterFeature(SwissLocatorFilter):
             else:
                 self.info(
                     self.tr(
-                        f"Layer {layer} is not in the list of searchable layers."
+                        "Layer {} is not in the list of searchable layers."
                         " Please report issue."
-                    ),
+                    ).format(layer),
                     Qgis.MessageLevel.Warning,
                 )
                 layer_display = layer

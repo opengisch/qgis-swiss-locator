@@ -50,6 +50,23 @@ class TestDatasets(unittest.TestCase):
 
 
 class TestMapGeoAdmin(unittest.TestCase):
+    def fake_get_json(self, configs, search_errors=None):
+        """Answer the layers configuration by language, and the feature search
+        by layer: an HttpError of search_errors, or no result."""
+        search_errors = search_errors or {}
+
+        def get_json(url, params):
+            if url == map_geo_admin.LAYERS_CONFIG_URL:
+                return configs.get(params["lang"], {})
+            self.assertEqual(url, map_geo_admin.SEARCH_URL)
+            self.assertEqual(params["type"], "featuresearch")
+            error = search_errors.get(params["features"])
+            if error:
+                raise error
+            return {"results": []}
+
+        return get_json
+
     def test_build(self):
         configs = {
             "de": {
@@ -58,19 +75,34 @@ class TestMapGeoAdmin(unittest.TestCase):
                 "ch.hidden": {"label": "Hidden", "searchable": False},
             },
             "fr": {"ch.a": {"label": "A fr", "searchable": True}},
+            "en": {"ch.a": {"searchable": True}},
         }
 
-        def get_json(url, params):
-            self.assertEqual(url, map_geo_admin.LAYERS_CONFIG_URL)
-            return configs.get(params["lang"], {"ch.a": {"searchable": True}})
-
-        layers = map_geo_admin.build(None, get_json)
+        layers = map_geo_admin.build(None, self.fake_get_json(configs))
         self.assertEqual(list(layers), ["ch.a", "ch.b"])
         self.assertEqual(layers["ch.a"]["de"], "A de")
         self.assertEqual(layers["ch.a"]["fr"], "A fr")
         # no label: the layer id
         self.assertEqual(layers["ch.a"]["en"], "ch.a")
         self.assertEqual(layers["ch.b"], {"de": "B de"})
+
+    def test_layer_without_search_index_is_left_out(self):
+        configs = {"de": {"ch.a": {"searchable": True}, "ch.b": {"searchable": True}}}
+        errors = {"ch.b": HttpError("HTTP error 404", status=404)}
+        layers = map_geo_admin.build({"ch.b": {}}, self.fake_get_json(configs, errors))
+        self.assertEqual(list(layers), ["ch.a"])
+
+    def test_unchecked_layer_is_kept_if_published(self):
+        configs = {"de": {"ch.a": {"searchable": True}, "ch.b": {"searchable": True}}}
+        errors = {
+            "ch.a": HttpError("HTTP error 503", status=503),
+            "ch.b": HttpError("unreachable"),
+        }
+        with self.assertLogs(map_geo_admin.log, "WARNING"):
+            layers = map_geo_admin.build(
+                {"ch.a": {"de": "A"}}, self.fake_get_json(configs, errors)
+            )
+        self.assertEqual(list(layers), ["ch.a"])
 
 
 class TestOpendataSwiss(unittest.TestCase):

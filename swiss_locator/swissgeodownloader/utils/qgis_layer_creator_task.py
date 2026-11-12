@@ -36,7 +36,7 @@ from swiss_locator.swissgeodownloader.utils.utilities import translate
 def createQgisLayersInTask(fileList: list[SgdAsset], callback):
     # Create layer from files (streamed and downloaded) so they can be
     # added to qgis
-    task = QgisLayerCreatorTask(translate("SGD", "Daten zu QGIS hinzufügen"), fileList)
+    task = QgisLayerCreatorTask(translate("SGD", "Add data to QGIS"), fileList)
     task.taskCompleted.connect(lambda: callback(task.layerList, task.alreadyAdded))
     task.taskTerminated.connect(callback)
     QgsApplication.taskManager().addTask(task)

@@ -23,7 +23,14 @@ import traceback
 
 from qgis.PyQt import sip
 
-from qgis.PyQt.QtCore import Qt, QTimer, QUrl, pyqtSignal, QEventLoop
+from qgis.PyQt.QtCore import (
+    QCoreApplication,
+    QEventLoop,
+    Qt,
+    QTimer,
+    QUrl,
+    pyqtSignal,
+)
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply, QNetworkAccessManager
 from qgis.PyQt.QtWidgets import QLabel, QWidget, QTabWidget
@@ -84,6 +91,9 @@ class InvalidBox(Exception):
 
 
 class SwissLocatorFilter(QgsLocatorFilter):
+    # Its methods run for the subclasses, and PyQt looks self.tr() up under the
+    # class of the object: its strings use QCoreApplication.translate() with the
+    # context lupdate gives them, "SwissLocatorFilter".
     HEADERS = {b"User-Agent": USER_AGENT}
 
     message_emitted = pyqtSignal(str, str, Qgis.MessageLevel, QWidget)
@@ -338,7 +348,9 @@ class SwissLocatorFilter(QgsLocatorFilter):
             if not self.result_found:
                 result = QgsLocatorResult()
                 result.filter = self
-                result.displayString = self.tr("No result found.")
+                result.displayString = QCoreApplication.translate(
+                    "SwissLocatorFilter", "No result found."
+                )
                 result.userData = NoResult().as_definition()
                 self.resultFetched.emit(result)
 
@@ -361,19 +373,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
         # remove any map tip
         self.clearPreviousResults()
 
-        # user_data = NoResult
-        try:
-            swiss_result = result_from_data(result)
-        except SystemError:
-            self.message_emitted.emit(
-                self.displayName(),
-                self.tr(
-                    "QGIS Swiss Locator encountered an error. Please <b>update to QGIS 3.16.2</b> or newer."
-                ),
-                Qgis.MessageLevel.Warning,
-                None,
-            )
-            return
+        swiss_result = result_from_data(result)
 
         if isinstance(swiss_result, NoResult):
             return
@@ -407,19 +407,22 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 label.setText(
                     f'<a href="{MAP_GEO_ADMIN_URL}/'
                     f'?lang={self.lang}&bgLayer=ch.swisstopo.pixelkarte-farbe&layers={swiss_result.layer}">'
-                    "Open layer in map.geo.admin.ch</a>"
+                    + QCoreApplication.translate(
+                        "SwissLocatorFilter", "Open layer in map.geo.admin.ch"
+                    )
+                    + "</a>"
                 )
 
             if not ch_layer.isValid():
-                msg = self.tr(
-                    f"Cannot load Layers layer: {swiss_result.title} ({swiss_result.layer})"
-                )
+                msg = QCoreApplication.translate(
+                    "SwissLocatorFilter", "Cannot load layer: {} ({})"
+                ).format(swiss_result.title, swiss_result.layer)
                 level = Qgis.MessageLevel.Warning
                 self.info(msg, level)
             else:
-                msg = self.tr(
-                    f"Layers layer added to the map: {swiss_result.title} ({swiss_result.layer})"
-                )
+                msg = QCoreApplication.translate(
+                    "SwissLocatorFilter", "Layer added to the map: {} ({})"
+                ).format(swiss_result.title, swiss_result.layer)
                 level = Qgis.MessageLevel.Info
 
                 QgsProject.instance().addMapLayer(ch_layer)
@@ -458,7 +461,9 @@ class SwissLocatorFilter(QgsLocatorFilter):
             ch_layer = QgsVectorTileLayer(url_with_params, result.displayString)
 
             if not ch_layer.isValid():
-                msg = self.tr(f"Cannot load Vector Tiles layer: {swiss_result.title}")
+                msg = QCoreApplication.translate(
+                    "SwissLocatorFilter", "Cannot load vector tiles layer: {}"
+                ).format(swiss_result.title)
                 level = Qgis.MessageLevel.Warning
                 self.info(msg, level)
             else:
@@ -469,24 +474,26 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 res, sublayers = ch_layer.loadDefaultStyleAndSubLayers(error, warnings)
 
                 if sublayers:
-                    msg = self.tr(
-                        "Sublayers found ({}): {}".format(
-                            swiss_result.title,
-                            "; ".join([sublayer.name() for sublayer in sublayers]),
-                        )
+                    msg = QCoreApplication.translate(
+                        "SwissLocatorFilter", "Sublayers found ({}): {}"
+                    ).format(
+                        swiss_result.title,
+                        "; ".join([sublayer.name() for sublayer in sublayers]),
                     )
                     level = Qgis.MessageLevel.Info
                     self.info(msg, level)
                 if error or warnings:
-                    msg = self.tr(
-                        "Error/warning found while loading default styles and sublayers for layer {}. Error: {} Warning: {}".format(
-                            swiss_result.title, error, "; ".join(warnings)
-                        )
-                    )
+                    msg = QCoreApplication.translate(
+                        "SwissLocatorFilter",
+                        "Error/warning found while loading default styles and "
+                        "sublayers for layer {}. Error: {} Warning: {}",
+                    ).format(swiss_result.title, error, "; ".join(warnings))
                     level = Qgis.MessageLevel.Warning
                     self.info(msg, level)
 
-                msg = self.tr(f"Layer added to the map: {swiss_result.title}")
+                msg = QCoreApplication.translate(
+                    "SwissLocatorFilter", "Layer added to the map: {}"
+                ).format(swiss_result.title)
                 level = Qgis.MessageLevel.Info
                 self.info(msg, level)
 

@@ -19,12 +19,16 @@
  ***************************************************************************/
 """
 
+from qgis.PyQt.QtCore import QCoreApplication
 from qgis.core import Qgis, QgsTask
 
 from swiss_locator.swissgeodownloader.utils.utilities import MESSAGE_CATEGORY, log
 
 
 class ApiCallerTask(QgsTask):
+    # Its methods run for the subclasses, and PyQt looks self.tr() up under the
+    # class of the object: its strings use QCoreApplication.translate() with the
+    # context lupdate gives them, "ApiCallerTask".
     def __init__(self, apiRef, msgBar=None, description="", **kwargs):
         super().__init__(description, QgsTask.Flag.CanCancel)
         self.apiRef = apiRef
@@ -32,7 +36,9 @@ class ApiCallerTask(QgsTask):
         self.kwargs = kwargs
         self.output = None
         self.exception = None
-        self.successMsg = self.tr("request completed")
+        self.successMsg = QCoreApplication.translate(
+            "ApiCallerTask", "request completed"
+        )
 
     def run(self):
         try:
@@ -40,7 +46,9 @@ class ApiCallerTask(QgsTask):
             return True
         except Exception as e:
             if not self.exception:
-                msg = self.tr("An unknown error occurred")
+                msg = QCoreApplication.translate(
+                    "ApiCallerTask", "An unknown error occurred"
+                )
                 self.exception = f"{msg}: {e}"
             raise e
 
@@ -50,7 +58,7 @@ class ApiCallerTask(QgsTask):
     def finished(self, result):
         """This function is called when the task has completed, successfully or not"""
         if self.isCanceled():
-            log(self.tr("Aborted by user"))
+            log(QCoreApplication.translate("ApiCallerTask", "Aborted by user"))
         elif result and self.output is not False:
             log(self.successMsg, Qgis.MessageLevel.Success)
         else:
