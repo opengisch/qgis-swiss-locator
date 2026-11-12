@@ -1,4 +1,4 @@
-# Couches
+# Couches WMS
 
 Préfixe : `chl`
 

@@ -1,4 +1,4 @@
-# Map layers
+# WMS layers
 
 Prefix: `chl`
 

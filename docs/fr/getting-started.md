@@ -30,11 +30,11 @@ celles de QGIS. Commencez par un préfixe et un espace pour n'en lancer qu'une :
 | Préfixe | Recherche |
 |---------|-----------|
 | `chs` | [Lieux](search/locations.md) |
-| `chl` | [Couches](search/layers.md), du géoportail et d'opendata.swiss |
-| `chw` | [Couches WMTS](search/wmts.md) |
-| `chb` | [Fonds de plan](search/base-maps.md), en tuiles vectorielles |
+| `chl` | [Couches WMS](layers/wms.md), du géoportail et d'opendata.swiss |
+| `chw` | [Couches WMTS](layers/wmts.md) |
+| `chb` | [Fonds de plan](layers/base-maps.md), en tuiles vectorielles |
 | `chf` | [Objets](search/features.md) |
-| `chd` | [Téléchargement de fichiers](search/downloads.md) |
+| `chd` | [Télécharger des données](downloads.md) |
 
 Par exemple, `chs Lausanne` ne recherche que les lieux nommés Lausanne.
 

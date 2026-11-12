@@ -5,20 +5,20 @@ der Kantone ab. Es benötigt eine Internetverbindung.
 
 | Dienst | Verwendet von |
 |--------|---------------|
-| [api3.geo.admin.ch](https://api3.geo.admin.ch) | Orte, Kartenlayer, Objekte, Höhenprofil |
-| [wms.geo.admin.ch](https://wms.geo.admin.ch) | Kartenlayer |
+| [api3.geo.admin.ch](https://api3.geo.admin.ch) | Orte, WMS-Layer, Objekte, Höhenprofil |
+| [wms.geo.admin.ch](https://wms.geo.admin.ch) | WMS-Layer |
 | [wmts.geo.admin.ch](https://wmts.geo.admin.ch) | WMTS-Layer |
 | [vectortiles.geo.admin.ch](https://vectortiles.geo.admin.ch) | Basiskarten |
-| [data.geo.admin.ch](https://data.geo.admin.ch) | Datei-Download |
-| [opendata.swiss](https://opendata.swiss) und die dort referenzierten WMS-Dienste | Kartenlayer |
-| [opengisch.github.io/qgis-swiss-locator](https://opengisch.github.io/qgis-swiss-locator/data/v1/index.json) | Kartenlayer, Objekte |
+| [data.geo.admin.ch](https://data.geo.admin.ch) | Daten herunterladen |
+| [opendata.swiss](https://opendata.swiss) und die dort referenzierten WMS-Dienste | WMS-Layer |
+| [opengisch.github.io/qgis-swiss-locator](https://opengisch.github.io/qgis-swiss-locator/data/v1/index.json) | WMS-Layer, Objekte |
 
 Die Daten gehören ihren Herausgebern: Prüfen Sie deren Nutzungsbedingungen,
 bevor Sie die Daten veröffentlichen.
 
 ## Der Datenkatalog (STAC)
 
-Der [Datei-Download](search/downloads.md) greift auf den Datenkatalog des
+Das [Herunterladen von Daten](downloads.md) greift auf den Datenkatalog des
 Geoportals des Bundes zu, [data.geo.admin.ch](https://data.geo.admin.ch). Er
 folgt dem Standard STAC (SpatioTemporal Asset Catalog) und gliedert die Daten
 in:
@@ -53,7 +53,7 @@ langsam wäre, sie online zu durchsuchen:
 - die Layer von map.geo.admin.ch, deren Objekte durchsuchbar sind, für die
   [Objektsuche](search/features.md);
 - die Layer der auf opendata.swiss referenzierten WMS-Dienste, für die Suche
-  nach [Kartenlayer](search/layers.md).
+  nach [WMS-Layern](layers/wms.md).
 
 Ein GitHub-Workflow des Repositorys des Plugins erzeugt sie regelmässig und veröffentlicht sie auf
 [GitHub Pages](https://opengisch.github.io/qgis-swiss-locator/data/v1/index.json),

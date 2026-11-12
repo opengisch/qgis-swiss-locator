@@ -1,16 +1,12 @@
-# Suche
+# Orte und Objekte suchen
 
-Das Plugin fügt der Suchleiste von QGIS sechs Suchen hinzu. Jede hat ein
-Präfix, um sie einzeln auszuführen.
+Finden Sie einen Ort oder ein Objekt des Geoportals: Die Karte springt dorthin
+und hebt es hervor.
 
-| Suche | Präfix | Findet | Quelle |
-|-------|--------|--------|--------|
-| [Orte](locations.md) | `chs` | Kantone, Gemeinden, Bezirke, Postleitzahlen, Adressen, Parzellen, Namen der Landeskarte | geo.admin.ch |
-| [Kartenlayer](layers.md) | `chl` | WMS-Layer | geo.admin.ch, auf opendata.swiss referenzierte kantonale Dienste |
-| [WMTS-Layer](wmts.md) | `chw` | WMTS-Layer | geo.admin.ch |
-| [Basiskarten](base-maps.md) | `chb` | Basiskarten als Vektorkacheln | swisstopo |
-| [Objekte](features.md) | `chf` | Objekte der Layer des Geoportals | geo.admin.ch |
-| [Datei-Download](downloads.md) | `chd` | Dateien des Datenkatalogs | data.geo.admin.ch (STAC) |
+| Suche | Präfix | Findet |
+|-------|--------|--------|
+| [Orte](locations.md) | `chs` | Kantone, Gemeinden, Bezirke, Postleitzahlen, Adressen, Parzellen, Namen der Landeskarte |
+| [Objekte](features.md) | `chf` | Objekte der Layer des Geoportals, etwa eine Haltestelle des öffentlichen Verkehrs oder eine Hütte |
 
 Die Anzahl der Resultate und die Reihenfolge der Suchen lassen sich in der
 [Konfiguration](../configuration.md) einstellen.

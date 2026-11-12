@@ -1,4 +1,4 @@
-# Kartenlayer
+# WMS-Layer
 
 Präfix: `chl`
 

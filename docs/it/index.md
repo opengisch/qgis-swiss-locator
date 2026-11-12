@@ -26,8 +26,9 @@ di QGIS.
    oppure premere ++ctrl+k++.
 3. Digitare un luogo, ad esempio `Lausanne`, e fare doppio clic su un risultato.
 
-[Primi passi](getting-started.md) spiega la barra di localizzazione,
-[Ricerca](search/index.md) ogni tipo di risultato.
+[Primi passi](getting-started.md) spiega la barra di localizzazione. Poi è
+possibile [cercare luoghi e oggetti](search/index.md),
+[aggiungere layer](layers/index.md) o [scaricare dati](downloads.md).
 
 ## Informazioni
 

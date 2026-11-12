@@ -1,4 +1,4 @@
-# Layer
+# Layer WMS
 
 Prefisso: `chl`
 

@@ -84,14 +84,16 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Getting started: getting-started.md
-  - Search:
+  - Search for locations and features:
       - search/index.md
       - Locations: search/locations.md
-      - Map layers: search/layers.md
-      - WMTS layers: search/wmts.md
-      - Base maps: search/base-maps.md
       - Features: search/features.md
-      - File downloads: search/downloads.md
+  - Adding layers:
+      - layers/index.md
+      - WMS layers: layers/wms.md
+      - WMTS layers: layers/wmts.md
+      - Base maps: layers/base-maps.md
+  - Downloading data (STAC): downloads.md
   - Elevation profile: elevation-profile.md
   - Configuration: configuration.md
   - Data sources: data-sources.md

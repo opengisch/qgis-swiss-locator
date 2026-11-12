@@ -27,8 +27,10 @@ de QGIS.
    appuyez sur ++ctrl+k++.
 3. Tapez un lieu, par exemple `Lausanne`, et double-cliquez sur un résultat.
 
-La page [Prise en main](getting-started.md) présente la barre de localisation,
-la page [Recherche](search/index.md) chaque type de résultat.
+La page [Prise en main](getting-started.md) présente la barre de localisation.
+Ensuite, [recherchez des lieux et des objets](search/index.md),
+[ajoutez des couches](layers/index.md) ou
+[téléchargez des données](downloads.md).
 
 ## À propos
 

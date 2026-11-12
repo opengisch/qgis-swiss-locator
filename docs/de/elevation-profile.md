@@ -25,7 +25,7 @@ dem Gelände von swissALTI3D.
 !!! note
     Die Punktwolke dieses Beispiels wurde für die Dokumentation künstlich
     erzeugt. Echte Punktwolken wie swissSURFACE3D lassen sich mit der Suche
-    [Datei-Download](search/downloads.md) herunterladen.
+    [Daten herunterladen](downloads.md) beziehen.
 
 Deaktivieren Sie im Layerbaum des Profils **Swiss Profile**, um das Gelände
 auszublenden, oder verschieben Sie es, um die Zeichenreihenfolge zu ändern.

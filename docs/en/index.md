@@ -25,8 +25,9 @@ QGIS.
    ++ctrl+k++.
 3. Type a place, such as `Lausanne`, and double-click a result.
 
-[Getting started](getting-started.md) explains the locator bar,
-[Search](search/index.md) each kind of result.
+[Getting started](getting-started.md) explains the locator bar. Then
+[search for locations and features](search/index.md),
+[add layers](layers/index.md) or [download data](downloads.md).
 
 ## About
 

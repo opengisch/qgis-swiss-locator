@@ -30,11 +30,11 @@ QGIS. Iniziare con un prefisso seguito da uno spazio per eseguirne una sola:
 | Prefisso | Ricerca |
 |----------|---------|
 | `chs` | [Località](search/locations.md) |
-| `chl` | [Layer](search/layers.md), del geoportale e di opendata.swiss |
-| `chw` | [Layer WMTS](search/wmts.md) |
-| `chb` | [Mappe di base](search/base-maps.md), in tile vettoriali |
+| `chl` | [Layer WMS](layers/wms.md), del geoportale e di opendata.swiss |
+| `chw` | [Layer WMTS](layers/wmts.md) |
+| `chb` | [Mappe di base](layers/base-maps.md), in tile vettoriali |
 | `chf` | [Oggetti](search/features.md) |
-| `chd` | [Download di file](search/downloads.md) |
+| `chd` | [Scaricare dati](downloads.md) |
 
 Ad esempio, `chs Lausanne` cerca solo i luoghi di nome Lausanne.
 

@@ -38,20 +38,20 @@ Jede Suche, ausser den Basiskarten, hat ihren eigenen Reiter:
 **Maximale Anzahl Resultate**
 :   Wie viele Resultate die Suche auflistet.
 
-**Daten von opendata.swiss berücksichtigen** (Kartenlayer)
+**Daten von opendata.swiss berücksichtigen** (WMS-Layer)
 :   Auch die Layer der auf opendata.swiss referenzierten Dienste durchsuchen.
 
-**Max. Anzahl von Dateien pro Ergebnis** (Datei-Download)
+**Max. Anzahl von Dateien pro Ergebnis** (Daten herunterladen)
 :   Ein Datensatz mit mehr Dateien öffnet das Filterfenster, statt sie
     aufzulisten.
 
 | Suche | Priorität | Resultate |
 |-------|-----------|-----------|
 | Orte | Höchste | 8 |
-| Kartenlayer | Hoch | 5 |
+| WMS-Layer | Hoch | 5 |
 | WMTS-Layer | Mittel | 8 |
 | Objekte | Hoch | 8 |
-| Datei-Download | Tief | 5, und 5 Dateien pro Resultat |
+| Daten herunterladen | Tief | 5, und 5 Dateien pro Resultat |
 
 ### Objektsuche {#feature-search}
 

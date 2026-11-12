@@ -9,7 +9,7 @@ des cantons. Elle nécessite une connexion Internet.
 | [wms.geo.admin.ch](https://wms.geo.admin.ch) | couches |
 | [wmts.geo.admin.ch](https://wmts.geo.admin.ch) | couches WMTS |
 | [vectortiles.geo.admin.ch](https://vectortiles.geo.admin.ch) | fonds de plan |
-| [data.geo.admin.ch](https://data.geo.admin.ch) | téléchargement de fichiers |
+| [data.geo.admin.ch](https://data.geo.admin.ch) | téléchargement de données |
 | [opendata.swiss](https://opendata.swiss) et les services WMS qu'il référence | couches |
 | [opengisch.github.io/qgis-swiss-locator](https://opengisch.github.io/qgis-swiss-locator/data/v1/index.json) | couches, objets |
 
@@ -18,7 +18,7 @@ d'utilisation avant de les publier.
 
 ## Le catalogue de données (STAC)
 
-Le [téléchargement de fichiers](search/downloads.md) puise dans le catalogue de
+Le [téléchargement de données](downloads.md) puise dans le catalogue de
 données du géoportail fédéral, [data.geo.admin.ch](https://data.geo.admin.ch).
 Il suit le standard STAC (SpatioTemporal Asset Catalog) et organise les données
 en :
@@ -54,7 +54,7 @@ consulter en ligne serait trop lent :
 - les couches de map.geo.admin.ch dont les objets peuvent être recherchés, pour
   la [recherche d'objets](search/features.md);
 - les couches des services WMS référencés par opendata.swiss, pour la recherche
-  de [couches](search/layers.md).
+  de [couches WMS](layers/wms.md).
 
 Un workflow GitHub du dépôt de l'extension les génère régulièrement et les publie sur
 [GitHub Pages](https://opengisch.github.io/qgis-swiss-locator/data/v1/index.json),

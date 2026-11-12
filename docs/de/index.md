@@ -29,8 +29,10 @@ von QGIS.
 3. Geben Sie einen Ort ein, etwa `Lausanne`, und doppelklicken Sie auf ein
    Resultat.
 
-[Erste Schritte](getting-started.md) erklärt die Suchleiste,
-[Suche](search/index.md) jede Art von Resultat.
+[Erste Schritte](getting-started.md) erklärt die Suchleiste. Danach können
+Sie [Orte und Objekte suchen](search/index.md),
+[Layer hinzufügen](layers/index.md) oder
+[Daten herunterladen](downloads.md).
 
 ## Über das Plugin
 
