@@ -16,6 +16,35 @@ der Kantone ab. Es benötigt eine Internetverbindung.
 Die Daten gehören ihren Herausgebern: Prüfen Sie deren Nutzungsbedingungen,
 bevor Sie die Daten veröffentlichen.
 
+## Der Datenkatalog (STAC)
+
+Der [Datei-Download](search/downloads.md) greift auf den Datenkatalog des
+Geoportals des Bundes zu, [data.geo.admin.ch](https://data.geo.admin.ch). Er
+folgt dem Standard STAC (SpatioTemporal Asset Catalog) und gliedert die Daten
+in:
+
+- **Collections**, die Datensätze, etwa swissALTI3D;
+- **Items**, die Teile eines Datensatzes in Raum oder Zeit, etwa eine Kachel
+  von einem Quadratkilometer zu einem Zeitstand;
+- **Assets**, die Dateien eines Items, nach Format, Auflösung und
+  Koordinatensystem.
+
+Beim Start von QGIS lädt das Plugin die Liste der Collections im Hintergrund
+herunter. Ihre Titel und Beschreibungen in der Sprache des Plugins stammen aus
+dem Metadatenkatalog [geocat.ch](https://www.geocat.ch). Eine Suche sucht den
+Text in den Titeln und Kennungen dieser Liste, ohne Anfrage. Für jede gefundene
+Collection fragt das Plugin dann ihre ersten Dateien ab: Sind es wenige, werden
+sie aufgelistet; sonst öffnet die Collection das Filterfenster.
+
+Das Filterfenster fragt beim Katalog die Items der gewählten Ausdehnung ab und
+listet ihre Assets nach Dateityp, Auflösung, Zeitstand und Koordinatensystem
+auf. Es stammt aus dem Plugin
+[Swiss Geo Downloader](https://pimoll.github.io/swissgeodownloader/) von
+Patricia Moll.
+
+Ein als *gestreamt* hinzugefügtes Cloud Optimized GeoTIFF bleibt auf
+data.geo.admin.ch: QGIS liest die angezeigten Teile über das Netzwerk.
+
 ## Vom Plugin veröffentlichte Dateien
 
 Zwei Suchen stützen sich auf Listen, die das Plugin vorbereitet, da es zu

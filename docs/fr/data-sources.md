@@ -16,6 +16,36 @@ des cantons. Elle nécessite une connexion Internet.
 Les données appartiennent à leurs producteurs : consultez leurs conditions
 d'utilisation avant de les publier.
 
+## Le catalogue de données (STAC)
+
+Le [téléchargement de fichiers](search/downloads.md) puise dans le catalogue de
+données du géoportail fédéral, [data.geo.admin.ch](https://data.geo.admin.ch).
+Il suit le standard STAC (SpatioTemporal Asset Catalog) et organise les données
+en :
+
+- **collections**, les jeux de données, comme swissALTI3D ;
+- **items**, les parties d'un jeu de données dans l'espace ou le temps, comme
+  une tuile d'un kilomètre carré à une date ;
+- **assets**, les fichiers d'un item, par format, résolution et système de
+  coordonnées.
+
+Au démarrage de QGIS, l'extension télécharge la liste des collections, en
+arrière-plan. Leurs titres et descriptions dans la langue de l'extension
+viennent du catalogue de métadonnées [geocat.ch](https://www.geocat.ch). Une
+recherche cherche le texte dans les titres et identifiants de cette liste, sans
+requête. Pour chaque collection trouvée, l'extension demande ensuite ses
+premiers fichiers : s'ils sont peu nombreux, ils sont listés ; sinon, la
+collection ouvre le panneau de filtre.
+
+Le panneau de filtre demande au catalogue les items de l'étendue choisie, et
+liste leurs assets par type de fichier, résolution, date et système de
+coordonnées. Il vient de l'extension
+[Swiss Geo Downloader](https://pimoll.github.io/swissgeodownloader/), de
+Patricia Moll.
+
+Un Cloud Optimized GeoTIFF ajouté en *streamed* reste sur data.geo.admin.ch :
+QGIS lit par le réseau les parties qu'il affiche.
+
 ## Fichiers publiés par l'extension
 
 Deux recherches s'appuient sur des listes que l'extension prépare, car les
