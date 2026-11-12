@@ -23,6 +23,7 @@ from qgis.PyQt.QtWidgets import QWidget
 from qgis.core import Qgis, QgsApplication, QgsMessageLog, NULL, QgsSettingsTree
 from qgis.gui import QgsDockWidget, QgisInterface, QgsMessageBarItem
 
+from swiss_locator.core.filters.opendata_swiss import WMS_LAYERS_INDEX
 from swiss_locator.core.filters.swiss_locator_filter_feature import (
     SwissLocatorFilterFeature,
 )
@@ -38,6 +39,7 @@ from swiss_locator.core.filters.swiss_locator_filter_vector_tiles import (
 )
 from swiss_locator.core.filters.swiss_locator_filter_wmts import SwissLocatorFilterWMTS
 from swiss_locator.core.language import get_language
+from swiss_locator.map_geo_admin.layers import SEARCHABLE_LAYERS
 from swiss_locator.swissgeodownloader.ui.sgd_dockwidget import (
     SwissGeoDownloaderDockWidget,
 )
@@ -72,6 +74,10 @@ class SwissLocatorPlugin:
             self.profile_source = SwissProfileSource()
 
     def initGui(self):
+        # Update the data published by the plugin on GitHub Pages, in the background
+        for remote_data_file in (SEARCHABLE_LAYERS, WMS_LAYERS_INDEX):
+            remote_data_file.refresh()
+
         for _filter in (
             SwissLocatorFilterLocation,
             SwissLocatorFilterWMTS,

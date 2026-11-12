@@ -1,0 +1,58 @@
+name: 📦 Update data
+
+# Generates the data files used by the plugin (see swiss_locator/remote_data)
+# and publishes them on GitHub Pages. The plugin downloads them from there and
+# a copy is bundled in each release.
+
+on:
+  schedule:
+    # weekly
+    - cron: '0 0 * * 0'
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/update-data.yml
+      - scripts/**
+      - swiss_locator/remote_data/spec.py
+      - swiss_locator/utils/wms.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Build data
+        run: python -m scripts build --site _site
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

@@ -13,6 +13,7 @@ from qgis.core import QgsLocator, QgsLocatorContext
 from qgis.testing import start_app, unittest
 from qgis.testing.mocked import get_iface
 
+from swiss_locator.core.filters.opendata_swiss import WMS_LAYERS_INDEX
 from swiss_locator.core.filters.swiss_locator_filter_layer import (
     SwissLocatorFilterLayer,
 )
@@ -28,6 +29,8 @@ from swiss_locator.core.filters.swiss_locator_filter_vector_tiles import (
 from swiss_locator.core.filters.swiss_locator_filter_wmts import (
     SwissLocatorFilterWMTS,
 )
+from swiss_locator.map_geo_admin.layers import SEARCHABLE_LAYERS
+from swiss_locator.remote_data import spec
 
 start_app()
 
@@ -128,6 +131,21 @@ class TestLocatorFilterLocation(unittest.TestCase):
 
 class TestLocatorFilterFeature(unittest.TestCase):
     """Integration tests for the Feature filter (geo.admin.ch feature search)."""
+
+    @classmethod
+    def setUpClass(cls):
+        SEARCHABLE_LAYERS.set_document(
+            spec.wrap(
+                {
+                    "ch.swisstopo.amtliches-strassenverzeichnis": {
+                        "de": "Amtliches Strassenverzeichnis"
+                    },
+                    "ch.swisstopo-vd.ortschaftenverzeichnis_plz": {
+                        "de": "Amtliches Ortschaftenverzeichnis"
+                    },
+                }
+            )
+        )
 
     def _search(self, text, timeout=30000):
         return _run_filter(SwissLocatorFilterFeature(get_iface()), text, timeout)
@@ -272,6 +290,26 @@ class TestLocatorFilterVectorTiles(unittest.TestCase):
 class TestLocatorFilterLayer(unittest.TestCase):
     """Integration test for the Layer locator filter (geo.admin + opendata.swiss)."""
 
+    @classmethod
+    def setUpClass(cls):
+        WMS_LAYERS_INDEX.set_document(
+            spec.wrap(
+                {
+                    "services": [
+                        {
+                            "url": "https://wms.example.ch/zug",
+                            "version": "1.3.0",
+                            "title": "Geoportal Kanton Zug",
+                            "layers": [
+                                ["zg_naturschutz", "Naturschutzgebiete"],
+                                ["zg_naturschutz_objekte", "Naturschutzobjekte"],
+                            ],
+                        }
+                    ]
+                }
+            )
+        )
+
     def _search(self, text, timeout=30000):
         return _run_filter(SwissLocatorFilterLayer(get_iface()), text, timeout)
 
@@ -298,37 +336,28 @@ class TestLocatorFilterLayer(unittest.TestCase):
         ]
         self.assertGreater(len(geoadmin), 0)
 
-    # -- opendata.swiss results via GetCapabilities --------------------------
+    # -- opendata.swiss results from the published WMS layers index ----------
 
-    def test_opendata_swiss_layer_asiat(self):
-        """'asiat' should return opendata.swiss layers (Asiatische Hornisse)."""
-        results = self._search("asiat")
+    def test_opendata_swiss_layer_by_name(self):
+        """A layer of the index is found by its name."""
+        results = self._search("zg_naturschutz")
         opendata = [r for r in results if r["group"] == "opendata.swiss"]
-        self.assertGreater(
-            len(opendata),
-            0,
-            f"Expected opendata.swiss results for 'asiat', got all: {results}",
+        self.assertEqual(
+            [r["displayString"] for r in opendata],
+            ["Naturschutzgebiete", "Naturschutzobjekte"],
         )
+        self.assertEqual(
+            opendata[0]["description"], "zg_naturschutz – Geoportal Kanton Zug"
+        )
+        user_data = json.loads(opendata[0]["userData"])
+        self.assertEqual(user_data["type"], "WMSLayerResult")
+        self.assertEqual(user_data["layer"], "zg_naturschutz")
+        self.assertEqual(user_data["url"], "https://wms.example.ch/zug?VERSION%3D1.3.0")
 
-    def test_opendata_swiss_layer_asia(self):
-        """'asia' (partial word) should also return opendata.swiss layers."""
-        results = self._search("asia")
+    def test_opendata_swiss_layer_by_title(self):
+        results = self._search("naturschutzobj")
         opendata = [r for r in results if r["group"] == "opendata.swiss"]
-        self.assertGreater(
-            len(opendata),
-            0,
-            f"Expected opendata.swiss results for 'asia', got all: {results}",
-        )
-
-    def test_opendata_swiss_layer_wasser(self):
-        """'wasser' should return opendata.swiss WMS layers."""
-        results = self._search("wasser")
-        opendata = [r for r in results if r["group"] == "opendata.swiss"]
-        self.assertGreater(
-            len(opendata),
-            0,
-            f"Expected opendata.swiss results for 'wasser', got all: {results}",
-        )
+        self.assertEqual(len(opendata), 1, results)
 
     def test_no_result_for_gibberish(self):
         """A nonsense query should return 'No result found.'."""
