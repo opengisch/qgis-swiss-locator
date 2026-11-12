@@ -38,6 +38,12 @@ QGIS. Iniziare con un prefisso seguito da uno spazio per eseguirne una sola:
 
 Ad esempio, `chs Lausanne` cerca solo i luoghi di nome Lausanne.
 
+Non serve ricordarli: fare clic nella barra di localizzazione senza digitare
+nulla, elenca tutte le ricerche con il loro prefisso. Fare doppio clic su una:
+il suo prefisso viene digitato automaticamente.
+
+![Le ricerche e i loro prefissi](assets/screenshots/search-prefixes.png)
+
 I prefissi, e quali ricerche vengono eseguite senza prefisso, possono essere
 modificati nelle [opzioni di QGIS](configuration.md#in-the-options-of-qgis).
 

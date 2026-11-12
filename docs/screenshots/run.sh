@@ -26,10 +26,13 @@ docker run --rm --platform linux/amd64 \
     for lang in $LANGUAGES; do
       python3 docs/screenshots/prepare.py "$lang" /tmp/qgis
       # QGIS is noisy on stderr: keep the script output and the tracebacks
+      set +e
       SCREENSHOTS_LANG=$lang xvfb-run -a -s "-screen 0 1600x1000x24" \
         qgis --profiles-path /tmp/qgis --lang "$lang" --nologo --noversioncheck \
         --code docs/screenshots/take_screenshots.py 2>&1 \
-        | grep --line-buffered -E "^\[|^Traceback|^  |Error" || true
-      test "${PIPESTATUS[0]}" -eq 0
+        | grep --line-buffered -E "^\[|^Traceback|^  |Error"
+      status=${PIPESTATUS[0]}
+      set -e
+      test "$status" -eq 0
     done
   '
