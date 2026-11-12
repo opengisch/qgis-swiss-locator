@@ -3,10 +3,10 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
-      - master
+      - main
 
 env:
   QGIS_TEST_VERSION: latest
@@ -22,4 +22,5 @@ jobs:
 
       - name: docker test
         run: |
-          docker run -v $(pwd):/usr/src -w /usr/src qgis/qgis:${QGIS_TEST_VERSION} sh -c 'xvfb-run pytest-3'
+          docker run -v $(pwd):/usr/src -w /usr/src -e QT_QPA_PLATFORM=offscreen qgis/qgis-slim:${QGIS_TEST_VERSION} \
+            sh -c 'python3 -m pytest'

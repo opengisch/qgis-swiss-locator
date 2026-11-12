@@ -117,7 +117,7 @@ class TestLocatorFilterLocation(unittest.TestCase):
 
     def test_location_no_result(self):
         """Gibberish should return 'No result found.'."""
-        results = self._search("xyzzy98765qqq")
+        results = self._search("qxzqxzqxz")
         self.assertTrue(
             any("No result" in r["displayString"] for r in results),
             f"Expected 'No result found.' for gibberish, got: {results}",
