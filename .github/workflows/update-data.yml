@@ -3,6 +3,8 @@ name: 📦 Update data
 # Generates the data files used by the plugin (see swiss_locator/remote_data)
 # and publishes them on GitHub Pages. The plugin downloads them from there and
 # a copy is bundled in each release.
+# A deployment replaces the whole site: the documentation is built again, see
+# docs.yml.
 
 on:
   schedule:
@@ -36,12 +38,17 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Build documentation
+        run: |
+          pip install -r docs/requirements.txt
+          python docs/build.py
+
       - name: Build data
-        run: python -m scripts build --site _site
+        run: python -m scripts build --site docs/site
 
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: _site
+          path: docs/site
 
   deploy:
     needs: build

@@ -1,0 +1,92 @@
+name: 📚 Documentation
+
+# Builds the documentation (docs/) and publishes it on GitHub Pages.
+# A deployment replaces the whole site: the data files of the plugin, see
+# update-data.yml, are published again as they are.
+
+on:
+  push:
+    branches:
+      - main
+      - docs
+    paths:
+      - .github/workflows/docs.yml
+      - docs/**
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/docs.yml
+      - docs/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Install Zensical
+        run: pip install -r docs/requirements.txt
+
+      - name: Build documentation
+        run: python docs/build.py --strict
+
+      - uses: actions/upload-artifact@v7
+        if: github.event_name != 'pull_request'
+        with:
+          name: documentation
+          path: docs/site
+          if-no-files-found: error
+
+  deploy:
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    # Shared with update-data.yml: the data is fetched once the other
+    # deployments are done, never an older version over a newer one
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: documentation
+          path: _site
+
+      - name: Fetch published data
+        run: python -m scripts fetch --site _site
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

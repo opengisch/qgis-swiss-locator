@@ -23,58 +23,12 @@ Elevation profiles can be displayed in QGIS and included in layouts. These profi
 
 ## How
 
-Type the text to search in the locator bar.
+Type the text to search in the locator bar of QGIS, and double-click a result.
 
-If the result is a **WMTS layer**, double-clicking on it will try to add it to the map. 
-It might not be possible since some layers are only visible in the geoportal (map.geo.admin.ch).
-In this case, a link will be shown to display the layer in the geoportal.
+The **[documentation](https://opengisch.github.io/qgis-swiss-locator/)**, in
+English, French, German and Italian, shows each search with examples.
 
-![WMTS layer search](./doc/wmts_search.png)
-
-If the result is a **location** or **feature**, 
-double-clicking on it will move the map canvas to the result and highlight its position.
-If any further information can be shown, an info window will be shown over the map.
-
-![Feature search](./doc/feature_search.png)
-
-If the result is a **vector tiles layer**,
-double clicking it will add it to the map canvas as another background layer.
-
-![Vector Tiles layer search](./doc/vector_tiles_search.png)
-
-If the result is a **file download** from the Swiss Geoportal STAC catalog,
-double clicking it will download the file and add it to the map.
-
-![Swiss Geoportal STAC file download](doc/stac_search.png)
-
-For topics with many files associated,
-double clicking opens a filter dialog to further narrow down the search.
-Users can do a spatial search, as well as filter file type, timestamp, raster
-resolution, and more.
-![File filter](doc/stac_filter_dialog.png)
-
-For displaying **elevation profiles**:
- 1. Go to View -> Elevation Profiles -> New Elevation Profile.
-2. Draw a line on the map using the `Capture Curve` tool from the Elevation Profile widget.
-3. Optionally, you can change both the profile visibility and the rendering order in the Elevation Profile's Layer Tree.
-
-![Elevation profile](doc/elevation_profile.png)
-
-## More
-
-The search is performed through the QGIS [locator bar](https://qgis.org/en/site/forusers/visualchangelog30/#feature-locator-bar).
-
-Configuration is achieved in the main application settings under the `locator` tab. You will be able to:
-* Enable or disable searches (locations, layers, features)
-* Customize prefixes, define if they are default filters (used without prefix)
-* Access to the configuration of the plugin
-* Include or exclude opendata.swiss data from layer searches
-
-In the configuration of the plugin, further customization can be achieved:
-* Language definition (English, German, French, Italian, Rumantsch)
-* CRS definition (project, CH1903 or CH1903+)
-* Defining if the plugin will try to display further information in a tool tip
-* Defining layers used in the feature search
+![Hiking trails added from the locator bar](docs/en/assets/screenshots/layers-result.png)
 
 ## Data files
 
@@ -104,6 +58,21 @@ python -m scripts fetch
 ```
 
 `python -m scripts build --site _site` generates the GitHub Pages site as CI does.
+
+## Documentation
+
+The documentation is in [docs](docs), one folder per language, built with
+[Zensical](https://zensical.org) and published on GitHub Pages by the
+[Documentation](.github/workflows/docs.yml) workflow:
+
+```sh
+pip install -r docs/requirements.txt
+python docs/build.py
+```
+
+The screenshots are taken by a script driving QGIS in Docker:
+`docs/screenshots/run.sh`. See [the skill](.claude/skills/docs/SKILL.md) for
+the details.
 
 ## Who
 
