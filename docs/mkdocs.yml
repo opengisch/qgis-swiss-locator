@@ -92,6 +92,7 @@ nav:
       - search/index.md
       - Locations: search/locations.md
       - Features: search/features.md
+  - Geocoding: geocoding.md
   - Adding layers:
       - layers/index.md
       - WMS layers: layers/wms.md

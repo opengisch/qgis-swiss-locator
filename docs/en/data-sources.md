@@ -5,7 +5,7 @@ and of the cantons. It needs an internet connection.
 
 | Service | Used by |
 |---------|---------|
-| [api3.geo.admin.ch](https://api3.geo.admin.ch) | locations, WMS layers, features, elevation profile |
+| [api3.geo.admin.ch](https://api3.geo.admin.ch) | locations, geocoding, WMS layers, features, elevation profile |
 | [wms.geo.admin.ch](https://wms.geo.admin.ch) | WMS layers |
 | [wmts.geo.admin.ch](https://wmts.geo.admin.ch) | WMTS layers |
 | [vectortiles.geo.admin.ch](https://vectortiles.geo.admin.ch) | base maps |

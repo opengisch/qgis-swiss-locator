@@ -31,6 +31,7 @@ from qgis.core import (
     QgsProcessingParameterNumber,
 )
 
+from swiss_locator.core.constants import PAGES_URL
 from swiss_locator.core.geocoder.swiss_geocoder import (
     GEOCODE_ORIGINS,
     MAX_CONSECUTIVE_ERRORS,
@@ -100,7 +101,10 @@ class GeocodeAddressesAlgorithm(QgsBatchGeocodeAlgorithm):
         return QIcon(get_icon_path("swiss_locator.png"))
 
     def helpUrl(self) -> str:
-        return "https://github.com/opengisch/qgis-swiss-locator#batch-geocoding"
+        # The documentation is in English, French, German and Italian
+        lang = get_language()
+        lang = lang if lang in ("fr", "de", "it") else "en"
+        return f"{PAGES_URL}/{lang}/geocoding/"
 
     def shortDescription(self) -> str:
         return self.tr(
