@@ -27,12 +27,15 @@ def write_document(path: str, document: dict):
         json.dump(document, f, ensure_ascii=False, separators=(",", ":"))
 
 
-def download(destination: str) -> bool:
-    """Download all the published documents. Return False if one is missing."""
+def download(destination: str, file_names=spec.DATA_FILES) -> bool:
+    """Download published documents, all the data files by default.
+
+    Return False if one is missing.
+    """
     # created even if empty, the packaging adds it to the plugin package
     os.makedirs(destination, exist_ok=True)
     complete = True
-    for file_name in spec.DATA_FILES:
+    for file_name in file_names:
         document = published_document(file_name)
         if document is None:
             log.error("%s is not published", file_name)
