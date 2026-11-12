@@ -339,4 +339,4 @@ class ApiDataGeoAdmin:
         return items
 
     def tr(self, message):
-        return translate(message, type(self).__name__)
+        return translate(type(self).__name__, message)
