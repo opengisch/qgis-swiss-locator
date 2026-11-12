@@ -524,7 +524,7 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
         self.fileListRequest = GetFileListTask(
             self.apiDGA,
             self.msgBar,
-            "get file list",
+            self.tr("get file list"),
             collectionId=self.currentCollection.id(),
             bbox=bbox,
         )
@@ -789,7 +789,7 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
         caller = DownloadFilesTask(
             self.apiDGA,
             self.msgBar,
-            "download files",
+            self.tr("download files"),
             fileList=self.filesListDownload,
             outputDir=self.outputPath,
         )

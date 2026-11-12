@@ -47,7 +47,7 @@ class SwissLocatorFilterLayer(SwissLocatorFilter):
         return SwissLocatorFilterLayer(crs=self.crs)
 
     def displayName(self):
-        return self.tr("Swiss Geoportal / opendata.swiss Layers layers")
+        return self.tr("Swiss Geoportal / opendata.swiss layers")
 
     def prefix(self):
         return "chl"
