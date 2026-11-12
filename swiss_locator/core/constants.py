@@ -18,4 +18,8 @@ OPENDATA_SWISS_URL = "https://opendata.swiss/api/3/action/package_search"
 
 MAP_GEO_ADMIN_URL = "https://map.geo.admin.ch"
 
+# GitHub Pages site of the plugin, which publishes the data files generated
+# weekly by .github/workflows/update-data.yml (see swiss_locator/remote_data).
+PAGES_URL = "https://opengisch.github.io/qgis-swiss-locator"
+
 USER_AGENT = b"Mozilla/5.0 QGIS Swiss Geoportal Locator Filter"

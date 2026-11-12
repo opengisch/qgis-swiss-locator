@@ -43,12 +43,19 @@ jobs:
         if: ${{ github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/') }}
         run: qgis-plugin-ci push-translation ${{ secrets.TX_TOKEN }}
 
+      # Bundle the data published on GitHub Pages (see update-data.yml) as a
+      # fallback for the plugin. Mandatory for releases only.
+      - name: 📦 Fetch published data
+        continue-on-error: ${{ ! startsWith(github.ref, 'refs/tags/') }}
+        run: python -m scripts fetch
+
       - name: Package
         if: ${{ ! startsWith(github.ref, 'refs/tags/') }}
         run: |
           VERSION=0.0.0
           qgis-plugin-ci -v package ${VERSION} \
             --allow-uncommitted-changes \
+            --asset-path swiss_locator/remote_data/bundled \
             --transifex-token "${{ secrets.TX_TOKEN }}"
 
       - name: Upload artifact
@@ -80,6 +87,7 @@ jobs:
           VERSION=${{ github.ref_name }}
           qgis-plugin-ci release ${VERSION} \
             --allow-uncommitted-changes \
+            --asset-path swiss_locator/remote_data/bundled \
             --github-token ${{ secrets.GITHUB_TOKEN }} \
             --qgis-token ${{ secrets.QGIS_ORG_TOKEN }} \
             --transifex-token "${{ secrets.TX_TOKEN }}"

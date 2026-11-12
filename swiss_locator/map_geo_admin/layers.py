@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 /***************************************************************************
 
@@ -21,28 +20,21 @@
  ***************************************************************************/
 """
 
-import os
-import json
 from swiss_locator.core.parameters import AVAILABLE_LANGUAGES
 from swiss_locator.core.settings import Settings
-
-# Module-level cache: parsed JSON data keyed by language code.
-# The JSON files are static per plugin version, so caching avoids
-# repeated file I/O on every keystroke in the locator bar.
-_layers_cache: dict[str, dict] = {}
+from swiss_locator.remote_data import spec
+from swiss_locator.remote_data.remote_data_file import RemoteDataFile
 
 
-def data_file(lang: str):
-    cur_dir = os.path.dirname(__file__)
-    return os.path.join(cur_dir, f"layers_{lang}.json")
+def _parse(data) -> dict[str, dict[str, str]]:
+    if not isinstance(data, dict) or not all(
+        isinstance(labels, dict) for labels in data.values()
+    ):
+        raise spec.InvalidDataFile("expected {layer_id: {lang: label}}")
+    return data
 
 
-def _load_data(lang: str) -> dict:
-    """Return parsed layer data for *lang*, using an in-memory cache."""
-    if lang not in _layers_cache:
-        with open(data_file(lang)) as f:
-            _layers_cache[lang] = json.loads(f.read())
-    return _layers_cache[lang]
+SEARCHABLE_LAYERS = RemoteDataFile(spec.MAP_GEO_ADMIN_LAYERS, parse=_parse)
 
 
 def searchable_layers(lang: str, restrict: bool = False) -> dict:
@@ -55,17 +47,12 @@ def searchable_layers(lang: str, restrict: bool = False) -> dict:
     assert lang in AVAILABLE_LANGUAGES.values()
 
     settings = Settings()
-    restrict_enabled_by_user = settings.feature_search_restrict.value()
+    restrict = restrict and settings.feature_search_restrict.value()
     restrict_layer_list = settings.feature_search_layers_list.value()
 
     layers = {}
-
-    data = _load_data(lang)
-    translations_api = data["translations"]
-
-    for layer in data["searchableLayers"]:
-        if restrict and restrict_enabled_by_user and layer not in restrict_layer_list:
+    for layer_id, labels in (SEARCHABLE_LAYERS.data() or {}).items():
+        if restrict and layer_id not in restrict_layer_list:
             continue
-        layers[layer] = translations_api[layer]
-
+        layers[layer_id] = labels.get(lang) or labels.get("de") or layer_id
     return layers

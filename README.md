@@ -76,6 +76,35 @@ In the configuration of the plugin, further customization can be achieved:
 * Defining if the plugin will try to display further information in a tool tip
 * Defining layers used in the feature search
 
+## Data files
+
+Some searches rely on data files generated weekly by the
+[Update data](.github/workflows/update-data.yml) workflow and published on
+[GitHub Pages](https://opengisch.github.io/qgis-swiss-locator/data/v1/index.json):
+* the searchable layers of map.geo.admin.ch (feature search)
+* the layers of the WMS services referenced by opendata.swiss (layer search,
+  e.g. by layer name such as `zg_naturschutz`)
+
+The plugin updates its cache from there at most once a day, in the background,
+and falls back on the copy bundled in each release when GitHub is unreachable.
+A WMS service offline during the weekly run keeps its published layers for up
+to 30 days.
+See [swiss_locator/remote_data](swiss_locator/remote_data).
+
+When running the plugin from the sources (e.g. symlinked in the QGIS plugins
+folder), put the files in `swiss_locator/remote_data/bundled/` (git-ignored),
+then reload the plugin. The plugin uses them as long as they are fresher than
+its cache:
+
+```sh
+# generate them locally, no need of GitHub Pages
+python -m scripts build [--only opendata_swiss_wms_layers.json]
+# or download the published ones
+python -m scripts fetch
+```
+
+`python -m scripts build --site _site` generates the GitHub Pages site as CI does.
+
 ## Who
 
 This plugin has been developed by OPENGIS.ch with friendly support from

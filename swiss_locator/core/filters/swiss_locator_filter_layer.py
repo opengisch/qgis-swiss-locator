@@ -17,15 +17,8 @@
 """
 
 import json
-import re
-from urllib.parse import urlparse, parse_qs
-
-
-from qgis.PyQt.QtCore import QUrl
-from qgis.PyQt.QtNetwork import QNetworkRequest
 
 from qgis.core import (
-    Qgis,
     QgsLocatorResult,
     QgsFeedback,
     QgsApplication,
@@ -36,14 +29,19 @@ from swiss_locator.core.constants import WMS_BASE_URL
 from swiss_locator.core.filters.swiss_locator_filter import SwissLocatorFilter
 from swiss_locator.core.filters.filter_type import FilterType
 from swiss_locator.core.filters.map_geo_admin import map_geo_admin_url
-from swiss_locator.core.filters.opendata_swiss import opendata_swiss_url
+from swiss_locator.core.filters.opendata_swiss import (
+    WMS_LAYERS_INDEX,
+    opendata_swiss_url,
+)
 from swiss_locator.core.results import WMSLayerResult
-from swiss_locator.utils import safe_xml
+from swiss_locator.utils import wms
 
 
 class SwissLocatorFilterLayer(SwissLocatorFilter):
     def __init__(self, iface: QgisInterface = None, crs: str = None):
         super().__init__(FilterType.Layers, iface, crs)
+        # (service URL, layer name) of the opendata.swiss results of a search
+        self.emitted_layers = set()
 
     def clone(self):
         return SwissLocatorFilterLayer(crs=self.crs)
@@ -56,158 +54,114 @@ class SwissLocatorFilterLayer(SwissLocatorFilter):
 
     def perform_fetch_results(self, search: str, feedback: QgsFeedback):
         limit = self.settings.filters[self.type.value]["limit"].value()
-        urls = [
-            map_geo_admin_url(search, self.type.value, self.crs, self.lang, limit),
-            opendata_swiss_url(search),
+        self.emitted_layers = set()
+        urls = [map_geo_admin_url(search, self.type.value, self.crs, self.lang, limit)]
+
+        if self.settings.layers_include_opendataswiss.value():
+            # Layers of the services referenced by opendata.swiss come from the
+            # index published by the plugin: available before the online searches.
+            self.emit_indexed_layers(search, limit)
+            # Datasets pointing to a single layer of a service (GetMap links)
+            urls.append(opendata_swiss_url(search))
+
+        requests = [
+            self.request_for_url(url, params, self.HEADERS) for url, params in urls
         ]
-        requests = []
-        for url, params in urls:
-            requests.append(self.request_for_url(url, params, self.HEADERS))
+        self.fetch_requests(requests, feedback, slot=self.handle_content)
 
-        # Collect GetCapabilities URLs during handle_content instead of
-        # fetching them inline (which would re-enter the event loop).
-        self._pending_capabilities = []
-        self.fetch_requests(requests, feedback, slot=self.handle_content, data=search)
-
-        # Now process the GetCapabilities requests one by one.
-        # The outer event loop has already returned, so exec() can be called again.
-        for cap_request, cap_data in self._pending_capabilities:
-            self.fetch_requests(
-                [cap_request],
-                feedback,
-                slot=self.handle_capabilities_response,
-                data=cap_data,
+    def emit_indexed_layers(self, search: str, limit: int):
+        index = WMS_LAYERS_INDEX.data()
+        if index is None:
+            return
+        for layer, score in index.search(search, limit):
+            description = layer.name
+            if layer.service_title:
+                description += f" – {layer.service_title}"
+            self.emit_opendata_swiss_layer(
+                layer.name,
+                layer.title,
+                layer.service_url,
+                layer.version,
+                description,
+                score,
             )
 
-    def handle_content(self, content, feedback: QgsFeedback, search: str):
+    def handle_content(self, content: str, feedback: QgsFeedback):
         data = json.loads(content)
         self.dbg_info(data)
 
         if self.is_opendata_swiss_response(data):
-            visited_capabilities = []
-
-            for loc in data["result"]["results"]:
-                display_name = loc["title"].get(self.lang, "")
-                self.info(display_name)
-                if not display_name:
-                    # Fallback to german
-                    display_name = loc["title"]["de"]
-
-                for res in loc["resources"]:
-                    url = res["url"]
-                    url_components = urlparse(url)
-                    wms_url = f"{url_components.scheme}://{url_components.netloc}/{url_components.path}?"  # noqa: E231
-
-                    result = QgsLocatorResult()
-                    result.filter = self
-                    result.group = "opendata.swiss"
-                    result.icon = QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
-
-                    if re.match(r"https?:\/\/wmt?s.geo.admin.ch", url):
-                        # skip swisstopo since it's handled in other filter
-                        self.dbg_info(
-                            "skip swisstopo get capabilities since it"
-                            "'s handled in other filter"
-                        )
-                        continue
-
-                    if "wms" in url.lower():
-                        if "media_type" in res and res["media_type"] == "Layers":
-                            result.displayString = display_name
-                            result.description = url
-
-                            if res["title"]["de"] == "GetMap":
-                                query = parse_qs(url_components.query)
-                                layers = query["LAYERS"]
-                                version = query.get("VERSION", ["1.3.0"])[0]
-                                self.info(layers)
-                                result.userData = WMSLayerResult(
-                                    layer=layers[0],
-                                    title=display_name,
-                                    url=f"{wms_url}VERSION%3D{version}",
-                                ).as_definition()
-                                self.result_found = True
-                                self.resultFetched.emit(result)
-
-                        elif (
-                            "request=getcapabilities" in url.lower()
-                            and url_components.netloc not in visited_capabilities
-                        ):
-                            self.dbg_info(f"get_cap: {url_components.netloc} {url}")
-                            visited_capabilities.append(url_components.netloc)
-                            self._pending_capabilities.append(
-                                (
-                                    QNetworkRequest(QUrl(url)),
-                                    (search, wms_url),
-                                )
-                            )
-
+            self.handle_opendata_swiss_content(data)
         else:
-            for loc in data["results"]:
-                self.dbg_info("keys: {}".format(loc["attrs"].keys()))
+            self.handle_geo_admin_content(data)
 
-                result = QgsLocatorResult()
-                result.filter = self
-                result.group = self.tr("Swiss Geoportal")
-                if loc["attrs"]["origin"] == "layer":
-                    # available keys: ['origin', 'lang', 'layer', 'staging', 'title', 'topics', 'detail', 'label', 'id']
-                    for key, val in loc["attrs"].items():
-                        self.dbg_info(f"{key}: {val}")
-                    result.displayString = loc["attrs"]["title"]
-                    result.description = loc["attrs"]["layer"]
-                    result.userData = WMSLayerResult(
-                        layer=loc["attrs"]["layer"],
-                        title=loc["attrs"]["title"],
-                        url=f"{WMS_BASE_URL}/?VERSION%3D1.3.0",
-                    ).as_definition()
-                    result.icon = QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
-                    self.result_found = True
-                    self.resultFetched.emit(result)
+    def handle_opendata_swiss_content(self, data: dict):
+        for dataset in data["result"]["results"]:
+            title = dataset["title"].get(self.lang) or dataset["title"].get("de", "")
+            for resource in dataset["resources"]:
+                url = resource.get("url") or ""
+                if (
+                    wms.is_geo_admin(url)
+                    or "wms" not in url.lower()
+                    or resource.get("media_type") != "Layers"
+                    or (resource.get("title") or {}).get("de") != "GetMap"
+                ):
+                    continue
+                layer = wms.query_parameter(url, "LAYERS")
+                service_url = wms.service_url(url)
+                if not layer or not service_url:
+                    continue
+                version = wms.query_parameter(url, "VERSION") or wms.DEFAULT_VERSION
+                self.emit_opendata_swiss_layer(layer, title, service_url, version, url)
 
-    def handle_capabilities_response(self, content, feedback: QgsFeedback, data):
-        search = data[0]
-        wms_url = data[1]
-        # The capabilities come from arbitrary servers advertised by
-        # opendata.swiss, so a broken or hostile document must not break search.
-        try:
-            capabilities = safe_xml.fromstring(content)
-        except safe_xml.ParseError as e:
-            self.info(
-                self.tr("Could not parse the capabilities of {url}: {error}").format(
-                    url=wms_url, error=e
-                ),
-                Qgis.MessageLevel.Warning,
-            )
+    def emit_opendata_swiss_layer(
+        self,
+        layer: str,
+        title: str,
+        service_url: str,
+        version: str,
+        description: str,
+        score: float | None = None,
+    ):
+        key = (service_url, layer)
+        if key in self.emitted_layers:
             return
+        self.emitted_layers.add(key)
 
-        # Get xml namespace
-        match = re.match(r"\{.*\}", capabilities.tag)
-        namespace = match.group(0) if match else ""
-        # Extract WMS version from capabilities root (defaults to 1.3.0)
-        version = capabilities.get("version", "1.3.0")
-        wms_url = f"{wms_url}VERSION%3D{version}"
-        search = search.lower()
+        result = QgsLocatorResult()
+        result.filter = self
+        result.group = "opendata.swiss"
+        result.icon = QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
+        result.displayString = title
+        result.description = description
+        if score is not None:
+            result.score = score
+        result.userData = WMSLayerResult(
+            layer=layer,
+            title=title,
+            url=wms.provider_url(service_url, version),
+        ).as_definition()
+        self.result_found = True
+        self.resultFetched.emit(result)
 
-        # Search for layers containing the search term in the name or title
-        for layer in capabilities.findall(f".//{namespace}Layer"):
-            layername = self.find_text(layer, f"{namespace}Name")
-            layertitle = self.find_text(layer, f"{namespace}Title")
-            if layername and (
-                search in layername.lower() or search in layertitle.lower()
-            ):
-                if not layertitle:
-                    layertitle = layername
-
-                result = QgsLocatorResult()
-                result.filter = self
-                result.group = "opendata.swiss"
-                result.icon = QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
-                result.displayString = layertitle
-                result.description = layername
-                result.userData = WMSLayerResult(
-                    layer=layername,
-                    title=layertitle,
-                    url=wms_url,
-                ).as_definition()
-                self.result_found = True
-                self.resultFetched.emit(result)
+    def handle_geo_admin_content(self, data: dict):
+        for loc in data["results"]:
+            self.dbg_info("keys: {}".format(loc["attrs"].keys()))
+            if loc["attrs"]["origin"] != "layer":
+                continue
+            # available keys: ['origin', 'lang', 'layer', 'staging', 'title', 'topics', 'detail', 'label', 'id']
+            for key, val in loc["attrs"].items():
+                self.dbg_info(f"{key}: {val}")
+            result = QgsLocatorResult()
+            result.filter = self
+            result.group = self.tr("Swiss Geoportal")
+            result.displayString = loc["attrs"]["title"]
+            result.description = loc["attrs"]["layer"]
+            result.userData = WMSLayerResult(
+                layer=loc["attrs"]["layer"],
+                title=loc["attrs"]["title"],
+                url=wms.provider_url(f"{WMS_BASE_URL}/"),
+            ).as_definition()
+            result.icon = QgsApplication.getThemeIcon("/mActionAddWmsLayer.svg")
+            self.result_found = True
+            self.resultFetched.emit(result)

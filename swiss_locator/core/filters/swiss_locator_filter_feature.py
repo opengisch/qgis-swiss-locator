@@ -55,23 +55,25 @@ class SwissLocatorFilterFeature(SwissLocatorFilter):
     def perform_fetch_results(self, search: str, feedback: QgsFeedback):
         # Feature search is split in several requests
         # otherwise URL is too long
-        requests = []
-        try:
-            limit = self.settings.filters[self.type.value]["limit"].value()
-            layers = list(self.searchable_layers.keys())
-            assert len(layers) > 0
-            step = 20
-            for i_layer in range(0, len(layers), step):
-                url, params = map_geo_admin_url(
-                    search, self.type.value, self.crs, self.lang, limit
-                )
-                params["features"] = ",".join(layers[i_layer : i_layer + step])
-                requests.append(self.request_for_url(url, params, self.HEADERS))
-        except OSError:
+        layers = list(self.searchable_layers.keys())
+        if not layers:
             self.info(
-                "Layers data file not found. Please report an issue.",
-                Qgis.MessageLevel.Critical,
+                self.tr(
+                    "The list of searchable layers is not available yet. It is"
+                    " downloaded when QGIS starts, check the network connection."
+                ),
+                Qgis.MessageLevel.Warning,
             )
+            return
+        limit = self.settings.filters[self.type.value]["limit"].value()
+        requests = []
+        step = 20
+        for i_layer in range(0, len(layers), step):
+            url, params = map_geo_admin_url(
+                search, self.type.value, self.crs, self.lang, limit
+            )
+            params["features"] = ",".join(layers[i_layer : i_layer + step])
+            requests.append(self.request_for_url(url, params, self.HEADERS))
         self.fetch_requests(requests, feedback, self.handle_content)
 
     def handle_content(self, content: str, feedback: QgsFeedback):
