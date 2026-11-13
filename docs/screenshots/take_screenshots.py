@@ -540,7 +540,7 @@ def shot_downloads_viageo():
 def shot_downloads_basel():
     stac = stac_filter("baselstadt")
     wait_until(lambda: stac.available_collections)
-    background(view=BASEL)
+    base_map_background(BASEL)
     search("chd defibrillatoren")
     find_result(text=stac.displayName())
     save("downloads-basel")
