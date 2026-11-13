@@ -230,8 +230,19 @@ def results_view() -> QTreeView:
 
 
 def plugin_filter(filter_type: str):
+    """The first filter of a type: for STAC, the one of data.geo.admin.ch."""
     plugin = plugins["swiss_locator"]
     return next(f for f in plugin.locator_filters if f.type.value == filter_type)
+
+
+def stac_filter(catalog_id: str):
+    """The filter of a STAC catalogue, such as viageo"""
+    plugin = plugins["swiss_locator"]
+    return next(
+        f
+        for f in plugin.locator_filters
+        if f.type.value == "stac" and f.catalog.CATALOG_ID == catalog_id
+    )
 
 
 def set_view(view):
@@ -497,6 +508,18 @@ def shot_downloads():
     dock.close()
 
 
+def shot_downloads_viageo():
+    # Both catalogues answer to chd, each under its own name
+    for catalog_id in ("geoadmin", "viageo"):
+        stac = stac_filter(catalog_id)
+        wait_until(lambda: stac.available_collections)
+    background(view=(2538000, 1152500, SCALE[10]))
+    search("chd lidar")
+    find_result(text=stac_filter("viageo").displayName())
+    save("downloads-viageo")
+    close_locator()
+
+
 def shot_geocoding():
     import processing
 
@@ -648,6 +671,7 @@ SHOTS = {
     "base_maps": shot_base_maps,
     "features": shot_features,
     "downloads": shot_downloads,
+    "downloads_viageo": shot_downloads_viageo,
     "geocoding": shot_geocoding,
     "profile": shot_profile,
     "configuration": shot_configuration,

@@ -34,7 +34,7 @@ QGIS. Iniziare con un prefisso seguito da uno spazio per eseguirne una sola:
 | `chw` | [Layer WMTS](layers/wmts.md) |
 | `chb` | [Mappe di base](layers/base-maps.md), in tile vettoriali |
 | `chf` | [Oggetti](search/features.md) |
-| `chd` | [Scaricare dati](downloads.md) |
+| `chd` | [Scaricare dati](downloads.md), dal geoportale e da viageo.ch |
 
 Ad esempio, `chs Lausanne` cerca solo i luoghi di nome Lausanne.
 

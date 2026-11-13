@@ -2,10 +2,16 @@
 
 Präfix: `chd`
 
-Laden Sie Dateien aus dem Datenkatalog des Geoportals,
-[data.geo.admin.ch](https://data.geo.admin.ch), herunter und fügen Sie sie zur
-Karte hinzu: Höhenmodelle, Luftbilder, Grenzen, Karten und mehr. Die Suche
-berücksichtigt die Namen der Datensätze.
+Laden Sie Dateien aus zwei Datenkatalogen herunter und fügen Sie sie zur Karte
+hinzu:
+
+- dem des Geoportals des Bundes, [data.geo.admin.ch](https://data.geo.admin.ch):
+  Höhenmodelle, Luftbilder, Grenzen, Karten und mehr;
+- [viageo.ch](https://viageo.ch), den Geodaten von
+  [Kantonen und Gemeinden](#viageo).
+
+Die Suche berücksichtigt die Namen der Datensätze. Jeder Katalog listet seine
+Resultate unter seinem eigenen Namen auf.
 
 ## Ein Datensatz mit wenigen Dateien
 
@@ -47,3 +53,21 @@ Im Bedienfeld **Swiss Locator: Filtere Dateien für den Download**:
 
 Wie viele Dateien direkt in der Suchleiste aufgelistet werden, lässt sich in
 der [Konfiguration](configuration.md) einstellen.
+
+## Kantonale und kommunale Daten (viageo.ch) {#viageo}
+
+viageo.ch veröffentlicht die Daten des Kantons Waadt und seiner Gemeinden: die
+Bathymetrie der Seen, Luftbilder mit 2 cm Auflösung und LiDAR-Punktwolken. Die
+Titel sind französisch: Geben Sie `lidar`, `orthophoto` oder `bathymétrie` ein,
+mit den Akzenten.
+
+![Die Punktwolken beider Kataloge](assets/screenshots/downloads-viageo.png)
+
+Die Resultate funktionieren wie die des Geoportals: Ein Luftbild oder eine
+Bathymetrie ist eine einzelne Datei, zum Herunterladen oder *gestreamt*; eine
+Punktwolke öffnet das Filterfenster. Manche Dateien sind gross, etwa das
+Luftbild von Pully vom Juni 2026 mit 35 GB: Fügen Sie es *gestreamt* hinzu.
+
+Jeder Katalog ist eine eigene Suche in den
+[Optionen von QGIS](configuration.md#in-the-options-of-qgis): Deaktivieren Sie
+einen, um ihn auszulassen, oder geben Sie ihm ein eigenes Präfix.

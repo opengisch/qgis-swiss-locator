@@ -11,6 +11,9 @@ elencata con il suo prefisso:
 - il pulsante a destra apre la configurazione del plugin (le mappe di base non
   ne hanno).
 
+Il download di dati ha una ricerca per catalogo, con lo stesso prefisso:
+**Swiss Geoportal STAC file download** e **viageo.ch STAC file download**.
+
 ![Le opzioni del localizzatore di QGIS](assets/screenshots/options-locator.png)
 
 ## Nel plugin
@@ -50,7 +53,7 @@ Ogni ricerca, tranne le mappe di base, ha la sua scheda:
 | Layer WMS | alta | 5 |
 | Layer WMTS | media | 8 |
 | Oggetti | alta | 8 |
-| Scaricare dati | bassa | 5, e 5 file per risultato |
+| Scaricare dati | bassa | 5 per catalogo, e 5 file per risultato |
 
 ### Ricerca di oggetti {#feature-search}
 

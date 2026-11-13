@@ -2,10 +2,15 @@
 
 Prefix: `chd`
 
-Download files from the data catalogue of the geoportal,
-[data.geo.admin.ch](https://data.geo.admin.ch), and add them to the map:
-elevation models, aerial images, boundaries, maps and more. The search looks in
-the names of the datasets.
+Download files and add them to the map, from two data catalogues:
+
+- that of the federal geoportal, [data.geo.admin.ch](https://data.geo.admin.ch):
+  elevation models, aerial images, boundaries, maps and more;
+- [viageo.ch](https://viageo.ch), the geodata of
+  [cantons and municipalities](#viageo).
+
+The search looks in the names of the datasets. Each catalogue lists its
+results under its own name.
 
 ## A dataset with a few files
 
@@ -44,3 +49,21 @@ In the panel **Swiss Locator: Filter files to download**:
 
 The number of files listed directly in the locator bar can be set in the
 [configuration](configuration.md).
+
+## Cantonal and communal data (viageo.ch) {#viageo}
+
+viageo.ch publishes the data of the canton of Vaud and of its municipalities:
+the bathymetry of the lakes, aerial images of 2 cm and LiDAR point clouds. Its
+titles are in French: type `lidar`, `orthophoto` or `bathymétrie`, with the
+accents.
+
+![The point clouds of both catalogues](assets/screenshots/downloads-viageo.png)
+
+Its results work as those of the geoportal: an aerial image or a bathymetry is
+a single file, to download or to stream; a point cloud opens the filter panel.
+Some files are large, such as the aerial image of Pully of June 2026, 35 GB:
+stream it.
+
+Each catalogue is a search of its own in the
+[options of QGIS](configuration.md#in-the-options-of-qgis): uncheck one to
+leave it out, or give it a prefix of its own.

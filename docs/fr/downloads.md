@@ -2,10 +2,16 @@
 
 Préfixe : `chd`
 
-Téléchargez des fichiers du catalogue de données du géoportail,
-[data.geo.admin.ch](https://data.geo.admin.ch), et ajoutez-les à la carte :
-modèles altimétriques, images aériennes, limites, cartes et plus encore. La
-recherche porte sur les noms des jeux de données.
+Téléchargez des fichiers et ajoutez-les à la carte, depuis deux catalogues de
+données :
+
+- celui du géoportail fédéral, [data.geo.admin.ch](https://data.geo.admin.ch) :
+  modèles altimétriques, images aériennes, limites, cartes et plus encore ;
+- [viageo.ch](https://viageo.ch), les géodonnées des
+  [cantons et des communes](#viageo).
+
+La recherche porte sur les noms des jeux de données. Chaque catalogue liste ses
+résultats sous son propre nom.
 
 ## Un jeu de données de quelques fichiers
 
@@ -48,3 +54,21 @@ Dans le panneau **Swiss Locator : Filtrer les fichiers à télécharger** :
 
 Le nombre de fichiers listés directement dans la barre de localisation peut
 être défini dans la [configuration](configuration.md).
+
+## Données cantonales et communales (viageo.ch) {#viageo}
+
+viageo.ch publie les données du canton de Vaud et de ses communes : la
+bathymétrie des lacs, des images aériennes de 2 cm et des nuages de points
+LiDAR. Ses titres sont en français : tapez `lidar`, `orthophoto` ou
+`bathymétrie`, avec les accents.
+
+![Les nuages de points des deux catalogues](assets/screenshots/downloads-viageo.png)
+
+Ses résultats fonctionnent comme ceux du géoportail : une image aérienne ou une
+bathymétrie est un seul fichier, à télécharger ou à ajouter en *streamed* ; un
+nuage de points ouvre le panneau de filtre. Certains fichiers sont gros, comme
+l'image aérienne de Pully de juin 2026, 35 Go : ajoutez-la en *streamed*.
+
+Chaque catalogue est une recherche à part dans les
+[options de QGIS](configuration.md#in-the-options-of-qgis) : décochez-en un pour
+l'écarter, ou donnez-lui son propre préfixe.

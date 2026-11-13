@@ -10,18 +10,20 @@ des cantons. Elle nécessite une connexion Internet.
 | [wmts.geo.admin.ch](https://wmts.geo.admin.ch) | couches WMTS |
 | [vectortiles.geo.admin.ch](https://vectortiles.geo.admin.ch) | fonds de plan |
 | [data.geo.admin.ch](https://data.geo.admin.ch) | téléchargement de données |
+| [viageo.ch](https://viageo.ch) | téléchargement de données |
 | [opendata.swiss](https://opendata.swiss) et les services WMS qu'il référence | couches |
 | [opengisch.github.io/qgis-swiss-locator](https://opengisch.github.io/qgis-swiss-locator/data/v1/index.json) | couches, objets |
 
 Les données appartiennent à leurs producteurs : consultez leurs conditions
 d'utilisation avant de les publier.
 
-## Le catalogue de données (STAC)
+## Les catalogues de données (STAC)
 
-Le [téléchargement de données](downloads.md) puise dans le catalogue de
-données du géoportail fédéral, [data.geo.admin.ch](https://data.geo.admin.ch).
-Il suit le standard STAC (SpatioTemporal Asset Catalog) et organise les données
-en :
+Le [téléchargement de données](downloads.md) puise dans deux catalogues de
+données : celui du géoportail fédéral, [data.geo.admin.ch](https://data.geo.admin.ch),
+et [viageo.ch](https://viageo.ch), qui publie les géodonnées des cantons et des
+communes. Tous deux suivent le standard STAC (SpatioTemporal Asset Catalog) et
+organisent les données en :
 
 - **collections**, les jeux de données, comme swissALTI3D ;
 - **items**, les parties d'un jeu de données dans l'espace ou le temps, comme
@@ -29,10 +31,11 @@ en :
 - **assets**, les fichiers d'un item, par format, résolution et système de
   coordonnées.
 
-Au démarrage de QGIS, l'extension télécharge la liste des collections, en
-arrière-plan. Leurs titres et descriptions dans la langue de l'extension
-viennent du catalogue de métadonnées [geocat.ch](https://www.geocat.ch). Une
-recherche cherche le texte dans les titres et identifiants de cette liste, sans
+Au démarrage de QGIS, l'extension télécharge la liste des collections de chaque
+catalogue, en arrière-plan. Les titres et descriptions de data.geo.admin.ch
+dans la langue de l'extension viennent du catalogue de métadonnées
+[geocat.ch](https://www.geocat.ch) ; ceux de viageo.ch sont en français. Une
+recherche cherche le texte dans les titres et identifiants de ces listes, sans
 requête. Pour chaque collection trouvée, l'extension demande ensuite ses
 premiers fichiers : s'ils sont peu nombreux, ils sont listés ; sinon, la
 collection ouvre le panneau de filtre.
@@ -43,8 +46,8 @@ coordonnées. Il vient de l'extension
 [Swiss Geo Downloader](https://pimoll.github.io/swissgeodownloader/), de
 Patricia Moll.
 
-Un Cloud Optimized GeoTIFF ou Point Cloud ajouté en *streamed* reste sur
-data.geo.admin.ch : QGIS lit par le réseau les parties qu'il affiche.
+Un Cloud Optimized GeoTIFF ou Point Cloud ajouté en *streamed* reste sur le
+serveur de son catalogue : QGIS lit par le réseau les parties qu'il affiche.
 
 ## Fichiers publiés par l'extension
 
