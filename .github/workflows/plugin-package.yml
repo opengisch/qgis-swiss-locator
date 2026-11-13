@@ -92,5 +92,21 @@ jobs:
             --allow-uncommitted-changes \
             --asset-path swiss_locator/remote_data/bundled \
             ${TRANSLATIONS} \
-            --github-token ${{ secrets.GITHUB_TOKEN }} \
-            --qgis-token ${{ secrets.QGIS_ORG_TOKEN }}
+            --github-token ${{ secrets.GITHUB_TOKEN }}
+
+      # Uploaded here rather than by qgis-plugin-ci (--qgis-token), which
+      # cannot skip security rules yet (qgis/qgis-plugin-ci#430): the long
+      # layer names of the bundled data look like secrets to detect-secrets
+      # (Base64HighEntropyString). The skipped rule shows on the version page.
+      # https://plugins.qgis.org/docs/security-scanning/skipping
+      - name: Upload to plugins.qgis.org
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          QGIS_ORG_TOKEN: ${{ secrets.QGIS_ORG_TOKEN }}
+        run: |
+          curl --fail-with-body --silent --show-error \
+            --header "Authorization: Bearer ${QGIS_ORG_TOKEN}" \
+            --form "package=@swiss_locator.${{ github.ref_name }}.zip" \
+            --form auto_approve_after_scan=true \
+            --form skip_security_rules=Base64HighEntropyString \
+            https://plugins.qgis.org/plugins/api/swiss_locator/version/add/
