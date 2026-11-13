@@ -32,17 +32,17 @@
     <message>
         <location filename="../swissgeodownloader/api/stac_catalog.py"/>
         <source>Error when loading available dataset - Unexpected API response</source>
-        <translation type="unfinished"></translation>
+        <translation>Fehler beim Laden der verfügbaren Datensätze - Unerwartete Antwort der API</translation>
     </message>
     <message>
         <location filename="../swissgeodownloader/api/stac_catalog.py"/>
         <source>Error when loading dataset details - Unexpected API response</source>
-        <translation type="unfinished"></translation>
+        <translation>Fehler beim Laden der Details des Datensatzes - Unerwartete Antwort der API</translation>
     </message>
     <message>
         <location filename="../swissgeodownloader/api/stac_catalog.py"/>
         <source>Error when requesting file list - Unexpected API response</source>
-        <translation type="unfinished"></translation>
+        <translation>Fehler beim Anfordern der Dateiliste - Unerwartete Antwort der API</translation>
     </message>
 </context>
 <context>
@@ -108,7 +108,7 @@
     <message>
         <location filename="../ui/config.ui"/>
         <source>Locations</source>
-        <translation>Locations</translation>
+        <translation>Orte</translation>
     </message>
     <message>
         <location filename="../ui/config.ui"/>
@@ -191,7 +191,7 @@
     <message>
         <location filename="../gui/config_dialog.py"/>
         <source>You need to install QtWebKit to use map tips.</source>
-        <translation type="unfinished"></translation>
+        <translation>QtWebKit muss installiert sein, um Kartenhinweise zu verwenden.</translation>
     </message>
 </context>
 <context>
@@ -207,107 +207,107 @@
     <message>
         <location filename="../processing/geocode_addresses_algorithm.py"/>
         <source>Geocode addresses</source>
-        <translation type="unfinished"></translation>
+        <translation>Adressen geokodieren</translation>
     </message>
     <message>
         <location filename="../processing/geocode_addresses_algorithm.py"/>
         <source>Geocoding</source>
-        <translation type="unfinished"></translation>
+        <translation>Geokodierung</translation>
     </message>
     <message>
         <location filename="../processing/geocode_addresses_algorithm.py"/>
         <source>geocode,geocoding,address,swiss,swisstopo,geo.admin.ch,csv,batch,bulk</source>
-        <translation type="unfinished"></translation>
+        <translation>geokodieren,geokodierung,adresse,schweiz,stapelverarbeitung,geocode,geocoding,address,swiss,swisstopo,geo.admin.ch,csv,batch,bulk</translation>
     </message>
     <message>
         <location filename="../processing/geocode_addresses_algorithm.py"/>
         <source>Geocodes a table of Swiss addresses with the geo.admin.ch search service and creates a point layer.</source>
-        <translation type="unfinished"></translation>
+        <translation>Geokodiert eine Tabelle mit Schweizer Adressen mit dem Suchdienst von geo.admin.ch und erstellt einen Punktlayer.</translation>
     </message>
     <message>
         <location filename="../processing/geocode_addresses_algorithm.py"/>
         <source>&lt;p&gt;Geocodes the rows of a layer or table (typically a CSV file loaded as a delimited text layer) with the search service of geo.admin.ch, the Swiss federal geoportal, and creates a point layer. The source attributes are kept and completed with the attributes described below. Rows without any match are kept without geometry so that no source row is lost.&lt;/p&gt;&lt;h3&gt;Parameters&lt;/h3&gt;&lt;ul&gt;&lt;li&gt;&lt;b&gt;Address field&lt;/b&gt;: the column holding the full address, e.g. &lt;i&gt;Seftigenstrasse 264, 3084 Wabern&lt;/i&gt;. Build it with the field calculator when the address is split over several columns.&lt;/li&gt;&lt;li&gt;&lt;b&gt;Search in&lt;/b&gt;: the kinds of locations to search for. Building addresses are the default; cadastral parcels, postal codes, municipalities, districts, cantons and place names can be added.&lt;/li&gt;&lt;li&gt;&lt;b&gt;Coordinate reference system&lt;/b&gt;: CRS of the output when the input is a table without geometry. When the input is a layer, the output keeps its CRS.&lt;/li&gt;&lt;li&gt;&lt;b&gt;Restrict search to extent&lt;/b&gt;: when set, only locations within this extent are returned.&lt;/li&gt;&lt;li&gt;&lt;b&gt;Language&lt;/b&gt;: language of the labels returned by the service.&lt;/li&gt;&lt;li&gt;&lt;b&gt;Pause between requests&lt;/b&gt;: minimum delay between two requests, to spread the load on the service. The default of 3 seconds keeps to its fair use policy.&lt;/li&gt;&lt;/ul&gt;&lt;h3&gt;Added attributes&lt;/h3&gt;&lt;ul&gt;&lt;li&gt;&lt;b&gt;geocode_quality&lt;/b&gt;: &lt;i&gt;exact&lt;/i&gt; when every word of the address appears in the location found, &lt;i&gt;fuzzy&lt;/i&gt; otherwise. The service performs a fuzzy search and almost always returns something, even for typos or unknown addresses: check this attribute before trusting a result.&lt;/li&gt;&lt;li&gt;&lt;b&gt;geocode_candidates&lt;/b&gt;: number of locations returned by the service; more than one means the address is ambiguous, the best match is written.&lt;/li&gt;&lt;li&gt;&lt;b&gt;geocode_label&lt;/b&gt;, &lt;b&gt;geocode_detail&lt;/b&gt;, &lt;b&gt;geocode_origin&lt;/b&gt;, &lt;b&gt;geocode_feature_id&lt;/b&gt;, &lt;b&gt;geocode_rank&lt;/b&gt;, &lt;b&gt;geocode_weight&lt;/b&gt;: the location as returned by the service. For building addresses the feature identifier is the EGID and EDID of the federal register of buildings and dwellings.&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;The attributes are empty when no location was found or when the request failed. The algorithm can also edit a point layer in place.&lt;/p&gt;&lt;h3&gt;Fair use&lt;/h3&gt;&lt;p&gt;The service is free of charge but subject to a fair use policy, about 20 requests per minute on average. Identical addresses are requested only once. Keep the pause between requests for large tables and do not run unattended bulk jobs. Transient failures are retried a few times; the algorithm stops after several consecutive failures.&lt;/p&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;p&gt;Geokodiert die Zeilen eines Layers oder einer Tabelle (typischerweise einer als getrennte Textdatei geladenen CSV-Datei) mit dem Suchdienst von geo.admin.ch, dem Geoportal des Bundes, und erstellt einen Punktlayer. Die Attribute der Quelle bleiben erhalten und werden um die unten beschriebenen Attribute ergänzt. Zeilen ohne Treffer bleiben ohne Geometrie erhalten, damit keine Zeile der Quelle verloren geht.&lt;/p&gt;&lt;h3&gt;Parameter&lt;/h3&gt;&lt;ul&gt;&lt;li&gt;&lt;b&gt;Adressfeld&lt;/b&gt;: die Spalte mit der ganzen Adresse, z. B. &lt;i&gt;Seftigenstrasse 264, 3084 Wabern&lt;/i&gt;. Ist die Adresse auf mehrere Spalten verteilt, setzen Sie sie mit dem Feldrechner zusammen.&lt;/li&gt;&lt;li&gt;&lt;b&gt;Suchen in&lt;/b&gt;: die Arten von Orten, nach denen gesucht wird. Standardmässig die Gebäudeadressen; Parzellen, Postleitzahlen, Gemeinden, Bezirke, Kantone und Ortsnamen können hinzugefügt werden.&lt;/li&gt;&lt;li&gt;&lt;b&gt;Koordinatenbezugssystem&lt;/b&gt;: KBS des Ergebnisses, wenn die Eingabe eine Tabelle ohne Geometrie ist. Ist die Eingabe ein Layer, behält das Ergebnis dessen KBS.&lt;/li&gt;&lt;li&gt;&lt;b&gt;Suche auf Ausdehnung beschränken&lt;/b&gt;: wenn gesetzt, werden nur Orte innerhalb dieser Ausdehnung zurückgegeben.&lt;/li&gt;&lt;li&gt;&lt;b&gt;Sprache&lt;/b&gt;: Sprache der vom Dienst gelieferten Bezeichnungen.&lt;/li&gt;&lt;li&gt;&lt;b&gt;Pause zwischen Anfragen&lt;/b&gt;: minimale Wartezeit zwischen zwei Anfragen, um die Last auf den Dienst zu verteilen. Der Standardwert von 3 Sekunden hält dessen Fair-Use-Regelung ein.&lt;/li&gt;&lt;/ul&gt;&lt;h3&gt;Hinzugefügte Attribute&lt;/h3&gt;&lt;ul&gt;&lt;li&gt;&lt;b&gt;geocode_quality&lt;/b&gt;: &lt;i&gt;exact&lt;/i&gt;, wenn jedes Wort der Adresse im gefundenen Ort vorkommt, sonst &lt;i&gt;fuzzy&lt;/i&gt;. Der Dienst sucht unscharf und liefert fast immer etwas, auch bei Tippfehlern oder unbekannten Adressen: Prüfen Sie dieses Attribut, bevor Sie einem Ergebnis vertrauen.&lt;/li&gt;&lt;li&gt;&lt;b&gt;geocode_candidates&lt;/b&gt;: Anzahl der vom Dienst gelieferten Orte; mehr als einer bedeutet, dass die Adresse mehrdeutig ist, der beste Treffer wird geschrieben.&lt;/li&gt;&lt;li&gt;&lt;b&gt;geocode_label&lt;/b&gt;, &lt;b&gt;geocode_detail&lt;/b&gt;, &lt;b&gt;geocode_origin&lt;/b&gt;, &lt;b&gt;geocode_feature_id&lt;/b&gt;, &lt;b&gt;geocode_rank&lt;/b&gt;, &lt;b&gt;geocode_weight&lt;/b&gt;: der Ort, wie ihn der Dienst liefert. Bei Gebäudeadressen enthält die Objekt-ID den EGID und den EDID des eidgenössischen Gebäude- und Wohnungsregisters.&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;Die Attribute sind leer, wenn kein Ort gefunden wurde oder die Anfrage fehlschlug. Der Algorithmus kann auch einen Punktlayer direkt bearbeiten.&lt;/p&gt;&lt;h3&gt;Faire Nutzung&lt;/h3&gt;&lt;p&gt;Der Dienst ist kostenlos, unterliegt aber einer Fair-Use-Regelung von durchschnittlich etwa 20 Anfragen pro Minute. Gleiche Adressen werden nur einmal angefragt. Behalten Sie die Pause zwischen Anfragen bei grossen Tabellen bei und lassen Sie keine Massenverarbeitungen unbeaufsichtigt laufen. Vorübergehende Fehler werden einige Male wiederholt; nach mehreren Fehlern in Folge bricht der Algorithmus ab.&lt;/p&gt;</translation>
     </message>
     <message>
         <location filename="../processing/geocode_addresses_algorithm.py"/>
         <source>Search in</source>
-        <translation type="unfinished"></translation>
+        <translation>Suchen in</translation>
     </message>
     <message>
         <location filename="../processing/geocode_addresses_algorithm.py"/>
         <source>Building addresses</source>
-        <translation type="unfinished"></translation>
+        <translation>Gebäudeadressen</translation>
     </message>
     <message>
         <location filename="../processing/geocode_addresses_algorithm.py"/>
         <source>Cadastral parcels</source>
-        <translation type="unfinished"></translation>
+        <translation>Parzellen</translation>
     </message>
     <message>
         <location filename="../processing/geocode_addresses_algorithm.py"/>
         <source>Postal codes</source>
-        <translation type="unfinished"></translation>
+        <translation>Postleitzahlen</translation>
     </message>
     <message>
         <location filename="../processing/geocode_addresses_algorithm.py"/>
         <source>Municipalities</source>
-        <translation type="unfinished"></translation>
+        <translation>Gemeinden</translation>
     </message>
     <message>
         <location filename="../processing/geocode_addresses_algorithm.py"/>
         <source>Districts</source>
-        <translation type="unfinished"></translation>
+        <translation>Bezirke</translation>
     </message>
     <message>
         <location filename="../processing/geocode_addresses_algorithm.py"/>
         <source>Cantons</source>
-        <translation type="unfinished">Kantone</translation>
+        <translation>Kantone</translation>
     </message>
     <message>
         <location filename="../processing/geocode_addresses_algorithm.py"/>
         <source>Place names</source>
-        <translation type="unfinished"></translation>
+        <translation>Ortsnamen</translation>
     </message>
     <message>
         <location filename="../processing/geocode_addresses_algorithm.py"/>
         <source>Coordinate reference system (tables without geometry)</source>
-        <translation type="unfinished"></translation>
+        <translation>Koordinatenbezugssystem (Tabellen ohne Geometrie)</translation>
     </message>
     <message>
         <location filename="../processing/geocode_addresses_algorithm.py"/>
         <source>Restrict search to extent</source>
-        <translation type="unfinished"></translation>
+        <translation>Suche auf Ausdehnung beschränken</translation>
     </message>
     <message>
         <location filename="../processing/geocode_addresses_algorithm.py"/>
         <source>Language</source>
-        <translation type="unfinished">Sprache</translation>
+        <translation>Sprache</translation>
     </message>
     <message>
         <location filename="../processing/geocode_addresses_algorithm.py"/>
         <source>Automatic (plugin setting)</source>
-        <translation type="unfinished"></translation>
+        <translation>Automatisch (Einstellung des Plugins)</translation>
     </message>
     <message>
         <location filename="../processing/geocode_addresses_algorithm.py"/>
         <source>Pause between requests (milliseconds)</source>
-        <translation type="unfinished"></translation>
+        <translation>Pause zwischen Anfragen (Millisekunden)</translation>
     </message>
     <message>
         <location filename="../processing/geocode_addresses_algorithm.py"/>
         <source>Empty address field for feature {}</source>
-        <translation type="unfinished"></translation>
+        <translation>Leeres Adressfeld für Objekt {}</translation>
     </message>
     <message>
         <location filename="../processing/geocode_addresses_algorithm.py"/>
         <source>{} consecutive requests failed, giving up.</source>
-        <translation type="unfinished"></translation>
+        <translation>{} Anfragen in Folge fehlgeschlagen, Abbruch.</translation>
     </message>
     <message>
         <location filename="../processing/geocode_addresses_algorithm.py"/>
         <source>Requests sent: {}, identical addresses reused: {}.</source>
-        <translation type="unfinished"></translation>
+        <translation>Gesendete Anfragen: {}, wiederverwendete gleiche Adressen: {}.</translation>
     </message>
 </context>
 <context>
@@ -404,7 +404,7 @@
     <message>
         <location filename="../swissgeodownloader/utils/qgis_layer_creator_task.py"/>
         <source>Add data to QGIS</source>
-        <translation type="unfinished"></translation>
+        <translation>Daten zu QGIS hinzufügen</translation>
     </message>
 </context>
 <context>
@@ -515,12 +515,12 @@ Weitere Informationen:
     <message>
         <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
         <source>get file list</source>
-        <translation type="unfinished"></translation>
+        <translation>Dateiliste abfragen</translation>
     </message>
     <message>
         <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
         <source>download files</source>
-        <translation type="unfinished"></translation>
+        <translation>Dateien herunterladen</translation>
     </message>
 </context>
 <context>
@@ -533,32 +533,32 @@ Weitere Informationen:
     <message>
         <location filename="../core/filters/swiss_locator_filter.py"/>
         <source>Open layer in map.geo.admin.ch</source>
-        <translation type="unfinished"></translation>
+        <translation>Layer in map.geo.admin.ch öffnen</translation>
     </message>
     <message>
         <location filename="../core/filters/swiss_locator_filter.py"/>
         <source>Cannot load layer: {} ({})</source>
-        <translation type="unfinished"></translation>
+        <translation>Layer kann nicht geladen werden: {} ({})</translation>
     </message>
     <message>
         <location filename="../core/filters/swiss_locator_filter.py"/>
         <source>Layer added to the map: {} ({})</source>
-        <translation type="unfinished"></translation>
+        <translation>Layer zur Karte hinzugefügt: {} ({})</translation>
     </message>
     <message>
         <location filename="../core/filters/swiss_locator_filter.py"/>
         <source>Cannot load vector tiles layer: {}</source>
-        <translation type="unfinished"></translation>
+        <translation>Vektorkachel-Layer kann nicht geladen werden: {}</translation>
     </message>
     <message>
         <location filename="../core/filters/swiss_locator_filter.py"/>
         <source>Sublayers found ({}): {}</source>
-        <translation type="unfinished"></translation>
+        <translation>Unterlayer gefunden ({}): {}</translation>
     </message>
     <message>
         <location filename="../core/filters/swiss_locator_filter.py"/>
         <source>Layer added to the map: {}</source>
-        <translation type="unfinished"></translation>
+        <translation>Layer zur Karte hinzugefügt: {}</translation>
     </message>
 </context>
 <context>
@@ -576,12 +576,12 @@ Weitere Informationen:
     <message>
         <location filename="../core/filters/swiss_locator_filter_feature.py"/>
         <source>The list of searchable layers is not available yet. It is downloaded when QGIS starts, check the network connection.</source>
-        <translation type="unfinished"></translation>
+        <translation>Die Liste der durchsuchbaren Layer ist noch nicht verfügbar. Sie wird beim Start von QGIS heruntergeladen, prüfen Sie die Netzwerkverbindung.</translation>
     </message>
     <message>
         <location filename="../core/filters/swiss_locator_filter_feature.py"/>
         <source>Layer {} is not in the list of searchable layers. Please report issue.</source>
-        <translation type="unfinished"></translation>
+        <translation>Layer {} ist nicht in der Liste der durchsuchbaren Layer. Bitte melden Sie das Problem.</translation>
     </message>
 </context>
 <context>
@@ -594,7 +594,7 @@ Weitere Informationen:
     <message>
         <location filename="../core/filters/swiss_locator_filter_layer.py"/>
         <source>Swiss Geoportal / opendata.swiss layers</source>
-        <translation type="unfinished"></translation>
+        <translation>Schweizer Geoportal / opendata.swiss Layer</translation>
     </message>
 </context>
 <context>
@@ -690,22 +690,22 @@ Weitere Informationen:
     <message>
         <location filename="../core/filters/swiss_locator_filter_stac.py"/>
         <source>Fetching the STAC collections of {}</source>
-        <translation type="unfinished"></translation>
+        <translation>Die STAC-Kollektionen von {} werden abgerufen</translation>
     </message>
     <message>
         <location filename="../core/filters/swiss_locator_filter_stac.py"/>
         <source>Not able to download the STAC collections of {}</source>
-        <translation type="unfinished"></translation>
+        <translation>Die STAC-Kollektionen von {} können nicht heruntergeladen werden</translation>
     </message>
     <message>
         <location filename="../core/filters/swiss_locator_filter_stac.py"/>
         <source>viageo.ch STAC file download</source>
-        <translation type="unfinished"></translation>
+        <translation>viageo.ch STAC Datei-Download</translation>
     </message>
     <message>
         <location filename="../core/filters/swiss_locator_filter_stac.py"/>
         <source>Basel-Stadt STAC file download</source>
-        <translation type="unfinished"></translation>
+        <translation>Basel-Stadt STAC Datei-Download</translation>
     </message>
 </context>
 <context>
@@ -718,17 +718,17 @@ Weitere Informationen:
     <message>
         <location filename="../core/filters/swiss_locator_filter_vector_tiles.py"/>
         <source>Base map</source>
-        <translation type="unfinished"></translation>
+        <translation>Basiskarte</translation>
     </message>
     <message>
         <location filename="../core/filters/swiss_locator_filter_vector_tiles.py"/>
         <source>Light base map</source>
-        <translation type="unfinished"></translation>
+        <translation>Helle Basiskarte</translation>
     </message>
     <message>
         <location filename="../core/filters/swiss_locator_filter_vector_tiles.py"/>
         <source>Imagery base map</source>
-        <translation type="unfinished"></translation>
+        <translation>Luftbild-Basiskarte</translation>
     </message>
 </context>
 <context>
@@ -746,7 +746,7 @@ Weitere Informationen:
     <message>
         <location filename="../core/filters/swiss_locator_filter_wmts.py"/>
         <source>The Swiss Locator filter for WMTS layers could not parse capabilities.</source>
-        <translation type="unfinished"></translation>
+        <translation>Der Swiss Locator Filter für WMTS Layer konnte die Metadaten des Servers nicht lesen.</translation>
     </message>
 </context>
 <context>
