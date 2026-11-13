@@ -147,11 +147,12 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
         matching_collections = self.perform_local_search(search)[:result_limit]
 
         # For each collection, request a few items to decide whether assets can
-        # be downloaded directly from the locator or a filter dialog is necessary
+        # be downloaded directly from the locator or a filter dialog is necessary.
+        # One more item than the limit is requested to know if there are more.
         requests = []
         for collection_id in matching_collections:
             url, params = map_geo_admin_stac_items_url(
-                collection_id, files_per_result_limit
+                collection_id, files_per_result_limit + 1
             )
             requests.append(self.request_for_url(url, params, self.HEADERS))
 
@@ -173,11 +174,15 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
         files_per_collection_limit = self.settings.filters[self.type.value][
             "limit_files_per_result"
         ].value()
+        item_count = len(response["features"])
         file_count = sum(
             [len(item["assets"].values()) for item in response["features"]]
         )
 
-        if file_count <= files_per_collection_limit:
+        if (
+            item_count <= files_per_collection_limit
+            and file_count <= files_per_collection_limit
+        ):
             results = []
             # Analyse response and create stac result objects
             for item in response["features"]:
