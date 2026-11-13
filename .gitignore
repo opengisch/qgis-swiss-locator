@@ -1,7 +1,6 @@
 .idea
 __pycache__
 *.orig
-i18n
 .DS_Store
 .python-version
 github_deploy_key.out
@@ -13,3 +12,8 @@ _site/
 
 # documentation built by python docs/build.py
 docs/site/
+
+# translations: compiled ones, and the source strings for Transifex
+# (python -m scripts.translations update)
+swiss_locator/i18n/*.qm
+swiss_locator/i18n/swiss_locator_en.ts

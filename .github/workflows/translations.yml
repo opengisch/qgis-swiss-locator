@@ -1,0 +1,108 @@
+name: 🌍 Translations
+
+# Keeps the translations of the plugin, swiss_locator/i18n/*.ts, in sync with
+# Transifex, where translators work. They can be edited in the repository too.
+#
+# In one job, in this order, so that a translation edited in the repository is
+# on Transifex before the translations are pulled from there:
+# 1. push the strings of the source code
+# 2. push the translations edited in the repository since the last successful
+#    run, only those: the ones edited on Transifex in the meantime are kept
+# 3. pull the translations and commit them to main. Pushed with GITHUB_TOKEN,
+#    the commit does not trigger any workflow.
+# See python -m scripts.translations --help
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/translations.yml
+      - .tx/config
+      - scripts/translations.py
+      - swiss_locator/**.py
+      - swiss_locator/**.ui
+      - swiss_locator/i18n/*.ts
+  schedule:
+    # daily, for the translations made on Transifex
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# one run at a time, the next one waits
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.repository == 'opengisch/qgis-swiss-locator'
+    runs-on: ubuntu-latest
+    permissions:
+      # to find the last successful run
+      actions: read
+      # to commit the translations
+      contents: write
+    env:
+      TX_TOKEN: ${{ secrets.TX_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # to find the translations edited since the last successful run
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Install pylupdate5 and the Transifex CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends pyqt5-dev-tools
+          curl -sSfLO https://github.com/transifex/cli/releases/download/v1.6.17/tx-linux-amd64.tar.gz
+          echo "002dec5b9e71248a7e6a0808118e9da940205828d5a33ce88e04bb57a967164d  tx-linux-amd64.tar.gz" | sha256sum --check
+          mkdir "$RUNNER_TEMP/tx"
+          tar -xzf tx-linux-amd64.tar.gz -C "$RUNNER_TEMP/tx" tx
+          echo "$RUNNER_TEMP/tx" >> "$GITHUB_PATH"
+
+      - name: ⬆️ Push to Transifex
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # all the translations of the repository without a successful run
+          since=$(gh run list --workflow translations.yml --branch main \
+            --status success --limit 1 --json headSha --jq '.[0].headSha // ""')
+          python -m scripts.translations update
+          languages=$(python -m scripts.translations edits ${since:+--since "$since"})
+          if [ -n "$languages" ]; then
+            tx push --source --translation --languages "$languages" --force
+          else
+            tx push --source --force
+          fi
+          # the files pushed hold only the edited translations
+          git checkout -- swiss_locator/i18n
+
+      - name: ⬇️ Pull from Transifex
+        run: |
+          tx pull --translation --all --force
+          python -m scripts.translations update
+
+      - name: 💾 Commit to main
+        run: |
+          git add swiss_locator/i18n
+          if git diff --cached --quiet; then
+            echo "The translations are up to date"
+            exit 0
+          fi
+          # commits of this author are not pushed back, see edits()
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update translations from Transifex"
+          for attempt in 1 2 3; do
+            git push origin HEAD:main && exit 0
+            git pull --rebase origin main
+          done
+          exit 1
