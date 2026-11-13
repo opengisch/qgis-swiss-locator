@@ -25,7 +25,7 @@ nav:
       - Layer WMTS: layers/wmts.md
       - Mappe di base: layers/base-maps.md
   - Scaricare dati (STAC):
-      - downloads/index.md
+      - swisstopo: downloads/swisstopo.md
       - viageo.ch: downloads/viageo.md
       - Basilea Città: downloads/basel-stadt.md
   - Profilo altimetrico: elevation-profile.md

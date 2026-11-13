@@ -20,7 +20,7 @@ bevor Sie die Daten veröffentlichen.
 
 ## Die Datenkataloge (STAC)
 
-Das [Herunterladen von Daten](downloads/index.md) greift auf drei Datenkataloge
+Das [Herunterladen von Daten](downloads/swisstopo.md) greift auf drei Datenkataloge
 zu: den des Geoportals des Bundes,
 [data.geo.admin.ch](https://data.geo.admin.ch); [viageo.ch](https://viageo.ch),
 das die Geodaten von Kantonen und Gemeinden veröffentlicht; und den des Kantons

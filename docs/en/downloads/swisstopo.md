@@ -1,11 +1,11 @@
-# Downloading data (STAC)
+# Federal data (swisstopo)
 
 Prefix: `chd`
 
 Download files and add them to the map, from three data catalogues:
 
-- that of the federal geoportal, [data.geo.admin.ch](https://data.geo.admin.ch):
-  elevation models, aerial images, boundaries, maps and more;
+- that of the federal geoportal, [data.geo.admin.ch](https://data.geo.admin.ch),
+  run by swisstopo: elevation models, aerial images, boundaries, maps and more;
 - [viageo.ch](https://viageo.ch), the geodata of
   [cantons and municipalities](viageo.md);
 - [geo.bs.ch](https://www.geo.bs.ch), the geodata of the canton of

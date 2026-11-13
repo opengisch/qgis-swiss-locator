@@ -84,7 +84,7 @@ disponibile.
 Per tabelle più grandi, scrivere prima a
 [info@geo.admin.ch](mailto:info@geo.admin.ch), come chiedono le condizioni di
 utilizzo, oppure usare l'elenco ufficiale degli indirizzi degli edifici di
-swisstopo, un set di dati del [catalogo dei dati](downloads/index.md).
+swisstopo, un set di dati del [catalogo dei dati](downloads/swisstopo.md).
 
 ## Nei modelli e negli script
 

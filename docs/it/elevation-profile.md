@@ -24,7 +24,7 @@ gli alberi e i tetti di due fattorie poggiano sul terreno di swissALTI3D.
 !!! note
     La nuvola di punti di questo esempio è stata creata per la documentazione.
     Quelle reali, come swissSURFACE3D, possono essere scaricate con la ricerca
-    [Scaricare dati](downloads/index.md).
+    [Scaricare dati](downloads/swisstopo.md).
 
 Nell'albero dei layer del profilo, deselezionare **Swiss Profile** per
 nascondere il terreno, oppure trascinarlo per cambiare l'ordine di disegno.

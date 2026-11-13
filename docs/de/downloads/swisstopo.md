@@ -1,12 +1,12 @@
-# Daten herunterladen (STAC)
+# Daten des Bundes (swisstopo)
 
 Präfix: `chd`
 
 Laden Sie Dateien aus drei Datenkatalogen herunter und fügen Sie sie zur Karte
 hinzu:
 
-- dem des Geoportals des Bundes, [data.geo.admin.ch](https://data.geo.admin.ch):
-  Höhenmodelle, Luftbilder, Grenzen, Karten und mehr;
+- dem des Geoportals des Bundes, [data.geo.admin.ch](https://data.geo.admin.ch),
+  betrieben von swisstopo: Höhenmodelle, Luftbilder, Grenzen, Karten und mehr;
 - [viageo.ch](https://viageo.ch), den Geodaten von
   [Kantonen und Gemeinden](viageo.md);
 - [geo.bs.ch](https://www.geo.bs.ch), den Geodaten des Kantons

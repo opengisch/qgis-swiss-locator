@@ -1,12 +1,13 @@
-# Télécharger des données (STAC)
+# Données fédérales (swisstopo)
 
 Préfixe : `chd`
 
 Téléchargez des fichiers et ajoutez-les à la carte, depuis trois catalogues de
 données :
 
-- celui du géoportail fédéral, [data.geo.admin.ch](https://data.geo.admin.ch) :
-  modèles altimétriques, images aériennes, limites, cartes et plus encore ;
+- celui du géoportail fédéral, [data.geo.admin.ch](https://data.geo.admin.ch),
+  exploité par swisstopo : modèles altimétriques, images aériennes, limites,
+  cartes et plus encore ;
 - [viageo.ch](https://viageo.ch), les géodonnées des
   [cantons et des communes](viageo.md) ;
 - [geo.bs.ch](https://www.geo.bs.ch), les géodonnées du canton de

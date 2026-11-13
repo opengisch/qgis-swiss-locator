@@ -20,7 +20,7 @@ publish it.
 
 ## The data catalogues (STAC)
 
-The [downloads](downloads/index.md) come from three data catalogues: that of
+The [downloads](downloads/swisstopo.md) come from three data catalogues: that of
 the federal geoportal, [data.geo.admin.ch](https://data.geo.admin.ch);
 [viageo.ch](https://viageo.ch), which publishes the geodata of cantons and
 municipalities; and that of the canton of Basel-Stadt,

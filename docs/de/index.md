@@ -35,7 +35,7 @@ Verarbeitung.
 [Erste Schritte](getting-started.md) erklärt die Suchleiste. Danach können
 Sie [Orte und Objekte suchen](search/index.md),
 [Layer hinzufügen](layers/index.md) oder
-[Daten herunterladen](downloads/index.md).
+[Daten herunterladen](downloads/swisstopo.md).
 
 ## Über das Plugin
 

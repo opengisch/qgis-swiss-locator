@@ -9,7 +9,7 @@ LiDAR. I suoi titoli sono in francese: digitare `lidar`, `orthophoto` o
 
 ![Le nuvole di punti dei due cataloghi](../assets/screenshots/downloads-viageo.png)
 
-I suoi risultati funzionano [come quelli del geoportale](index.md): un'immagine
+I suoi risultati funzionano [come quelli del geoportale](swisstopo.md): un'immagine
 aerea o una batimetria è un unico file, da scaricare o da aggiungere come
 *streamed*; una nuvola di punti apre il pannello di filtro. Alcuni file sono
 grandi, come l'immagine aerea di Pully di giugno 2026, 35 GB: aggiungerla come

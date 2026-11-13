@@ -9,7 +9,7 @@ oder `bathymétrie` ein, mit den Akzenten.
 
 ![Die Punktwolken beider Kataloge](../assets/screenshots/downloads-viageo.png)
 
-Die Resultate funktionieren [wie die des Geoportals](index.md): Ein Luftbild
+Die Resultate funktionieren [wie die des Geoportals](swisstopo.md): Ein Luftbild
 oder eine Bathymetrie ist eine einzelne Datei, zum Herunterladen oder
 *gestreamt*; eine Punktwolke öffnet das Filterfenster. Manche Dateien sind
 gross, etwa das Luftbild von Pully vom Juni 2026 mit 35 GB: Fügen Sie es
