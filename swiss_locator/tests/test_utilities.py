@@ -18,13 +18,12 @@ from swiss_locator.core.constants import (
     STAC_BASE_URL,
     USER_AGENT,
     VECTOR_TILES_BASE_URL,
+    VIAGEO_STAC_URL,
     WMS_BASE_URL,
     WMTS_BASE_URL,
 )
 from swiss_locator.core.filters.map_geo_admin import map_geo_admin_url
-from swiss_locator.core.filters.map_geo_admin_stac import (
-    map_geo_admin_stac_items_url,
-)
+from swiss_locator.core.filters.map_geo_admin_stac import stac_items_url
 from swiss_locator.core.filters.opendata_swiss import opendata_swiss_url
 from swiss_locator.core.filters.swiss_locator_filter import SwissLocatorFilter
 from swiss_locator.core.profiles.profile_url import profile_url
@@ -62,6 +61,7 @@ class TestConstants(unittest.TestCase):
             WMTS_BASE_URL,
             WMS_BASE_URL,
             STAC_BASE_URL,
+            VIAGEO_STAC_URL,
             VECTOR_TILES_BASE_URL,
             OPENDATA_SWISS_URL,
             MAP_GEO_ADMIN_URL,
@@ -163,14 +163,13 @@ class TestMapGeoAdminUrl(unittest.TestCase):
         self.assertEqual(params["returnGeometry"], "true")
 
 
-class TestMapGeoAdminStacItemsUrl(unittest.TestCase):
-    def test_url_contains_collection_id(self):
-        url, params = map_geo_admin_stac_items_url("ch.swisstopo.swissalti3d", 10)
-        self.assertIn("ch.swisstopo.swissalti3d", url)
-        self.assertTrue(url.startswith(STAC_BASE_URL))
+class TestStacItemsUrl(unittest.TestCase):
+    def test_url(self):
+        url, _ = stac_items_url(VIAGEO_STAC_URL, "7f4f2fb9", 10)
+        self.assertEqual(url, f"{VIAGEO_STAC_URL}/collections/7f4f2fb9/items")
 
     def test_limit_param(self):
-        _, params = map_geo_admin_stac_items_url("ch.test", 5)
+        _, params = stac_items_url(STAC_BASE_URL, "ch.test", 5)
         self.assertEqual(params["limit"], "5")
 
 

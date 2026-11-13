@@ -33,6 +33,9 @@ from swiss_locator.core.filters.map_geo_admin_stac import (
 )
 from swiss_locator.core.filters.swiss_locator_filter_stac import SwissLocatorFilterSTAC
 from swiss_locator.core.results import result_from_data
+from swiss_locator.swissgeodownloader.api.catalogs import ApiViageo
+from swiss_locator.swissgeodownloader.api.datageoadmin import ApiDataGeoAdmin
+from swiss_locator.swissgeodownloader.api.response_objects import SgdStacCollection
 
 start_app()
 
@@ -50,17 +53,37 @@ class TestLocatorFilterSTAC(unittest.TestCase):
         )
         cls.collections = {}
         for key, title in cls.test_strings:
-            cls.collections[key] = QgsStacCollection(
-                key, None, None, [], None, QgsStacExtent()
+            cls.collections[key] = cls.collection(key, title, ApiDataGeoAdmin)
+        cls.geoadmin = ApiDataGeoAdmin("en")
+        # Orthophoto of Pully on viageo.ch
+        cls.viageo_id = "dc37c46c-167e-46a8-b2e6-3b71287b423b"
+        cls.viageo_collections = {
+            cls.viageo_id: cls.collection(
+                cls.viageo_id, "Image aérienne True Orthophoto 2cm Pully", ApiViageo
             )
-            cls.collections[key].setTitle(title)
+        }
+        cls.viageo = ApiViageo("en")
 
-    def _make_filter(self):
-        search_strings, search_ids = collections_to_searchable_strings(self.collections)
-        _filter = SwissLocatorFilterSTAC(
-            get_iface(), None, [self.collections, search_strings, search_ids]
+    @staticmethod
+    def collection(collection_id, title, catalog) -> SgdStacCollection:
+        collection = SgdStacCollection(
+            QgsStacCollection(collection_id, None, None, [], None, QgsStacExtent()),
+            catalog.CATALOG_ID,
         )
-        return _filter
+        collection.setTitle(title)
+        return collection
+
+    def _make_filter(self, catalog=None, collections=None):
+        """Filter of data.geo.admin.ch, unless another catalog is given"""
+        catalog = catalog or self.geoadmin
+        collections = self.collections if collections is None else collections
+        search_strings, search_ids = collections_to_searchable_strings(collections)
+        return SwissLocatorFilterSTAC(
+            get_iface(), None, [catalog, collections, search_strings, search_ids]
+        )
+
+    def _make_viageo_filter(self):
+        return self._make_filter(self.viageo, self.viageo_collections)
 
     def test_local_search(self):
         _filter = self._make_filter()
@@ -112,6 +135,76 @@ class TestLocatorFilterSTAC(unittest.TestCase):
             ],
         )
 
+    def test_viageo_asset_named_after_its_file(self):
+        """viageo.ch names all assets 'geotiff_cog' and gives the coordinate
+        system on the item, not on the asset."""
+        _filter = self._make_viageo_filter()
+        results = []
+        _filter.resultFetched.connect(
+            lambda r: results.append((r.displayString, result_from_data(r.userData)))
+        )
+        href = "https://data.viageo.ch/pully/true_ortho-Pully.cog.tif"
+        _filter.handle_content(
+            json.dumps(
+                {
+                    "features": [
+                        {
+                            "id": "data",
+                            "collection": self.viageo_id,
+                            "properties": {"proj:epsg": 2056},
+                            "assets": {
+                                "geotiff_cog": {
+                                    "href": href,
+                                    "type": "image/tiff; application=geotiff; "
+                                    "profile=cloud-optimized",
+                                }
+                            },
+                        }
+                    ]
+                }
+            ),
+            None,
+        )
+        self.assertEqual(
+            [(name, r.href, r.coordsys) for name, r in results],
+            [
+                ("true_ortho-Pully.cog.tif", href, "2056"),
+                ("true_ortho-Pully.cog.tif (streamed)", href, "2056"),
+            ],
+        )
+
+    def test_one_filter_per_catalog(self):
+        """The filters of the catalogs share the prefix and show the source
+        of the files above the results."""
+        geoadmin, viageo = self._make_filter(), self._make_viageo_filter()
+        self.assertEqual(geoadmin.prefix(), viageo.prefix())
+        self.assertNotEqual(geoadmin.displayName(), viageo.displayName())
+        # QGIS saves the settings of a filter under its name, the one of
+        #  data.geo.admin.ch keeps the name it had alone
+        self.assertEqual(geoadmin.name(), "SwissLocatorFilterSTAC")
+        self.assertEqual(viageo.name(), "SwissLocatorFilterSTAC_viageo")
+        self.assertEqual(viageo.clone().name(), viageo.name())
+
+    def test_items_requested_from_the_catalog_of_the_filter(self):
+        urls = []
+
+        def fake_fetch_requests(requests, feedback, slot, data=None):
+            urls.extend(request.url().toString().split("?")[0] for request in requests)
+
+        for _filter, search in (
+            (self._make_viageo_filter(), "pully"),
+            (self._make_filter(), "swissalti3d"),
+        ):
+            _filter.fetch_requests = fake_fetch_requests
+            _filter.perform_fetch_results(search, QgsFeedback())
+        self.assertEqual(
+            urls,
+            [
+                f"{ApiViageo.URL}/collections/{self.viageo_id}/items",
+                f"{ApiDataGeoAdmin.URL}/collections/ch.swisstopo.swissalti3d/items",
+            ],
+        )
+
     def test_local_search_no_match(self):
         """Unmatched terms should return an empty list."""
         _filter = self._make_filter()
@@ -148,6 +241,7 @@ class TestLocatorFilterSTAC(unittest.TestCase):
         )
         self.assertEqual(cloned.search_strings, _filter.search_strings)
         self.assertEqual(cloned.collection_ids, _filter.collection_ids)
+        self.assertIs(cloned.catalog, _filter.catalog)
 
     def _search_single_asset_collection(self, items_over_limit: int):
         """Search a collection made of single-asset items (limit +

@@ -173,6 +173,17 @@ class TestFileObject(unittest.TestCase):
         self.assertTrue(file_obj.coordsysFitsFilter(""))
         self.assertFalse(file_obj.coordsysFitsFilter("EPSG:3857"))
 
+    def test_id_is_the_file_name(self):
+        """The key of an asset is not always its file name (viageo.ch)."""
+        file_obj = self.createAsset(
+            "laz_copc", "application/vnd.laszip+copc", "https://x/2538_1150.copc.laz"
+        )
+        self.assertEqual(file_obj.id, "2538_1150.copc.laz")
+        self.assertEqual(file_obj.copy().id, "2538_1150.copc.laz")
+
+    def test_id_without_file_name_in_url(self):
+        self.assertEqual(self.createAsset("tile", "image", "https://x/").id, "tile")
+
 
 if __name__ == "__main__":
     unittest.main()

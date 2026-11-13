@@ -11,6 +11,8 @@ WMTS_BASE_URL = "https://wmts.geo.admin.ch"
 WMS_BASE_URL = "https://wms.geo.admin.ch"
 
 STAC_BASE_URL = "https://data.geo.admin.ch/api/stac/v1"
+# Cantonal and communal geodata
+VIAGEO_STAC_URL = "https://viageo.ch/api/catalog/stac"
 
 VECTOR_TILES_BASE_URL = "https://vectortiles.geo.admin.ch"
 

@@ -19,7 +19,9 @@
  ***************************************************************************/
 """
 
+import posixpath
 from copy import deepcopy
+from urllib.parse import urlsplit
 
 from qgis.core import QgsBox3D, QgsStacAsset, QgsStacCollection
 
@@ -31,13 +33,25 @@ P_SIMILAR = 0.20  # max 20% difference
 FILETYPE_STREAMED = "streamed"
 
 
+def assetFileName(assetId: str, href: str) -> str:
+    """Name of the file of an asset, the last part of its URL. The key of an
+    asset is not always its file name: all assets of viageo.ch are named
+    'geotiff_cog' or 'laz_copc'."""
+    return posixpath.basename(urlsplit(href or "").path) or assetId
+
+
 class SgdStacCollection(QgsStacCollection):
-    def __init__(self, collection: QgsStacCollection):
+    def __init__(self, collection: QgsStacCollection, catalogId: str = ""):
         super().__init__(collection)
+        self._catalogId = catalogId
         self._selectByBBox = True
         self._isEmpty = None
         self._avgSize = {}
         self._analysed = False
+
+    def catalogId(self):
+        """Id of the STAC catalog the collection comes from"""
+        return self._catalogId
 
     def selectByBBox(self):
         return self._selectByBBox
@@ -108,8 +122,8 @@ class SgdStacCollection(QgsStacCollection):
 class SgdAsset(QgsStacAsset):
     def __init__(self, assetId: str, asset: QgsStacAsset):
         super().__init__(asset)
-        self.id = assetId
         self.href = self.href()
+        self.id = assetFileName(assetId, self.href)
         # Additional properties extending QgsStacAsset
         self.properties = {}
         self.bbox = None

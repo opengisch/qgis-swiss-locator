@@ -17,6 +17,7 @@
 """
 
 import os
+from functools import partial
 
 from qgis.PyQt.QtCore import QCoreApplication, QLocale, QSettings, QTranslator, Qt
 from qgis.PyQt.QtWidgets import QWidget
@@ -41,6 +42,7 @@ from swiss_locator.core.filters.swiss_locator_filter_wmts import SwissLocatorFil
 from swiss_locator.core.language import get_language
 from swiss_locator.map_geo_admin.layers import SEARCHABLE_LAYERS
 from swiss_locator.processing.provider import SwissLocatorProcessingProvider
+from swiss_locator.swissgeodownloader.api.catalogs import STAC_CATALOGS
 from swiss_locator.swissgeodownloader.ui.sgd_dockwidget import (
     SwissGeoDownloaderDockWidget,
 )
@@ -96,7 +98,11 @@ class SwissLocatorPlugin:
             SwissLocatorFilterLayer,
             SwissLocatorFilterVectorTiles,
             SwissLocatorFilterFeature,
-            SwissLocatorFilterSTAC,
+            # One filter per catalog, so the results are grouped by source
+            *(
+                partial(SwissLocatorFilterSTAC, catalog_id=catalog_id)
+                for catalog_id in STAC_CATALOGS
+            ),
         ):
             locatorFilter = _filter(self.iface)
             self.iface.registerLocatorFilter(locatorFilter)
@@ -163,7 +169,7 @@ class SwissLocatorPlugin:
         else:
             self.iface.messageBar().pushMessage(title, msg, level)
 
-    def open_stac_filter_widget(self, collectionId):
+    def open_stac_filter_widget(self, catalogId, collectionId):
         if not self.stac_filter_widget:
             self.stac_filter_widget = SwissGeoDownloaderDockWidget(
                 self.iface, get_language()
@@ -186,7 +192,7 @@ class SwissLocatorPlugin:
 
         if not self.stac_filter_widget.isUserVisible():
             self.stac_filter_widget.setUserVisible(True)
-        self.stac_filter_widget.setCurrentCollection(collectionId)
+        self.stac_filter_widget.setCurrentCollection(catalogId, collectionId)
 
     def close_stac_filter_widget(self):
         if self.stac_filter_widget:
