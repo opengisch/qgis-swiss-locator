@@ -3,8 +3,8 @@
 name=Swiss Locator
 qgisMinimumVersion=3.44
 qgisMaximumVersion=4.99
-description=A locator filter and a batch geocoder for Swiss Geoportal (geo.admin.ch) and opendata.swiss resources
-about=Search for locations, WMS layers of features in the whole Swiss Geoportal catalog as well as in opendata.swiss. Geocode tables of addresses into point layers with a Processing algorithm.
+description=Swiss toolbox for QGIS: locator filters (location and layer search), STAC catalogs, elevation profile and more
+about=Search the Swiss Geoportal (geo.admin.ch) and opendata.swiss from the locator bar of QGIS: locations, features and layers (WMS, WMTS, vector tile base maps). Download data from the STAC catalogs of swisstopo, viageo.ch and Basel-Stadt. Draw the swissALTI3D terrain in elevation profiles, and geocode tables of addresses with Processing. Documentation in English, French, German and Italian: https://opengisch.github.io/qgis-swiss-locator/
 version=dev
 author=OPENGIS.ch
 email=info@opengis.ch
@@ -14,7 +14,7 @@ hasProcessingProvider=yes
 
 
 # Tags are comma separated with spaces allowed
-tags=swiss, suisse, schweiz, locator, geoadmin, geoportal, opendata.swiss, geocoding, geocoder, address, processing
+tags=swiss, suisse, schweiz, locator, geoadmin, geoportal, opendata.swiss, geocoding, geocoder, address, processing, stac, download, swisstopo, viageo, elevation profile, swissalti3d
 
 tracker=https://github.com/opengisch/qgis-swiss-locator
 homepage=https://opengisch.github.io/qgis-swiss-locator/

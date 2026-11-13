@@ -1,36 +1,33 @@
-# QGIS Swiss Locator plugin
+# Swiss Toolbox for QGIS: locator filters (location and layer search), STAC catalogs, Elevation profile and more
 
-## What 
-Integrates the Swiss Geoportal into QGIS
+Swiss Locator brings the Swiss Geoportal into [QGIS](https://qgis.org/).
+Type in the locator bar of QGIS, as you would on
+[map.geo.admin.ch](https://map.geo.admin.ch/), and:
 
-Similarly to the online geoportal [https://map.geo.admin.ch](https://map.geo.admin.ch/), this plugin allows to search within [QGIS](https://qgis.org/) desktop for
+* [search for locations](https://opengisch.github.io/qgis-swiss-locator/en/search/locations/):
+  cantons, municipalities, districts, ZIP codes, addresses, parcels and the
+  names of the national map
+* [search for features](https://opengisch.github.io/qgis-swiss-locator/en/search/features/)
+  of the layers of the geoportal
+* [add layers](https://opengisch.github.io/qgis-swiss-locator/en/layers/) of
+  the federal geoportal and of opendata.swiss, as WMS, WMTS or vector tiles
+* [download data](https://opengisch.github.io/qgis-swiss-locator/en/downloads/swisstopo/)
+  from the STAC catalogs of swisstopo, viageo.ch and Basel-Stadt
 
-* Locations:
-   * Cantons, cities and municipalities,
-   * Place names as printed on the national map (SwissNames)
-   * Districts
-   * ZIP codes
-   * Addresses
-   * Cadastral parcels
-* Layers from the Federal Geoportal (map.geo.admin.ch) or opendata.swiss, which can easily be added to the map
-   * WMS
-   * WMTS
-   * Vector Tiles
-* Features (search through features descriptions)
-* Downloadable files from the Swisstopo STAC catalog
-
-Elevation profiles can be displayed in QGIS and included in layouts. These profiles use the Elevation Profile service (swissALTI3D height model).
-
-Tables of addresses (for instance a CSV file) can be geocoded in bulk into a point layer with the **Geocode addresses** Processing algorithm, see [Geocoding](https://opengisch.github.io/qgis-swiss-locator/en/geocoding/).
-
-## How
-
-Type the text to search in the locator bar of QGIS, and double-click a result.
-
-The **[documentation](https://opengisch.github.io/qgis-swiss-locator/)**, in
-English, French, German and Italian, shows each search with examples.
+It also draws the terrain of swissALTI3D in the
+[elevation profiles](https://opengisch.github.io/qgis-swiss-locator/en/elevation-profile/)
+of QGIS, and [geocodes](https://opengisch.github.io/qgis-swiss-locator/en/geocoding/)
+tables of addresses with Processing.
 
 ![Hiking trails added from the locator bar](docs/en/assets/screenshots/layers-result.png)
+
+## Documentation
+
+**https://opengisch.github.io/qgis-swiss-locator/**, in
+[English](https://opengisch.github.io/qgis-swiss-locator/en/),
+[French](https://opengisch.github.io/qgis-swiss-locator/fr/),
+[German](https://opengisch.github.io/qgis-swiss-locator/de/) and
+[Italian](https://opengisch.github.io/qgis-swiss-locator/it/).
 
 ## Data files
 
@@ -61,7 +58,7 @@ python -m scripts fetch
 
 `python -m scripts build --site _site` generates the GitHub Pages site as CI does.
 
-## Documentation
+## Building the documentation
 
 The documentation is in [docs](docs), one folder per language, built with
 [Zensical](https://zensical.org) and published on GitHub Pages by the
