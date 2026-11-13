@@ -49,6 +49,11 @@
     <name>CollectionListTable</name>
     <message>
         <location filename="../swissgeodownloader/ui/collection_list_table.py"/>
+        <source>Search</source>
+        <translation>Recherche</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/collection_list_table.py"/>
         <source>ID</source>
         <translation>ID</translation>
     </message>
@@ -56,11 +61,6 @@
         <location filename="../swissgeodownloader/ui/collection_list_table.py"/>
         <source>Title</source>
         <translation>Titre</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/collection_list_table.py"/>
-        <source>Search</source>
-        <translation>Recherche</translation>
     </message>
     <message>
         <location filename="../swissgeodownloader/ui/collection_list_table.py"/>
@@ -72,23 +72,8 @@
     <name>Config</name>
     <message>
         <location filename="../ui/config.ui"/>
-        <source>WMTS</source>
-        <translation>WMTS</translation>
-    </message>
-    <message>
-        <location filename="../ui/config.ui"/>
-        <source>Restrict feature search to specific layers</source>
-        <translation>Limiter la recherche d'objets aux couches suivantes</translation>
-    </message>
-    <message>
-        <location filename="../ui/config.ui"/>
-        <source>Maximum number of files per result</source>
-        <translation>Nombre max. de fichiers par résultat</translation>
-    </message>
-    <message>
-        <location filename="../ui/config.ui"/>
-        <source>Layers</source>
-        <translation>Couches</translation>
+        <source>Swiss locator filter configuration</source>
+        <translation>Configuration du filtre Swiss locator</translation>
     </message>
     <message>
         <location filename="../ui/config.ui"/>
@@ -97,28 +82,8 @@
     </message>
     <message>
         <location filename="../ui/config.ui"/>
-        <source>Language</source>
-        <translation>Langue</translation>
-    </message>
-    <message>
-        <location filename="../ui/config.ui"/>
-        <source>Maximum number of results</source>
-        <translation>Nombre maximum de résultats</translation>
-    </message>
-    <message>
-        <location filename="../ui/config.ui"/>
         <source>Locations</source>
         <translation>Lieux</translation>
-    </message>
-    <message>
-        <location filename="../ui/config.ui"/>
-        <source>Swiss locator filter configuration</source>
-        <translation>Configuration du filtre Swiss locator</translation>
-    </message>
-    <message>
-        <location filename="../ui/config.ui"/>
-        <source>Include data from opendata.swiss</source>
-        <translation>Inclure les données de opendata.swiss</translation>
     </message>
     <message>
         <location filename="../ui/config.ui"/>
@@ -127,13 +92,38 @@
     </message>
     <message>
         <location filename="../ui/config.ui"/>
-        <source>select all</source>
-        <translation>sélectionner tout</translation>
+        <source>Maximum number of results</source>
+        <translation>Nombre maximum de résultats</translation>
+    </message>
+    <message>
+        <location filename="../ui/config.ui"/>
+        <source>WMTS</source>
+        <translation>WMTS</translation>
+    </message>
+    <message>
+        <location filename="../ui/config.ui"/>
+        <source>Layers</source>
+        <translation>Couches</translation>
+    </message>
+    <message>
+        <location filename="../ui/config.ui"/>
+        <source>Include data from opendata.swiss</source>
+        <translation>Inclure les données de opendata.swiss</translation>
     </message>
     <message>
         <location filename="../ui/config.ui"/>
         <source>Feature search</source>
         <translation>Recherche d'objets</translation>
+    </message>
+    <message>
+        <location filename="../ui/config.ui"/>
+        <source>Restrict feature search to specific layers</source>
+        <translation>Limiter la recherche d'objets aux couches suivantes</translation>
+    </message>
+    <message>
+        <location filename="../ui/config.ui"/>
+        <source>select all</source>
+        <translation>sélectionner tout</translation>
     </message>
     <message>
         <location filename="../ui/config.ui"/>
@@ -145,13 +135,28 @@
         <source>STAC file download</source>
         <translation>Téléchargement de fichiers STAC</translation>
     </message>
+    <message>
+        <location filename="../ui/config.ui"/>
+        <source>Maximum number of files per result</source>
+        <translation>Nombre max. de fichiers par résultat</translation>
+    </message>
+    <message>
+        <location filename="../ui/config.ui"/>
+        <source>Language</source>
+        <translation>Langue</translation>
+    </message>
 </context>
 <context>
     <name>ConfigDialog</name>
     <message>
         <location filename="../gui/config_dialog.py"/>
-        <source>Low</source>
-        <translation>Basse</translation>
+        <source>use the application locale, defaults to English</source>
+        <translation>utiliser la langue de l'application avec l'Anglais par défaut</translation>
+    </message>
+    <message>
+        <location filename="../gui/config_dialog.py"/>
+        <source>Highest</source>
+        <translation>Très haute</translation>
     </message>
     <message>
         <location filename="../gui/config_dialog.py"/>
@@ -160,13 +165,13 @@
     </message>
     <message>
         <location filename="../gui/config_dialog.py"/>
-        <source>Layer</source>
-        <translation>Couche</translation>
+        <source>Medium</source>
+        <translation>Moyenne</translation>
     </message>
     <message>
         <location filename="../gui/config_dialog.py"/>
-        <source>use the application locale, defaults to English</source>
-        <translation>utiliser la langue de l'application avec l'Anglais par défaut</translation>
+        <source>Low</source>
+        <translation>Basse</translation>
     </message>
     <message>
         <location filename="../gui/config_dialog.py"/>
@@ -175,18 +180,13 @@
     </message>
     <message>
         <location filename="../gui/config_dialog.py"/>
-        <source>Medium</source>
-        <translation>Moyenne</translation>
+        <source>Layer</source>
+        <translation>Couche</translation>
     </message>
     <message>
         <location filename="../gui/config_dialog.py"/>
         <source>Description</source>
         <translation>Description</translation>
-    </message>
-    <message>
-        <location filename="../gui/config_dialog.py"/>
-        <source>Highest</source>
-        <translation>Très haute</translation>
     </message>
     <message>
         <location filename="../gui/config_dialog.py"/>
@@ -330,21 +330,26 @@
     <name>QgisLayerCreatorTask</name>
     <message>
         <location filename="../swissgeodownloader/utils/qgis_layer_creator_task.py"/>
-        <source>An unknown error occurred</source>
-        <translation>Une erreur inconnue est survenue</translation>
+        <source>Aborted by user</source>
+        <translation>Annulé par l'utilisateur</translation>
     </message>
     <message>
         <location filename="../swissgeodownloader/utils/qgis_layer_creator_task.py"/>
-        <source>Aborted by user</source>
-        <translation>Annulé par l'utilisateur</translation>
+        <source>An unknown error occurred</source>
+        <translation>Une erreur inconnue est survenue</translation>
     </message>
 </context>
 <context>
     <name>SGD</name>
     <message>
-        <location filename="../swissgeodownloader/ui/qgis_utilities.py"/>
-        <source>Layer &apos;{}&apos; already added to map</source>
-        <translation>la couche '{}' a déjà été ajoutée à la carte</translation>
+        <location filename="../swiss_locator_plugin.py"/>
+        <source>Swiss Locator: Filter files to download</source>
+        <translation>Swiss Locator : Filtrer les fichiers à télécharger</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/api/geocat.py"/>
+        <source>Error when trying to retrieve metadata - No dataset ID found</source>
+        <translation>Erreur lors de la consultation des métadonnées - Aucun ID d'enregistrement trouvé</translation>
     </message>
     <message>
         <location filename="../swissgeodownloader/api/network_request.py"/>
@@ -357,34 +362,14 @@
         <translation>{} n'est pas atteignable ou la connexion Internet est introuvable</translation>
     </message>
     <message>
-        <location filename="../swissgeodownloader/ui/qgis_utilities.py"/>
-        <source>Not able to add layer &apos;{}&apos; to map</source>
-        <translation>Erreur lors de la création de la couche '{}'</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/qgis_utilities.py"/>
-        <source>Layer &apos;{}&apos; added to map</source>
-        <translation>la couche '{}' a été ajoutée à la carte</translation>
-    </message>
-    <message>
-        <location filename="../swiss_locator_plugin.py"/>
-        <source>Swiss Locator: Filter files to download</source>
-        <translation>Swiss Locator : Filtrer les fichiers à télécharger</translation>
+        <location filename="../swissgeodownloader/api/network_request.py"/>
+        <source>{} returns error</source>
+        <translation>Erreur {}</translation>
     </message>
     <message>
         <location filename="../swissgeodownloader/api/network_request.py"/>
         <source>Start download of {}</source>
         <translation>Lancer le téléchargement de {}</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/qgis_utilities.py"/>
-        <source>Swisstopo National Map (grey)</source>
-        <translation>Carte nationale Swisstopo (gris)</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/api/network_request.py"/>
-        <source>Download of {} was canceled</source>
-        <translation>Le téléchargement de {} a été annulé</translation>
     </message>
     <message>
         <location filename="../swissgeodownloader/api/network_request.py"/>
@@ -393,13 +378,28 @@
     </message>
     <message>
         <location filename="../swissgeodownloader/api/network_request.py"/>
-        <source>{} returns error</source>
-        <translation>Erreur {}</translation>
+        <source>Download of {} was canceled</source>
+        <translation>Le téléchargement de {} a été annulé</translation>
     </message>
     <message>
-        <location filename="../swissgeodownloader/api/geocat.py"/>
-        <source>Error when trying to retrieve metadata - No dataset ID found</source>
-        <translation>Erreur lors de la consultation des métadonnées - Aucun ID d'enregistrement trouvé</translation>
+        <location filename="../swissgeodownloader/ui/qgis_utilities.py"/>
+        <source>Swisstopo National Map (grey)</source>
+        <translation>Carte nationale Swisstopo (gris)</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/qgis_utilities.py"/>
+        <source>Layer &apos;{}&apos; added to map</source>
+        <translation>la couche '{}' a été ajoutée à la carte</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/qgis_utilities.py"/>
+        <source>Not able to add layer &apos;{}&apos; to map</source>
+        <translation>Erreur lors de la création de la couche '{}'</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/qgis_utilities.py"/>
+        <source>Layer &apos;{}&apos; already added to map</source>
+        <translation>la couche '{}' a déjà été ajoutée à la carte</translation>
     </message>
     <message>
         <location filename="../swissgeodownloader/utils/qgis_layer_creator_task.py"/>
@@ -411,11 +411,6 @@
     <name>SwissGeoDownloaderDockWidget</name>
     <message>
         <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
-        <source>all</source>
-        <translation>tous</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
         <source>To download Swiss geo data it is recommended to use the Swiss coordinate reference system.
 
 Switch map to Swiss LV95?</source>
@@ -425,73 +420,8 @@ Changer la projection en LV95?</translation>
     </message>
     <message>
         <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
-        <source>No files found.</source>
-        <translation>Pas de fichiers trouvés.</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
-        <source>No files available</source>
-        <translation>Aucun fichier disponible</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
-        <source>Files successfully downloaded!</source>
-        <translation>Fichiers téléchargés avec succès!</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
-        <source>At least one file will be overwritten. Continue?</source>
-        <translation>Au moins un fichier sera écrasé. Continuer?</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
-        <source>No files available in this dataset</source>
-        <translation>Pas de fichiers disponibles dans ce jeu de données</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
-        <source>{} file(s), approximately {}</source>
-        <translation>{} fichier(s), approximativement {}</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
-        <source>Not possible to add layers to QGIS</source>
-        <translation>Impossible d'ajouter des fichiers à la carte</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
         <source>Swiss Geo Downloader - Info</source>
         <translation>Swiss Geo Downloader - Info</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
-        <source>{} layers added to QGIS, {} skipped because they are already present</source>
-        <translation>{} couches ajoutées à la carte. {} ignorées car déjà présentes</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
-        <source>Currently selected filters do not match any files</source>
-        <translation>Les filtres actuellement sélectionnés ne correspondent à aucun fichier</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
-        <source>current</source>
-        <translation>le plus actuel</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
-        <source>{} file(s)</source>
-        <translation>{} fichier(s)</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
-        <source>No files available in current extent</source>
-        <translation>Aucun fichier disponible dans l'étendue actuelle</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
-        <source>{} file(s) successfully downloaded</source>
-        <translation>{} fichier(s) téléchargés avec succès</translation>
     </message>
     <message>
         <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
@@ -504,13 +434,8 @@ Plus d'informations :
     </message>
     <message>
         <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
-        <source>Overwrite files?</source>
-        <translation>Écraser les fichiers?</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
-        <source>Choose output folder</source>
-        <translation>Sélectionnez un dossier de sortie</translation>
+        <source>No files available in this dataset</source>
+        <translation>Pas de fichiers disponibles dans ce jeu de données</translation>
     </message>
     <message>
         <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
@@ -519,8 +444,83 @@ Plus d'informations :
     </message>
     <message>
         <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
+        <source>No files available in current extent</source>
+        <translation>Aucun fichier disponible dans l'étendue actuelle</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
+        <source>No files available</source>
+        <translation>Aucun fichier disponible</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
+        <source>all</source>
+        <translation>tous</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
+        <source>current</source>
+        <translation>le plus actuel</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
+        <source>Currently selected filters do not match any files</source>
+        <translation>Les filtres actuellement sélectionnés ne correspondent à aucun fichier</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
+        <source>{} file(s), approximately {}</source>
+        <translation>{} fichier(s), approximativement {}</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
+        <source>{} file(s)</source>
+        <translation>{} fichier(s)</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
+        <source>No files found.</source>
+        <translation>Pas de fichiers trouvés.</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
+        <source>Overwrite files?</source>
+        <translation>Écraser les fichiers?</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
+        <source>At least one file will be overwritten. Continue?</source>
+        <translation>Au moins un fichier sera écrasé. Continuer?</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
+        <source>Choose output folder</source>
+        <translation>Sélectionnez un dossier de sortie</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
         <source>download files</source>
         <translation>télécharger les fichiers</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
+        <source>Files successfully downloaded!</source>
+        <translation>Fichiers téléchargés avec succès!</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
+        <source>{} file(s) successfully downloaded</source>
+        <translation>{} fichier(s) téléchargés avec succès</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
+        <source>Not possible to add layers to QGIS</source>
+        <translation>Impossible d'ajouter des fichiers à la carte</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
+        <source>{} layers added to QGIS, {} skipped because they are already present</source>
+        <translation>{} couches ajoutées à la carte. {} ignorées car déjà présentes</translation>
     </message>
 </context>
 <context>
@@ -570,13 +570,13 @@ Plus d'informations :
     </message>
     <message>
         <location filename="../core/filters/swiss_locator_filter_feature.py"/>
-        <source>Swiss Geoportal</source>
-        <translation>Géoportail Suisse</translation>
+        <source>The list of searchable layers is not available yet. It is downloaded when QGIS starts, check the network connection.</source>
+        <translation>La liste des couches interrogeables n'est pas encore disponible. Elle est téléchargée au démarrage de QGIS, vérifiez la connexion réseau.</translation>
     </message>
     <message>
         <location filename="../core/filters/swiss_locator_filter_feature.py"/>
-        <source>The list of searchable layers is not available yet. It is downloaded when QGIS starts, check the network connection.</source>
-        <translation>La liste des couches interrogeables n'est pas encore disponible. Elle est téléchargée au démarrage de QGIS, vérifiez la connexion réseau.</translation>
+        <source>Swiss Geoportal</source>
+        <translation>Géoportail Suisse</translation>
     </message>
     <message>
         <location filename="../core/filters/swiss_locator_filter_feature.py"/>
@@ -588,46 +588,21 @@ Plus d'informations :
     <name>SwissLocatorFilterLayer</name>
     <message>
         <location filename="../core/filters/swiss_locator_filter_layer.py"/>
-        <source>Swiss Geoportal</source>
-        <translation>Géoportail Suisse</translation>
+        <source>Swiss Geoportal / opendata.swiss layers</source>
+        <translation>Couches du géoportail suisse / opendata.swiss</translation>
     </message>
     <message>
         <location filename="../core/filters/swiss_locator_filter_layer.py"/>
-        <source>Swiss Geoportal / opendata.swiss layers</source>
-        <translation>Couches du géoportail suisse / opendata.swiss</translation>
+        <source>Swiss Geoportal</source>
+        <translation>Géoportail Suisse</translation>
     </message>
 </context>
 <context>
     <name>SwissLocatorFilterLocation</name>
     <message>
         <location filename="../core/filters/swiss_locator_filter_location.py"/>
-        <source>Index</source>
-        <translation>Index</translation>
-    </message>
-    <message>
-        <location filename="../core/filters/swiss_locator_filter_location.py"/>
-        <source>District</source>
-        <translation>District</translation>
-    </message>
-    <message>
-        <location filename="../core/filters/swiss_locator_filter_location.py"/>
         <source>Swiss Geoportal locations</source>
         <translation>Emplacements du géoportail Suisse</translation>
-    </message>
-    <message>
-        <location filename="../core/filters/swiss_locator_filter_location.py"/>
-        <source>Parcel</source>
-        <translation>Parcelle</translation>
-    </message>
-    <message>
-        <location filename="../core/filters/swiss_locator_filter_location.py"/>
-        <source>Address</source>
-        <translation>Adresse</translation>
-    </message>
-    <message>
-        <location filename="../core/filters/swiss_locator_filter_location.py"/>
-        <source>Cantons</source>
-        <translation>Cantons</translation>
     </message>
     <message>
         <location filename="../core/filters/swiss_locator_filter_location.py"/>
@@ -639,19 +614,34 @@ Plus d'informations :
         <source>Municipal boundaries</source>
         <translation>Limites communales</translation>
     </message>
+    <message>
+        <location filename="../core/filters/swiss_locator_filter_location.py"/>
+        <source>District</source>
+        <translation>District</translation>
+    </message>
+    <message>
+        <location filename="../core/filters/swiss_locator_filter_location.py"/>
+        <source>Cantons</source>
+        <translation>Cantons</translation>
+    </message>
+    <message>
+        <location filename="../core/filters/swiss_locator_filter_location.py"/>
+        <source>Index</source>
+        <translation>Index</translation>
+    </message>
+    <message>
+        <location filename="../core/filters/swiss_locator_filter_location.py"/>
+        <source>Address</source>
+        <translation>Adresse</translation>
+    </message>
+    <message>
+        <location filename="../core/filters/swiss_locator_filter_location.py"/>
+        <source>Parcel</source>
+        <translation>Parcelle</translation>
+    </message>
 </context>
 <context>
     <name>SwissLocatorFilterSTAC</name>
-    <message>
-        <location filename="../core/filters/swiss_locator_filter_stac.py"/>
-        <source>Unable to add layer to QGIS: {}</source>
-        <translation>Impossible d'ajouter des fichiers à la carte: {}</translation>
-    </message>
-    <message>
-        <location filename="../core/filters/swiss_locator_filter_stac.py"/>
-        <source>Added file {} to QGIS</source>
-        <translation>la couche {} a été ajoutée à la carte</translation>
-    </message>
     <message>
         <location filename="../core/filters/swiss_locator_filter_stac.py"/>
         <source>Fetching the STAC collections of {}</source>
@@ -704,8 +694,18 @@ Plus d'informations :
     </message>
     <message>
         <location filename="../core/filters/swiss_locator_filter_stac.py"/>
+        <source>Added file {} to QGIS</source>
+        <translation>la couche {} a été ajoutée à la carte</translation>
+    </message>
+    <message>
+        <location filename="../core/filters/swiss_locator_filter_stac.py"/>
         <source>Download completed: {}</source>
         <translation>Téléchargement terminé : {}</translation>
+    </message>
+    <message>
+        <location filename="../core/filters/swiss_locator_filter_stac.py"/>
+        <source>Unable to add layer to QGIS: {}</source>
+        <translation>Impossible d'ajouter des fichiers à la carte: {}</translation>
     </message>
 </context>
 <context>
@@ -735,6 +735,11 @@ Plus d'informations :
     <name>SwissLocatorFilterWMTS</name>
     <message>
         <location filename="../core/filters/swiss_locator_filter_wmts.py"/>
+        <source>The Swiss Locator filter for WMTS layers could not parse capabilities.</source>
+        <translation>Le filtre Swiss Locator pour les couches WMTS n'a pas pu lire les capacités du serveur.</translation>
+    </message>
+    <message>
+        <location filename="../core/filters/swiss_locator_filter_wmts.py"/>
         <source>The Swiss Locator filter for WMTS layers could not fetch capabilities.</source>
         <translation>Le filtre Swiss Locator pour les couches WMTS n'a pas pu récupérer les capacités du serveur.</translation>
     </message>
@@ -743,18 +748,23 @@ Plus d'informations :
         <source>Swiss Geoportal WMTS Layers</source>
         <translation>Couches WMTS du géoportail suisse</translation>
     </message>
-    <message>
-        <location filename="../core/filters/swiss_locator_filter_wmts.py"/>
-        <source>The Swiss Locator filter for WMTS layers could not parse capabilities.</source>
-        <translation>Le filtre Swiss Locator pour les couches WMTS n'a pas pu lire les capacités du serveur.</translation>
-    </message>
 </context>
 <context>
     <name>sgdDockWidgetBase</name>
     <message>
         <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
-        <source>3. Files</source>
-        <translation>3. Fichiers</translation>
+        <source>Swiss Geo Downloader</source>
+        <translation>Swiss Geo Downloader</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
+        <source>Show overview map</source>
+        <translation>Montrer la carte générale</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
+        <source>Refresh dataset list</source>
+        <translation>Rafraîchir la liste des jeux de données</translation>
     </message>
     <message>
         <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
@@ -768,78 +778,8 @@ Plus d'informations :
     </message>
     <message>
         <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
-        <source>Cancel request</source>
-        <translation>Annuler</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
-        <source>Refresh dataset list</source>
-        <translation>Rafraîchir la liste des jeux de données</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
-        <source>File type</source>
-        <translation>Type de données</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
-        <source>Swiss Geo Downloader</source>
-        <translation>Swiss Geo Downloader</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
-        <source>Full dataset extent</source>
-        <translation>Emprise complète du jeu de données</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
-        <source>Timestamp</source>
-        <translation>Date</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
-        <source>2. Extent</source>
-        <translation>2. Étendue</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
-        <source>Resolution [m]</source>
-        <translation>Résolution [m]</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
-        <source>Coord.sys</source>
-        <translation>Système de coordonnées</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
         <source>Download</source>
         <translation>Télécharger</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
-        <source>Select resolution (only raster based datasets)</source>
-        <translation>Sélectionner la résolution (seulement pour les données raster)</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
-        <source>Select timestamp</source>
-        <translation>Sélectionner la date</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
-        <source>Category</source>
-        <translation>Catégorie</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
-        <source>Show overview map</source>
-        <translation>Montrer la carte générale</translation>
-    </message>
-    <message>
-        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
-        <source>Select category</source>
-        <translation>Sélectionner la catégorie ou le format</translation>
     </message>
     <message>
         <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
@@ -848,8 +788,28 @@ Plus d'informations :
     </message>
     <message>
         <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
-        <source>Select coordinate reference system</source>
-        <translation>Sélectionner le système de coordonnées de référence</translation>
+        <source>2. Extent</source>
+        <translation>2. Étendue</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
+        <source>Full dataset extent</source>
+        <translation>Emprise complète du jeu de données</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
+        <source>3. Files</source>
+        <translation>3. Fichiers</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
+        <source>Request file list</source>
+        <translation>Demander la liste des fichiers</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
+        <source>Cancel request</source>
+        <translation>Annuler</translation>
     </message>
     <message>
         <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
@@ -858,8 +818,48 @@ Plus d'informations :
     </message>
     <message>
         <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
-        <source>Request file list</source>
-        <translation>Demander la liste des fichiers</translation>
+        <source>Select resolution (only raster based datasets)</source>
+        <translation>Sélectionner la résolution (seulement pour les données raster)</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
+        <source>Category</source>
+        <translation>Catégorie</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
+        <source>Resolution [m]</source>
+        <translation>Résolution [m]</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
+        <source>Select category</source>
+        <translation>Sélectionner la catégorie ou le format</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
+        <source>Timestamp</source>
+        <translation>Date</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
+        <source>Select timestamp</source>
+        <translation>Sélectionner la date</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
+        <source>Coord.sys</source>
+        <translation>Système de coordonnées</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
+        <source>Select coordinate reference system</source>
+        <translation>Sélectionner le système de coordonnées de référence</translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget_base.ui"/>
+        <source>File type</source>
+        <translation>Type de données</translation>
     </message>
 </context>
 </TS>

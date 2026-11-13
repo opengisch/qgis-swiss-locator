@@ -72,18 +72,8 @@
     <name>Config</name>
     <message>
         <location filename="../ui/config.ui"/>
-        <source>WMTS</source>
-        <translation>WMTS</translation>
-    </message>
-    <message>
-        <location filename="../ui/config.ui"/>
-        <source>Restrict feature search to specific layers</source>
-        <translation>Limita la ricerca di oggetti a layer specifici</translation>
-    </message>
-    <message>
-        <location filename="../ui/config.ui"/>
-        <source>Layers</source>
-        <translation>Layer</translation>
+        <source>Swiss locator filter configuration</source>
+        <translation>Configurazione filtro Swiss locator</translation>
     </message>
     <message>
         <location filename="../ui/config.ui"/>
@@ -92,28 +82,8 @@
     </message>
     <message>
         <location filename="../ui/config.ui"/>
-        <source>Language</source>
-        <translation>Lingua</translation>
-    </message>
-    <message>
-        <location filename="../ui/config.ui"/>
-        <source>Maximum number of results</source>
-        <translation>Numero massimo di risultati</translation>
-    </message>
-    <message>
-        <location filename="../ui/config.ui"/>
         <source>Locations</source>
         <translation>Luoghi</translation>
-    </message>
-    <message>
-        <location filename="../ui/config.ui"/>
-        <source>Swiss locator filter configuration</source>
-        <translation>Configurazione filtro Swiss locator</translation>
-    </message>
-    <message>
-        <location filename="../ui/config.ui"/>
-        <source>Include data from opendata.swiss</source>
-        <translation>Includi i dati di opendata.swiss</translation>
     </message>
     <message>
         <location filename="../ui/config.ui"/>
@@ -122,13 +92,38 @@
     </message>
     <message>
         <location filename="../ui/config.ui"/>
-        <source>select all</source>
-        <translation>seleziona tutto</translation>
+        <source>Maximum number of results</source>
+        <translation>Numero massimo di risultati</translation>
+    </message>
+    <message>
+        <location filename="../ui/config.ui"/>
+        <source>WMTS</source>
+        <translation>WMTS</translation>
+    </message>
+    <message>
+        <location filename="../ui/config.ui"/>
+        <source>Layers</source>
+        <translation>Layer</translation>
+    </message>
+    <message>
+        <location filename="../ui/config.ui"/>
+        <source>Include data from opendata.swiss</source>
+        <translation>Includi i dati di opendata.swiss</translation>
     </message>
     <message>
         <location filename="../ui/config.ui"/>
         <source>Feature search</source>
         <translation>Ricerca di oggetti</translation>
+    </message>
+    <message>
+        <location filename="../ui/config.ui"/>
+        <source>Restrict feature search to specific layers</source>
+        <translation>Limita la ricerca di oggetti a layer specifici</translation>
+    </message>
+    <message>
+        <location filename="../ui/config.ui"/>
+        <source>select all</source>
+        <translation>seleziona tutto</translation>
     </message>
     <message>
         <location filename="../ui/config.ui"/>
@@ -145,13 +140,23 @@
         <source>Maximum number of files per result</source>
         <translation>Numero massimo di file per risultato</translation>
     </message>
+    <message>
+        <location filename="../ui/config.ui"/>
+        <source>Language</source>
+        <translation>Lingua</translation>
+    </message>
 </context>
 <context>
     <name>ConfigDialog</name>
     <message>
         <location filename="../gui/config_dialog.py"/>
-        <source>Low</source>
-        <translation>Bassa</translation>
+        <source>use the application locale, defaults to English</source>
+        <translation>Utilizza le impostazioni locali dell'applicazione, di default inglese</translation>
+    </message>
+    <message>
+        <location filename="../gui/config_dialog.py"/>
+        <source>Highest</source>
+        <translation>Molto alta</translation>
     </message>
     <message>
         <location filename="../gui/config_dialog.py"/>
@@ -160,13 +165,13 @@
     </message>
     <message>
         <location filename="../gui/config_dialog.py"/>
-        <source>Layer</source>
-        <translation>Layer</translation>
+        <source>Medium</source>
+        <translation>Media</translation>
     </message>
     <message>
         <location filename="../gui/config_dialog.py"/>
-        <source>use the application locale, defaults to English</source>
-        <translation>Utilizza le impostazioni locali dell'applicazione, di default inglese</translation>
+        <source>Low</source>
+        <translation>Bassa</translation>
     </message>
     <message>
         <location filename="../gui/config_dialog.py"/>
@@ -175,18 +180,13 @@
     </message>
     <message>
         <location filename="../gui/config_dialog.py"/>
-        <source>Medium</source>
-        <translation>Media</translation>
+        <source>Layer</source>
+        <translation>Layer</translation>
     </message>
     <message>
         <location filename="../gui/config_dialog.py"/>
         <source>Description</source>
         <translation>Descrizione</translation>
-    </message>
-    <message>
-        <location filename="../gui/config_dialog.py"/>
-        <source>Highest</source>
-        <translation>Molto alta</translation>
     </message>
     <message>
         <location filename="../gui/config_dialog.py"/>
@@ -570,13 +570,13 @@ Ulteriori informazioni:
     </message>
     <message>
         <location filename="../core/filters/swiss_locator_filter_feature.py"/>
-        <source>Swiss Geoportal</source>
-        <translation>Geoportale svizzero</translation>
+        <source>The list of searchable layers is not available yet. It is downloaded when QGIS starts, check the network connection.</source>
+        <translation>L'elenco dei layer ricercabili non è ancora disponibile. Viene scaricato all'avvio di QGIS, verificare la connessione di rete.</translation>
     </message>
     <message>
         <location filename="../core/filters/swiss_locator_filter_feature.py"/>
-        <source>The list of searchable layers is not available yet. It is downloaded when QGIS starts, check the network connection.</source>
-        <translation>L'elenco dei layer ricercabili non è ancora disponibile. Viene scaricato all'avvio di QGIS, verificare la connessione di rete.</translation>
+        <source>Swiss Geoportal</source>
+        <translation>Geoportale svizzero</translation>
     </message>
     <message>
         <location filename="../core/filters/swiss_locator_filter_feature.py"/>
@@ -588,46 +588,21 @@ Ulteriori informazioni:
     <name>SwissLocatorFilterLayer</name>
     <message>
         <location filename="../core/filters/swiss_locator_filter_layer.py"/>
-        <source>Swiss Geoportal</source>
-        <translation>Geoportale svizzero</translation>
+        <source>Swiss Geoportal / opendata.swiss layers</source>
+        <translation>Layer del Geoportale svizzero / opendata.swiss</translation>
     </message>
     <message>
         <location filename="../core/filters/swiss_locator_filter_layer.py"/>
-        <source>Swiss Geoportal / opendata.swiss layers</source>
-        <translation>Layer del Geoportale svizzero / opendata.swiss</translation>
+        <source>Swiss Geoportal</source>
+        <translation>Geoportale svizzero</translation>
     </message>
 </context>
 <context>
     <name>SwissLocatorFilterLocation</name>
     <message>
         <location filename="../core/filters/swiss_locator_filter_location.py"/>
-        <source>Index</source>
-        <translation>Indice</translation>
-    </message>
-    <message>
-        <location filename="../core/filters/swiss_locator_filter_location.py"/>
-        <source>District</source>
-        <translation>Distretto</translation>
-    </message>
-    <message>
-        <location filename="../core/filters/swiss_locator_filter_location.py"/>
         <source>Swiss Geoportal locations</source>
         <translation>Luoghi Geoportale svizzero</translation>
-    </message>
-    <message>
-        <location filename="../core/filters/swiss_locator_filter_location.py"/>
-        <source>Parcel</source>
-        <translation>Parcella</translation>
-    </message>
-    <message>
-        <location filename="../core/filters/swiss_locator_filter_location.py"/>
-        <source>Address</source>
-        <translation>Indirizzo</translation>
-    </message>
-    <message>
-        <location filename="../core/filters/swiss_locator_filter_location.py"/>
-        <source>Cantons</source>
-        <translation>Cantoni</translation>
     </message>
     <message>
         <location filename="../core/filters/swiss_locator_filter_location.py"/>
@@ -638,6 +613,31 @@ Ulteriori informazioni:
         <location filename="../core/filters/swiss_locator_filter_location.py"/>
         <source>Municipal boundaries</source>
         <translation>Confini municipali</translation>
+    </message>
+    <message>
+        <location filename="../core/filters/swiss_locator_filter_location.py"/>
+        <source>District</source>
+        <translation>Distretto</translation>
+    </message>
+    <message>
+        <location filename="../core/filters/swiss_locator_filter_location.py"/>
+        <source>Cantons</source>
+        <translation>Cantoni</translation>
+    </message>
+    <message>
+        <location filename="../core/filters/swiss_locator_filter_location.py"/>
+        <source>Index</source>
+        <translation>Indice</translation>
+    </message>
+    <message>
+        <location filename="../core/filters/swiss_locator_filter_location.py"/>
+        <source>Address</source>
+        <translation>Indirizzo</translation>
+    </message>
+    <message>
+        <location filename="../core/filters/swiss_locator_filter_location.py"/>
+        <source>Parcel</source>
+        <translation>Parcella</translation>
     </message>
 </context>
 <context>
@@ -735,6 +735,11 @@ Ulteriori informazioni:
     <name>SwissLocatorFilterWMTS</name>
     <message>
         <location filename="../core/filters/swiss_locator_filter_wmts.py"/>
+        <source>The Swiss Locator filter for WMTS layers could not parse capabilities.</source>
+        <translation>Il filtro Swiss Locator per i layer WMTS non riesce a leggere le informazioni del server.</translation>
+    </message>
+    <message>
+        <location filename="../core/filters/swiss_locator_filter_wmts.py"/>
         <source>The Swiss Locator filter for WMTS layers could not fetch capabilities.</source>
         <translation>Il filtro Swiss Locator per i layer WMTS non riesce a recuperare le informazioni del server.</translation>
     </message>
@@ -742,11 +747,6 @@ Ulteriori informazioni:
         <location filename="../core/filters/swiss_locator_filter_wmts.py"/>
         <source>Swiss Geoportal WMTS Layers</source>
         <translation>Layer WMTS del Geoportale svizzero</translation>
-    </message>
-    <message>
-        <location filename="../core/filters/swiss_locator_filter_wmts.py"/>
-        <source>The Swiss Locator filter for WMTS layers could not parse capabilities.</source>
-        <translation>Il filtro Swiss Locator per i layer WMTS non riesce a leggere le informazioni del server.</translation>
     </message>
 </context>
 <context>
