@@ -54,7 +54,7 @@ class TestSearchableLayers(unittest.TestCase):
             self.assertEqual(set(searchable_layers(lang)), set(LAYERS))
 
     def test_invalid_language_raises(self):
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             searchable_layers("xx")
 
     def test_restriction(self):

@@ -19,6 +19,7 @@
  ***************************************************************************/
 """
 
+import contextlib
 import os
 import shutil
 import zipfile
@@ -239,24 +240,21 @@ class QgisLayerCreatorTask(QgsTask):
                 if file.path in already_added:
                     self.alreadyAdded += 1
                     continue
-                try:
+                # A file that cannot be opened as raster is tried as vector
+                with contextlib.suppress(Exception):
                     rasterLyr = QgsRasterLayer(file.path, file.id)
                     if rasterLyr.isValid():
                         self.layerList.append(rasterLyr)
                         continue
                     else:
                         del rasterLyr
-                except Exception:
-                    pass
-                try:
+                with contextlib.suppress(Exception):
                     vectorLyr = QgsVectorLayer(file.path, file.id, "ogr")
                     if vectorLyr.isValid():
                         self.layerList.append(vectorLyr)
                         continue
                     else:
                         del vectorLyr
-                except Exception:
-                    pass
 
         self.setProgress(100)
         return True
