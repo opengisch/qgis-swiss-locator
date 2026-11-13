@@ -42,8 +42,9 @@ auf. Es stammt aus dem Plugin
 [Swiss Geo Downloader](https://pimoll.github.io/swissgeodownloader/) von
 Patricia Moll.
 
-Ein als *gestreamt* hinzugefügtes Cloud Optimized GeoTIFF bleibt auf
-data.geo.admin.ch: QGIS liest die angezeigten Teile über das Netzwerk.
+Ein als *gestreamt* hinzugefügtes Cloud Optimized GeoTIFF oder Point Cloud
+bleibt auf data.geo.admin.ch: QGIS liest die angezeigten Teile über das
+Netzwerk.
 
 ## Vom Plugin veröffentlichte Dateien
 

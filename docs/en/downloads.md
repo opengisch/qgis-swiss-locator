@@ -15,11 +15,14 @@ directly, with their format.
 ![The files of swissBOUNDARIES3D](assets/screenshots/downloads-search.png)
 
 Double-click a file and choose a folder: the file is downloaded, then added to
-the map. Archives (ZIP) are only downloaded.
+the map. Archives (ZIP) are only downloaded, unless they hold a point cloud,
+such as swissSURFACE3D up to 2023: the point cloud is extracted next to the
+archive and added to the map. QGIS indexes it before drawing it, which takes a
+moment.
 
-Files that QGIS can read over the network, such as Cloud Optimized GeoTIFF,
-are listed twice: the second entry, marked *streamed*, adds the file to the
-map without downloading it.
+Files that QGIS can read over the network, such as Cloud Optimized GeoTIFF and
+Cloud Optimized Point Cloud (COPC), are listed twice: the second entry, marked
+*streamed*, adds the file to the map without downloading it.
 
 ## A dataset with many files
 

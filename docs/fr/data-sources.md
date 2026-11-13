@@ -43,8 +43,8 @@ coordonnées. Il vient de l'extension
 [Swiss Geo Downloader](https://pimoll.github.io/swissgeodownloader/), de
 Patricia Moll.
 
-Un Cloud Optimized GeoTIFF ajouté en *streamed* reste sur data.geo.admin.ch :
-QGIS lit par le réseau les parties qu'il affiche.
+Un Cloud Optimized GeoTIFF ou Point Cloud ajouté en *streamed* reste sur
+data.geo.admin.ch : QGIS lit par le réseau les parties qu'il affiche.
 
 ## Fichiers publiés par l'extension
 

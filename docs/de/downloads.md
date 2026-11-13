@@ -16,11 +16,14 @@ werden sie direkt mit ihrem Format aufgelistet.
 
 Doppelklicken Sie auf eine Datei und wählen Sie einen Ordner: Die Datei wird
 heruntergeladen und dann zur Karte hinzugefügt. Archive (ZIP) werden nur
-heruntergeladen.
+heruntergeladen, ausser sie enthalten eine Punktwolke, wie swissSURFACE3D bis
+2023: Die Punktwolke wird neben dem Archiv entpackt und zur Karte hinzugefügt.
+QGIS indexiert sie, bevor es sie anzeigt, was einen Moment dauert.
 
-Dateien, die QGIS über das Netzwerk lesen kann, etwa Cloud Optimized GeoTIFF,
-erscheinen zweimal: Der zweite Eintrag, mit *gestreamt* gekennzeichnet, fügt
-die Datei zur Karte hinzu, ohne sie herunterzuladen.
+Dateien, die QGIS über das Netzwerk lesen kann, etwa Cloud Optimized GeoTIFF
+und Cloud Optimized Point Cloud (COPC), erscheinen zweimal: Der zweite Eintrag,
+mit *gestreamt* gekennzeichnet, fügt die Datei zur Karte hinzu, ohne sie
+herunterzuladen.
 
 ## Ein Datensatz mit vielen Dateien
 
