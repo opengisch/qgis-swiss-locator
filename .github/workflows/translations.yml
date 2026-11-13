@@ -87,7 +87,7 @@ jobs:
 
       - name: ⬇️ Pull from Transifex
         run: |
-          tx pull --translation --all --force
+          tx pull --translations --all --force
           python -m scripts.translations update
 
       - name: 💾 Commit to main
