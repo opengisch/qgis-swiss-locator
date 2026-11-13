@@ -58,6 +58,25 @@ python -m scripts fetch
 
 `python -m scripts build --site _site` generates the GitHub Pages site as CI does.
 
+## Translations
+
+The plugin is translated into French, German and Italian on
+[Transifex](https://app.transifex.com/opengisch/qgis-swiss-locator/). The
+translations are in [swiss_locator/i18n](swiss_locator/i18n) and can be edited
+there as well. The [Translations](.github/workflows/translations.yml) workflow
+keeps both in sync, on each change on `main` and daily: it pushes the strings
+of the source code and the translations edited in the repository to
+Transifex, then commits the translations of Transifex to `main`.
+
+To update the translation files after changing strings in the code, and to
+compile them when running the plugin from the sources:
+
+```sh
+# pylupdate5 comes with PyQt5, e.g. PYLUPDATE5="<QGIS python> -m PyQt5.pylupdate_main"
+python -m scripts.translations update
+lrelease swiss_locator/i18n/*.ts
+```
+
 ## Building the documentation
 
 The documentation is in [docs](docs), one folder per language, built with

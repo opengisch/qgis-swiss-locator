@@ -1,0 +1,8 @@
+[main]
+host = https://app.transifex.com
+
+[o:opengisch:p:qgis-swiss-locator:r:swiss_locator]
+file_filter = swiss_locator/i18n/swiss_locator_<lang>.ts
+source_file = swiss_locator/i18n/swiss_locator_en.ts
+source_lang = en
+type = QT

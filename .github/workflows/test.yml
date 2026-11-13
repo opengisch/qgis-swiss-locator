@@ -24,3 +24,18 @@ jobs:
         run: |
           docker run -v $(pwd):/usr/src -w /usr/src -e QT_QPA_PLATFORM=offscreen qgis/qgis-slim:${QGIS_TEST_VERSION} \
             sh -c 'python3 -m pytest'
+
+  # The scripts (data files, translations) run in CI without QGIS: tested on
+  # the runner too, where git is available for the translations ones
+  scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Test the scripts
+        run: python -m unittest discover --start-directory scripts/tests --top-level-directory .

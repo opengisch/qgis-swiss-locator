@@ -1,0 +1,2 @@
+# translations: only the compiled ones go in the plugin package
+swiss_locator/i18n/*.ts export-ignore
