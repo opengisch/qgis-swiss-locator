@@ -86,7 +86,7 @@ Für grössere Tabellen schreiben Sie zuerst an
 [info@geo.admin.ch](mailto:info@geo.admin.ch), wie es die
 Nutzungsbedingungen verlangen, oder verwenden Sie das amtliche
 Gebäudeadressverzeichnis von swisstopo, einen Datensatz des
-[Datenkatalogs](downloads.md).
+[Datenkatalogs](downloads/index.md).
 
 ## In Modellen und Skripten
 

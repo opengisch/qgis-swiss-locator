@@ -77,7 +77,7 @@ algorithm stops: the service is most likely down.
 
 For larger tables, write to [info@geo.admin.ch](mailto:info@geo.admin.ch)
 first, as the terms of use ask, or use the official directory of building
-addresses of swisstopo, a dataset of the [data catalogue](downloads.md).
+addresses of swisstopo, a dataset of the [data catalogue](downloads/index.md).
 
 ## In models and scripts
 

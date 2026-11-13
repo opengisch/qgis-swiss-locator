@@ -7,17 +7,19 @@ Download files and add them to the map, from two data catalogues:
 - that of the federal geoportal, [data.geo.admin.ch](https://data.geo.admin.ch):
   elevation models, aerial images, boundaries, maps and more;
 - [viageo.ch](https://viageo.ch), the geodata of
-  [cantons and municipalities](#viageo).
+  [cantons and municipalities](viageo.md).
 
 The search looks in the names of the datasets. Each catalogue lists its
-results under its own name.
+results under its own name, and is a search of its own in the
+[options of QGIS](../configuration.md#in-the-options-of-qgis): uncheck one to
+leave it out, or give it a prefix of its own.
 
 ## A dataset with a few files
 
 Type `chd swissboundaries3d`. When a dataset has a few files, they are listed
 directly, with their format.
 
-![The files of swissBOUNDARIES3D](assets/screenshots/downloads-search.png)
+![The files of swissBOUNDARIES3D](../assets/screenshots/downloads-search.png)
 
 Double-click a file and choose a folder: the file is downloaded, then added to
 the map. Archives (ZIP) are only downloaded, unless they hold a point cloud,
@@ -34,7 +36,7 @@ Cloud Optimized Point Cloud (COPC), are listed twice: the second entry, marked
 Type `chd swissalti3d`. The elevation model is cut in tiles of one square
 kilometre, too many to list: the result opens a filter panel.
 
-![Searching for swissALTI3D](assets/screenshots/downloads-filter-search.png)
+![Searching for swissALTI3D](../assets/screenshots/downloads-filter-search.png)
 
 In the panel **Swiss Locator: Filter files to download**:
 
@@ -45,25 +47,7 @@ In the panel **Swiss Locator: Filter files to download**:
    and the **timestamp**. The footprints of the files are drawn on the map.
 3. **Download**.
 
-![The files of swissALTI3D around Lausanne](assets/screenshots/downloads-filter.png)
+![The files of swissALTI3D around Lausanne](../assets/screenshots/downloads-filter.png)
 
 The number of files listed directly in the locator bar can be set in the
-[configuration](configuration.md).
-
-## Cantonal and communal data (viageo.ch) {#viageo}
-
-viageo.ch publishes the data of the canton of Vaud and of its municipalities:
-the bathymetry of the lakes, aerial images of 2 cm and LiDAR point clouds. Its
-titles are in French: type `lidar`, `orthophoto` or `bathymétrie`, with the
-accents.
-
-![The point clouds of both catalogues](assets/screenshots/downloads-viageo.png)
-
-Its results work as those of the geoportal: an aerial image or a bathymetry is
-a single file, to download or to stream; a point cloud opens the filter panel.
-Some files are large, such as the aerial image of Pully of June 2026, 35 GB:
-stream it.
-
-Each catalogue is a search of its own in the
-[options of QGIS](configuration.md#in-the-options-of-qgis): uncheck one to
-leave it out, or give it a prefix of its own.
+[configuration](../configuration.md).

@@ -19,7 +19,7 @@ d'utilisation avant de les publier.
 
 ## Les catalogues de données (STAC)
 
-Le [téléchargement de données](downloads.md) puise dans deux catalogues de
+Le [téléchargement de données](downloads/index.md) puise dans deux catalogues de
 données : celui du géoportail fédéral, [data.geo.admin.ch](https://data.geo.admin.ch),
 et [viageo.ch](https://viageo.ch), qui publie les géodonnées des cantons et des
 communes. Tous deux suivent le standard STAC (SpatioTemporal Asset Catalog) et

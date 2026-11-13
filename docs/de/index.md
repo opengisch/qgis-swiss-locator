@@ -34,7 +34,7 @@ Verarbeitung.
 [Erste Schritte](getting-started.md) erklärt die Suchleiste. Danach können
 Sie [Orte und Objekte suchen](search/index.md),
 [Layer hinzufügen](layers/index.md) oder
-[Daten herunterladen](downloads.md).
+[Daten herunterladen](downloads/index.md).
 
 ## Über das Plugin
 

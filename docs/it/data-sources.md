@@ -19,7 +19,7 @@ verificarne le condizioni d'uso.
 
 ## I cataloghi dei dati (STAC)
 
-Il [download di dati](downloads.md) attinge a due cataloghi di dati: quello del
+Il [download di dati](downloads/index.md) attinge a due cataloghi di dati: quello del
 geoportale federale, [data.geo.admin.ch](https://data.geo.admin.ch), e
 [viageo.ch](https://viageo.ch), che pubblica i geodati di cantoni e comuni.
 Entrambi seguono lo standard STAC (SpatioTemporal Asset Catalog) e organizzano

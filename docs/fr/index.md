@@ -32,7 +32,7 @@ traitements.
 La page [Prise en main](getting-started.md) présente la barre de localisation.
 Ensuite, [recherchez des lieux et des objets](search/index.md),
 [ajoutez des couches](layers/index.md) ou
-[téléchargez des données](downloads.md).
+[téléchargez des données](downloads/index.md).
 
 ## À propos
 

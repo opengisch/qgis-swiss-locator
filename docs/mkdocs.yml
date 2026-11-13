@@ -98,7 +98,9 @@ nav:
       - WMS layers: layers/wms.md
       - WMTS layers: layers/wmts.md
       - Base maps: layers/base-maps.md
-  - Downloading data (STAC): downloads.md
+  - Downloading data (STAC):
+      - downloads/index.md
+      - viageo.ch: downloads/viageo.md
   - Elevation profile: elevation-profile.md
   - Configuration: configuration.md
   - Data sources: data-sources.md

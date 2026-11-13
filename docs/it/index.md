@@ -29,7 +29,7 @@ di QGIS, e [geocodifica](geocoding.md) **tabelle di indirizzi** con Processing.
 
 [Primi passi](getting-started.md) spiega la barra di localizzazione. Poi è
 possibile [cercare luoghi e oggetti](search/index.md),
-[aggiungere layer](layers/index.md) o [scaricare dati](downloads.md).
+[aggiungere layer](layers/index.md) o [scaricare dati](downloads/index.md).
 
 ## Informazioni
 

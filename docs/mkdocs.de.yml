@@ -24,7 +24,9 @@ nav:
       - WMS-Layer: layers/wms.md
       - WMTS-Layer: layers/wmts.md
       - Basiskarten: layers/base-maps.md
-  - Daten herunterladen (STAC): downloads.md
+  - Daten herunterladen (STAC):
+      - downloads/index.md
+      - viageo.ch: downloads/viageo.md
   - Höhenprofil: elevation-profile.md
   - Konfiguration: configuration.md
   - Datenquellen: data-sources.md

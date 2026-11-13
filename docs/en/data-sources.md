@@ -19,7 +19,7 @@ publish it.
 
 ## The data catalogues (STAC)
 
-The [downloads](downloads.md) come from two data catalogues: that of the
+The [downloads](downloads/index.md) come from two data catalogues: that of the
 federal geoportal, [data.geo.admin.ch](https://data.geo.admin.ch), and
 [viageo.ch](https://viageo.ch), which publishes the geodata of cantons and
 municipalities. Both follow the STAC standard (SpatioTemporal Asset Catalog),
