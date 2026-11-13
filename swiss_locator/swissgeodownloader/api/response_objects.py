@@ -169,37 +169,31 @@ class SgdAsset(QgsStacAsset):
         return filetype
 
     def setBbox(self, bbox: QgsBox3D):
+        """Set the bbox, raise ValueError when it is not valid."""
         # Bbox entries should be numbers and inside coordinate ranges of WGS84
-        bboxList = []
-        try:
-            assert isinstance(bbox, QgsBox3D), "bbox is not a QgsBox3D"
-            assert bbox.isNull() is False, "bbox is null"
-            bboxList = [
-                min(bbox.xMinimum(), bbox.xMaximum()),
-                min(bbox.yMinimum(), bbox.yMaximum()),
-                max(bbox.xMinimum(), bbox.xMaximum()),
-                max(bbox.yMinimum(), bbox.yMaximum()),
-            ]
-            assert [isinstance(c, float) or isinstance(c, int) for c in bboxList], (
-                "bbox contains non-numeric values"
-            )
-            assert -180 <= bboxList[0] <= 180 and -180 <= bboxList[2] <= 180, (
-                "bbox coordinates out of range"
-            )
-            assert -90 <= bboxList[1] <= 90 and -90 <= bboxList[3] <= 90, (
-                "bbox coordinates out of range"
-            )
-            assert bboxList[0] != bboxList[2] and bboxList[1] != bboxList[3], (
-                "Warning - bbox coordinates are overlapping"
-            )
-            assert bboxList[0] < bboxList[2] and bboxList[1] < bboxList[3], (
-                "bbox coordinates are not ordered"
-            )
-        except AssertionError as e:
-            self.bbox = None
-            if str(e).startswith("Warning"):
-                self.bbox = bboxList
-            raise e
+        self.bbox = None
+        if not isinstance(bbox, QgsBox3D):
+            raise ValueError("bbox is not a QgsBox3D")
+        if bbox.isNull():
+            raise ValueError("bbox is null")
+        bboxList = [
+            min(bbox.xMinimum(), bbox.xMaximum()),
+            min(bbox.yMinimum(), bbox.yMaximum()),
+            max(bbox.xMinimum(), bbox.xMaximum()),
+            max(bbox.yMinimum(), bbox.yMaximum()),
+        ]
+        if not all(isinstance(c, (float, int)) for c in bboxList):
+            raise ValueError("bbox contains non-numeric values")
+        if not (-180 <= bboxList[0] <= 180 and -180 <= bboxList[2] <= 180):
+            raise ValueError("bbox coordinates out of range")
+        if not (-90 <= bboxList[1] <= 90 and -90 <= bboxList[3] <= 90):
+            raise ValueError("bbox coordinates out of range")
+        if bboxList[0] == bboxList[2] or bboxList[1] == bboxList[3]:
+            # kept nevertheless
+            self.bbox = bboxList
+            raise ValueError("Warning - bbox coordinates are overlapping")
+        if not (bboxList[0] < bboxList[2] and bboxList[1] < bboxList[3]):
+            raise ValueError("bbox coordinates are not ordered")
 
         self.bbox = bboxList
 
@@ -261,29 +255,26 @@ class SgdAsset(QgsStacAsset):
         if not self.bbox or not bbox:
             return False
 
-        try:
-            # bbox pattern: E1, N1, E2, N2 (e.g. 5°, 45°, 7°, 47°)
-            height = bbox[3] - bbox[1]
-            s_height = self.bbox[3] - self.bbox[1]
-            length = bbox[2] - bbox[0]
-            s_length = self.bbox[2] - self.bbox[0]
+        # bbox pattern: E1, N1, E2, N2 (e.g. 5°, 45°, 7°, 47°)
+        height = bbox[3] - bbox[1]
+        s_height = self.bbox[3] - self.bbox[1]
+        length = bbox[2] - bbox[0]
+        s_length = self.bbox[2] - self.bbox[0]
 
-            assert s_height != 0 and s_length != 0
-
-            # Check if similar bbox length
-            assert (1 - P_SIMILAR) < abs(length / s_length) < (1 + P_SIMILAR)
-            # Check if similar bbox height
-            assert (1 - P_SIMILAR) < abs(height / s_height) < (1 + P_SIMILAR)
-
-            # Check if similar absolute position of corner points
-            assert abs(self.bbox[0] - bbox[0]) < s_length * P_SIMILAR
-            assert abs(self.bbox[1] - bbox[1]) < s_height * P_SIMILAR
-            assert abs(self.bbox[2] - bbox[2]) < s_length * P_SIMILAR
-            assert abs(self.bbox[3] - bbox[3]) < s_height * P_SIMILAR
-
-        except AssertionError:
+        if s_height == 0 or s_length == 0:
             return False
-        return True
+
+        return (
+            # Check if similar bbox length
+            (1 - P_SIMILAR) < abs(length / s_length) < (1 + P_SIMILAR)
+            # Check if similar bbox height
+            and (1 - P_SIMILAR) < abs(height / s_height) < (1 + P_SIMILAR)
+            # Check if similar absolute position of corner points
+            and abs(self.bbox[0] - bbox[0]) < s_length * P_SIMILAR
+            and abs(self.bbox[1] - bbox[1]) < s_height * P_SIMILAR
+            and abs(self.bbox[2] - bbox[2]) < s_length * P_SIMILAR
+            and abs(self.bbox[3] - bbox[3]) < s_height * P_SIMILAR
+        )
 
     def copy(self):
         copy = SgdAsset(self.id, self)

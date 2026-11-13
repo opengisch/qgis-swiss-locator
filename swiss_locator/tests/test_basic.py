@@ -38,7 +38,8 @@ class TestOpendataSwissUrl(unittest.TestCase):
         req = Request(
             full_url, headers={"User-Agent": "Mozilla/5.0 QGIS Swiss Locator Test"}
         )
-        response = urlopen(req, timeout=10)
+        # an https URL built by the plugin
+        response = urlopen(req, timeout=10)  # nosec B310
         data = json.loads(response.read().decode("utf-8"))
 
         self.assertTrue(data["success"])
@@ -56,7 +57,8 @@ class TestOpendataSwissUrl(unittest.TestCase):
         req = Request(
             full_url, headers={"User-Agent": "Mozilla/5.0 QGIS Swiss Locator Test"}
         )
-        response = urlopen(req, timeout=10)
+        # an https URL built by the plugin
+        response = urlopen(req, timeout=10)  # nosec B310
         data = json.loads(response.read().decode("utf-8"))
 
         self.assertTrue(data["success"])

@@ -16,7 +16,8 @@
  ***************************************************************************/
 """
 
-import xml.etree.ElementTree as ET
+# Hardened below, the reason of this module: hence the nosec B405 and B314
+import xml.etree.ElementTree as ET  # nosec B405
 
 # Capabilities and metadata documents are fetched from remote servers -- among
 # them arbitrary third party WMS servers advertised by opendata.swiss -- so
@@ -61,7 +62,7 @@ class _NoDoctypeTreeBuilder(ET.TreeBuilder):
 
 
 def _parser() -> ET.XMLParser:
-    return ET.XMLParser(target=_NoDoctypeTreeBuilder())
+    return ET.XMLParser(target=_NoDoctypeTreeBuilder())  # nosec B314
 
 
 def fromstring(text) -> ET.Element:
@@ -73,4 +74,4 @@ def fromstring(text) -> ET.Element:
 
 def parse_file(source) -> ET.Element:
     """Parse an XML document from a file path or file object, return its root element."""
-    return ET.parse(source, parser=_parser()).getroot()
+    return ET.parse(source, parser=_parser()).getroot()  # nosec B314

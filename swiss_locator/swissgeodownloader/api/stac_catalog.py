@@ -205,7 +205,7 @@ class ApiStacCatalog:
 
                 try:
                     file.setBbox(item.boundingBox())
-                except AssertionError as e:
+                except ValueError as e:
                     log(
                         f"File {file.id}: Bounding box not valid: {e} {item.boundingBox()}",
                         Qgis.MessageLevel.Warning,

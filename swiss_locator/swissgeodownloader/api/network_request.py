@@ -58,9 +58,7 @@ def fetch(
 
     # Check if request was successful
     r = http.reply()
-    try:
-        assert r.error() == QNetworkReply.NetworkError.NoError, r.error()
-    except AssertionError:
+    if r.error() != QNetworkReply.NetworkError.NoError:
         # Service is not reachable
         task.exception = translate(
             "SGD", "{} not reachable or no internet connection"

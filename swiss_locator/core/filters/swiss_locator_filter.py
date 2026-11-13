@@ -203,9 +203,9 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.crs = map_crs.authid().split(":")[1]
         if self.crs not in AVAILABLE_CRS:
             self.crs = "2056"
-        assert self.crs in AVAILABLE_CRS
         src_crs_ch = QgsCoordinateReferenceSystem(f"EPSG:{self.crs}")
-        assert src_crs_ch.isValid()
+        if not src_crs_ch.isValid():
+            raise ValueError(f"Invalid CRS EPSG:{self.crs}")
         dst_crs = self.map_canvas.mapSettings().destinationCrs()
         self.transform_ch = QgsCoordinateTransform(
             src_crs_ch, dst_crs, QgsProject.instance()

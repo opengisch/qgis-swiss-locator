@@ -44,7 +44,8 @@ def searchable_layers(lang: str, restrict: bool = False) -> dict:
     :param restrict: if True, restrict from the list from settings if restriction is enabled
     :return: a dict of searchable layers (key: layer id, value: description in given language)
     """
-    assert lang in AVAILABLE_LANGUAGES.values()
+    if lang not in AVAILABLE_LANGUAGES.values():
+        raise ValueError(f"Unknown language: {lang}")
 
     settings = Settings()
     restrict = restrict and settings.feature_search_restrict.value()

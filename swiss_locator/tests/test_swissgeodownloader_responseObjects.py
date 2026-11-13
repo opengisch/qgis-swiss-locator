@@ -49,7 +49,7 @@ class TestFileObject(unittest.TestCase):
     def test_set_bbox_invalid(self):
         file_obj = self.createAsset("test_file", "image", "http://example.com")
         # Invalid bbox length
-        self.assertRaises(AssertionError, file_obj.setBbox, [1.0, 2.0, 3.0])
+        self.assertRaises(ValueError, file_obj.setBbox, [1.0, 2.0, 3.0])
 
     def test_prop_key(self):
         file_obj = self.createAsset("test_file", "image", "http://example.com")

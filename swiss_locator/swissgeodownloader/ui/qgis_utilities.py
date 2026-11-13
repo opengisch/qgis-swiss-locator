@@ -62,7 +62,8 @@ def addLayersToQgis(layers: list[QgsRasterLayer | QgsVectorLayer]):
 
 def switchToCrs(canvas: QgsMapCanvas, crs=SWISS_CRS):
     newCrs = QgsCoordinateReferenceSystem(crs)
-    assert newCrs.isValid()
+    if not newCrs.isValid():
+        raise ValueError(f"Invalid CRS: {crs}")
     QgsProject.instance().setCrs(newCrs)
     canvas.refresh()
 
