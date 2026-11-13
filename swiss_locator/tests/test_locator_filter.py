@@ -20,8 +20,11 @@ This file keeps only the STAC local-search test that depends on
 QgsLocator + SwissLocatorFilterSTAC but does NOT hit the network.
 """
 
+import json
+
 from qgis._core import QgsStacExtent
-from qgis.core import QgsStacCollection, QgsLocator
+from qgis.PyQt.QtCore import QUrlQuery
+from qgis.core import QgsFeedback, QgsStacCollection, QgsLocator
 from qgis.testing import start_app, unittest
 from qgis.testing.mocked import get_iface
 
@@ -119,3 +122,48 @@ class TestLocatorFilterSTAC(unittest.TestCase):
         )
         self.assertEqual(cloned.search_strings, _filter.search_strings)
         self.assertEqual(cloned.collection_ids, _filter.collection_ids)
+
+    def _search_single_asset_collection(self, items_over_limit: int):
+        """Search a collection made of single-asset items (limit +
+        items_over_limit of them), served by a fake STAC API honouring the
+        `limit` parameter. Return the limit and the emitted display strings."""
+        _filter = self._make_filter()
+        limit = _filter.settings.filters[_filter.type.value][
+            "limit_files_per_result"
+        ].value()
+        item_count = limit + items_over_limit
+
+        def fake_fetch_requests(requests, feedback, slot, data=None):
+            for request in requests:
+                requested = int(QUrlQuery(request.url()).queryItemValue("limit"))
+                features = [
+                    {
+                        "collection": "ch.swisstopo.swissalti3d",
+                        "assets": {
+                            f"tile_{i}.las.zip": {
+                                "type": "application/vnd.laszip",
+                                "href": f"https://example.com/tile_{i}.las.zip",
+                            }
+                        },
+                    }
+                    for i in range(min(requested, item_count))
+                ]
+                slot(json.dumps({"features": features}), feedback)
+
+        _filter.fetch_requests = fake_fetch_requests
+        results = []
+        _filter.resultFetched.connect(lambda r: results.append(r.displayString))
+        _filter.perform_fetch_results("swissalti3d", QgsFeedback())
+        return limit, results
+
+    def test_items_within_limit_are_listed(self):
+        limit, results = self._search_single_asset_collection(0)
+        self.assertEqual(len(results), limit)
+        self.assertTrue(all(r.endswith(".las.zip") for r in results))
+
+    def test_more_items_than_limit_opens_filter_dialog(self):
+        """A collection with one asset per item and more items than the limit
+        (e.g. swissSURFACE3D point cloud) must offer the filter dialog, not the
+        first few files."""
+        _limit, results = self._search_single_asset_collection(100)
+        self.assertEqual(results, ["open filter dialog to choose files"])
