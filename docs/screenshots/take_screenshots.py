@@ -297,6 +297,22 @@ def background(layer_id: str = COLOUR, view=SWITZERLAND):
     wait_for_map()
 
 
+def base_map_background(view):
+    """The vector tile base map of swisstopo, added from the locator bar."""
+    new_project()
+    # Without layers, the map keeps its last image until refreshed
+    iface.mapCanvas().refresh()
+    search("chb ")
+    trigger(find_result(data="ch.swisstopo.basemap.vt"))
+    # The first layer gives the project its CRS, Web Mercator for the tiles
+    QgsProject.instance().setCrs(QgsCoordinateReferenceSystem("EPSG:2056"))
+    # The welcome page hides the map of an empty project, the map must be
+    # shown at its actual size before zooming
+    wait(1000)
+    set_view(view)
+    wait_for_map()
+
+
 # --------------------------------------------------------------------------
 # The locator bar
 # --------------------------------------------------------------------------
@@ -514,7 +530,7 @@ def shot_downloads_viageo():
     for catalog_id in ("geoadmin", "viageo"):
         stac = stac_filter(catalog_id)
         wait_until(lambda: stac.available_collections)
-    background(view=(2538000, 1152500, SCALE[10]))
+    base_map_background((2538000, 1152500, SCALE[10]))
     search("chd lidar")
     find_result(text=stac_filter("viageo").displayName())
     save("downloads-viageo")
