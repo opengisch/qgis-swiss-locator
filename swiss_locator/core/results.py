@@ -25,7 +25,7 @@
 
 import json
 
-from qgis.core import QgsGeometry, QgsRectangle
+from qgis.core import QgsGeometry, QgsMimeDataUtils, QgsRectangle, QgsStacAsset
 
 # Registry mapping result_type strings to their classes.
 # Populated automatically by ResultBase.__init_subclass__.
@@ -202,7 +202,6 @@ class VectorTilesLayerResult(ResultBase):
 
 class STACResult(ResultBase):
     result_type = "STACResult"
-    STREAMED_SOURCE_PREFIX = "/vsicurl/"
 
     def __init__(
         self,
@@ -213,6 +212,7 @@ class STACResult(ResultBase):
         media_type: str,
         href: str,
         path: str = "",
+        coordsys: str = "",
     ):
         self.collection_id = collection_id
         self.collection_name = collection_name
@@ -223,6 +223,8 @@ class STACResult(ResultBase):
         self.path = path
         # Necessary for Swiss Geo Downloader compatibility
         self.id = asset_id
+        # EPSG code from the STAC metadata (proj:epsg)
+        self.coordsys = coordsys
 
     def as_definition(self):
         definition = {
@@ -234,6 +236,7 @@ class STACResult(ResultBase):
             "media_type": self.media_type,
             "href": self.href,
             "path": self.path,
+            "coordsys": self.coordsys,
         }
         return json.dumps(definition)
 
@@ -247,21 +250,30 @@ class STACResult(ResultBase):
             dict_data["media_type"],
             dict_data["href"],
             dict_data["path"],
+            dict_data.get("coordsys", ""),
         )
 
     @property
     def is_downloadable(self):
         return self.asset_id and self.href
 
+    def uri(self) -> QgsMimeDataUtils.Uri:
+        """Source, provider and layer type to stream the asset (COG, COPC)"""
+        return QgsStacAsset(
+            self.href or "",
+            self.asset_id or "",
+            self.description or "",
+            self.media_type or "",
+            [],
+        ).uri()
+
     @property
     def is_streamable(self):
-        return (
-            "profile=cloud-optimized" in self.media_type and self.asset_id and self.href
-        )
+        return bool(self.asset_id and self.href and self.uri().isValid())
 
     @property
     def is_streamed(self):
-        return self.is_streamable and self.path.startswith(self.STREAMED_SOURCE_PREFIX)
+        return self.is_streamable and self.path == self.uri().uri
 
     @property
     def isStreamable(self):

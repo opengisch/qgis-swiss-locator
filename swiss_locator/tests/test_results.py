@@ -204,6 +204,7 @@ class TestSTACResultRoundTrip(unittest.TestCase):
             media_type="image/tiff; profile=cloud-optimized",
             href="https://data.geo.admin.ch/ch.swisstopo.swissalti3d/test.tif",
             path="/vsicurl/https://data.geo.admin.ch/test.tif",
+            coordsys="2056",
         )
         definition = original.as_definition()
         restored = result_from_data(definition)
@@ -216,6 +217,13 @@ class TestSTACResultRoundTrip(unittest.TestCase):
         self.assertEqual(restored.media_type, original.media_type)
         self.assertEqual(restored.href, original.href)
         self.assertEqual(restored.path, original.path)
+        self.assertEqual(restored.coordsys, "2056")
+
+    def test_definition_without_coordsys(self):
+        """Definitions stored before coordsys was added still load."""
+        data = json.loads(STACResult("c", "n", "a", "d", "t", "h").as_definition())
+        del data["coordsys"]
+        self.assertEqual(STACResult.from_dict(data).coordsys, "")
 
     def test_default_path(self):
         original = STACResult("coll_id", "coll_name", "asset", "desc", "type", "href")
@@ -239,19 +247,21 @@ class TestSTACResultProperties(unittest.TestCase):
         r = STACResult("c", "n", "", "d", "type", "http://example.com")
         self.assertFalse(r.is_downloadable)
 
+    COG = "image/tiff; application=geotiff; profile=cloud-optimized"
+    COPC = "application/vnd.laszip+copc"
+
     def test_is_streamable(self):
-        r = STACResult(
-            "c",
-            "n",
-            "asset",
-            "d",
-            "image/tiff; profile=cloud-optimized",
-            "http://example.com",
-        )
+        r = STACResult("c", "n", "asset", "d", self.COG, "http://example.com")
         self.assertTrue(r.is_streamable)
 
     def test_not_streamable_wrong_media_type(self):
         r = STACResult("c", "n", "asset", "d", "image/tiff", "http://example.com")
+        self.assertFalse(r.is_streamable)
+
+    def test_not_streamable_las_zip(self):
+        r = STACResult(
+            "c", "n", "asset", "d", "application/vnd.laszip", "http://example.com"
+        )
         self.assertFalse(r.is_streamable)
 
     def test_is_streamed(self):
@@ -260,7 +270,7 @@ class TestSTACResultProperties(unittest.TestCase):
             "n",
             "asset",
             "d",
-            "image/tiff; profile=cloud-optimized",
+            self.COG,
             "http://example.com",
             path="/vsicurl/http://example.com",
         )
@@ -272,9 +282,30 @@ class TestSTACResultProperties(unittest.TestCase):
             "n",
             "asset",
             "d",
-            "image/tiff; profile=cloud-optimized",
+            self.COG,
             "http://example.com",
             path="/home/user/local.tif",
+        )
+        self.assertFalse(r.is_streamed)
+
+    def test_copc_is_streamed_from_url(self):
+        href = "https://example.com/tile.copc.laz"
+        r = STACResult("c", "n", "tile.copc.laz", "d", self.COPC, href, path=href)
+        self.assertTrue(r.is_streamed)
+        uri = r.uri()
+        self.assertEqual(
+            (uri.layerType, uri.providerKey, uri.uri), ("pointcloud", "copc", href)
+        )
+
+    def test_copc_not_streamed_when_downloaded(self):
+        r = STACResult(
+            "c",
+            "n",
+            "tile.copc.laz",
+            "d",
+            self.COPC,
+            "https://example.com/tile.copc.laz",
+            path="/home/user/tile.copc.laz",
         )
         self.assertFalse(r.is_streamed)
 

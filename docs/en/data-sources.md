@@ -40,8 +40,8 @@ lists their assets by file type, resolution, timestamp and coordinate system.
 It comes from the plugin [Swiss Geo Downloader](https://pimoll.github.io/swissgeodownloader/),
 by Patricia Moll.
 
-A Cloud Optimized GeoTIFF added as *streamed* stays on data.geo.admin.ch: QGIS
-reads the parts it displays over the network.
+A Cloud Optimized GeoTIFF or Point Cloud added as *streamed* stays on
+data.geo.admin.ch: QGIS reads the parts it displays over the network.
 
 ## Files published by the plugin
 

@@ -28,8 +28,7 @@ from swiss_locator.swissgeodownloader.utils.utilities import getDateFromIsoStrin
 ALL_VALUE = "all"
 CURRENT_VALUE = "current"
 P_SIMILAR = 0.20  # max 20% difference
-FILETYPE_STREAMED = "streamed (COG)"
-STREAMED_SOURCE_PREFIX = "/vsicurl/"
+FILETYPE_STREAMED = "streamed"
 
 
 class SgdStacCollection(QgsStacCollection):

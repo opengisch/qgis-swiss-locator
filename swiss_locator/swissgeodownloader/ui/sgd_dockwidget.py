@@ -46,7 +46,6 @@ from swiss_locator.swissgeodownloader.api.datageoadmin import API_EPSG, ApiDataG
 from swiss_locator.swissgeodownloader.api.response_objects import (
     ALL_VALUE,
     CURRENT_VALUE,
-    STREAMED_SOURCE_PREFIX,
     SgdStacCollection,
     SgdAsset,
 )
@@ -722,10 +721,11 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
         self.filesListDownload = []
         filesToDownload = self.getCurrentlySelectedFilesAsList()
 
-        # Set href as path for streamed files so qgis knows to stream them directly
+        # Set the streamed source (e.g. /vsicurl/<href> for COG) as path for
+        #  streamed files so qgis knows to stream them directly
         for file in filesToDownload:
             if file.isStreamable:
-                file.path = STREAMED_SOURCE_PREFIX + file.href
+                file.path = file.uri().uri
                 self.filesListStreamed.append(file)
 
         # If there is no need for a download folder, the selected files

@@ -16,11 +16,15 @@ sont listés directement, avec leur format.
 
 Double-cliquez sur un fichier et choisissez un dossier : le fichier est
 téléchargé, puis ajouté à la carte. Les archives (ZIP) sont seulement
-téléchargées.
+téléchargées, sauf si elles contiennent un nuage de points, comme
+swissSURFACE3D jusqu'en 2023 : le nuage de points est extrait à côté de
+l'archive et ajouté à la carte. QGIS l'indexe avant de l'afficher, ce qui prend
+un moment.
 
 Les fichiers que QGIS peut lire par le réseau, comme les Cloud Optimized
-GeoTIFF, sont listés deux fois : la seconde entrée, marquée *streamed*, ajoute
-le fichier à la carte sans le télécharger.
+GeoTIFF et les Cloud Optimized Point Cloud (COPC), sont listés deux fois : la
+seconde entrée, marquée *streamed*, ajoute le fichier à la carte sans le
+télécharger.
 
 ## Un jeu de données de nombreux fichiers
 

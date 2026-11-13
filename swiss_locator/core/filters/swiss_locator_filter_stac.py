@@ -6,8 +6,7 @@ from qgis.PyQt.QtCore import pyqtSignal
 from qgis.core import (
     QgsTask,
     QgsProject,
-    QgsRasterLayer,
-    QgsVectorLayer,
+    QgsMapLayer,
     Qgis,
     QgsApplication,
     QgsFeedback,
@@ -53,6 +52,7 @@ FILE_TYPE_ICONS = {
     "netcdf": "/mActionAddLayer.svg",
     "kml": "mActionAddHtml.svg",
     "kmz": "/mIconZip.svg",
+    "laszip": "/mIconPointCloudLayer.svg",
     "filter": "/mIndicatorFilter.svg",
 }
 
@@ -194,6 +194,7 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
                         asset.get("description"),
                         asset.get("type"),
                         asset.get("href"),
+                        coordsys=str(asset.get("proj:epsg") or ""),
                     )
                     results.append(asset_result)
                     if asset_result.is_streamable:
@@ -201,9 +202,7 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
                         asset_as_stream = deepcopy(asset_result)
                         postfix = self.tr("streamed")
                         asset_as_stream.asset_id += f" ({postfix})"
-                        asset_as_stream.path = (
-                            STACResult.STREAMED_SOURCE_PREFIX + asset.get("href")
-                        )
+                        asset_as_stream.path = asset_result.uri().uri
                         results.append(asset_as_stream)
 
             # Create locator entries
@@ -299,27 +298,33 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
         if not os.path.exists(asset.path) and not asset.is_streamed:
             return
 
-        if "zip" in asset.path:
-            msg = self.tr("Download completed: {}").format(asset.asset_id)
-            level = Qgis.MessageLevel.Success
-            self.message_emitted.emit(self.displayName(), msg, level, None)
-            self.info(msg, level)
-            return
-
-        createQgisLayersInTask([asset], self.qgis_layer_created)
+        createQgisLayersInTask(
+            [asset],
+            lambda layers=None, alreadyAdded=0, exception=None: self.qgis_layer_created(
+                asset, layers, alreadyAdded, exception
+            ),
+        )
 
     def qgis_layer_created(
         self,
-        layers: list[QgsRasterLayer | QgsVectorLayer] | None = None,
-        _alreadyAdded: int = 0,
+        asset: STACResult,
+        layers: list[QgsMapLayer] | None = None,
+        alreadyAdded: int = 0,
         exception=None,
     ):
         msg = ""
         level = Qgis.MessageLevel.Info
         if layers:
-            layer = layers[0]
-            QgsProject.instance().addMapLayer(layer)
-            msg = self.tr("Added file {} to QGIS").format(layer.name())
+            # A zip file can contain several point clouds
+            QgsProject.instance().addMapLayers(layers)
+            msg = self.tr("Added file {} to QGIS").format(
+                ", ".join(layer.name() for layer in layers)
+            )
+        elif not alreadyAdded and not asset.is_streamed:
+            # Downloaded files QGIS cannot open directly, such as most zip files
+            msg = self.tr("Download completed: {}").format(asset.asset_id)
+            level = Qgis.MessageLevel.Success
+            self.message_emitted.emit(self.displayName(), msg, level, None)
         if exception:
             msg = self.tr("Unable to add layer to QGIS: {}").format(exception)
             level = Qgis.MessageLevel.Warning

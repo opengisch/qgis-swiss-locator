@@ -15,11 +15,14 @@ vengono elencati direttamente, con il loro formato.
 ![I file di swissBOUNDARIES3D](assets/screenshots/downloads-search.png)
 
 Fare doppio clic su un file e scegliere una cartella: il file viene scaricato,
-poi aggiunto alla mappa. Gli archivi (ZIP) vengono solo scaricati.
+poi aggiunto alla mappa. Gli archivi (ZIP) vengono solo scaricati, salvo se
+contengono una nuvola di punti, come swissSURFACE3D fino al 2023: la nuvola di
+punti viene estratta accanto all'archivio e aggiunta alla mappa. QGIS la
+indicizza prima di visualizzarla, il che richiede un momento.
 
-I file che QGIS può leggere via rete, come i Cloud Optimized GeoTIFF, sono
-elencati due volte: la seconda voce, contrassegnata con *streamed*, aggiunge il
-file alla mappa senza scaricarlo.
+I file che QGIS può leggere via rete, come i Cloud Optimized GeoTIFF e i Cloud
+Optimized Point Cloud (COPC), sono elencati due volte: la seconda voce,
+contrassegnata con *streamed*, aggiunge il file alla mappa senza scaricarlo.
 
 ## Un set di dati con molti file
 

@@ -32,6 +32,7 @@ from swiss_locator.core.filters.map_geo_admin_stac import (
     collections_to_searchable_strings,
 )
 from swiss_locator.core.filters.swiss_locator_filter_stac import SwissLocatorFilterSTAC
+from swiss_locator.core.results import result_from_data
 
 start_app()
 
@@ -85,6 +86,31 @@ class TestLocatorFilterSTAC(unittest.TestCase):
         results_lower = _filter.perform_local_search("swissalti3d")
         results_upper = _filter.perform_local_search("SWISSALTI3D")
         self.assertEqual(results_lower, results_upper)
+
+    def test_copc_asset_also_offered_streamed(self):
+        """A COPC point cloud can be downloaded or streamed from its URL."""
+        _filter = self._make_filter()
+        results = []
+        _filter.resultFetched.connect(
+            lambda r: results.append((r.displayString, result_from_data(r.userData)))
+        )
+        _filter.handle_content(
+            '{"features": [{"collection": "ch.swisstopo.swissalti3d", "assets": '
+            '{"tile.copc.laz": {"type": "application/vnd.laszip+copc", '
+            '"href": "https://example.com/tile.copc.laz", "proj:epsg": 2056}}}]}',
+            None,
+        )
+        self.assertEqual(
+            [(name, r.path, r.coordsys) for name, r in results],
+            [
+                ("tile.copc.laz", "", "2056"),
+                (
+                    "tile.copc.laz (streamed)",
+                    "https://example.com/tile.copc.laz",
+                    "2056",
+                ),
+            ],
+        )
 
     def test_local_search_no_match(self):
         """Unmatched terms should return an empty list."""

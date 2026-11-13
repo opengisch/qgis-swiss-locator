@@ -41,7 +41,7 @@ coordinate. Proviene dal plugin
 [Swiss Geo Downloader](https://pimoll.github.io/swissgeodownloader/) di
 Patricia Moll.
 
-Un Cloud Optimized GeoTIFF aggiunto come *streamed* resta su
+Un Cloud Optimized GeoTIFF o Point Cloud aggiunto come *streamed* resta su
 data.geo.admin.ch: QGIS legge via rete le parti che visualizza.
 
 ## File pubblicati dal plugin
