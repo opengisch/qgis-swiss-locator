@@ -10,6 +10,7 @@ from qgis.testing import start_app, unittest
 
 from swiss_locator.core.constants import (
     API_BASE_URL,
+    BASEL_STADT_STAC_URL,
     MAP_GEO_ADMIN_URL,
     MAP_SERVER_URL,
     OPENDATA_SWISS_URL,
@@ -62,6 +63,7 @@ class TestConstants(unittest.TestCase):
             WMS_BASE_URL,
             STAC_BASE_URL,
             VIAGEO_STAC_URL,
+            BASEL_STADT_STAC_URL,
             VECTOR_TILES_BASE_URL,
             OPENDATA_SWISS_URL,
             MAP_GEO_ADMIN_URL,

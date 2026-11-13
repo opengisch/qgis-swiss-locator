@@ -13,6 +13,7 @@ WMS_BASE_URL = "https://wms.geo.admin.ch"
 STAC_BASE_URL = "https://data.geo.admin.ch/api/stac/v1"
 # Cantonal and communal geodata
 VIAGEO_STAC_URL = "https://viageo.ch/api/catalog/stac"
+BASEL_STADT_STAC_URL = "https://api.geo.bs.ch/stac/v1"
 
 VECTOR_TILES_BASE_URL = "https://vectortiles.geo.admin.ch"
 

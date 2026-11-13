@@ -287,6 +287,7 @@ class SgdAsset(QgsStacAsset):
 
     def copy(self):
         copy = SgdAsset(self.id, self)
+        copy.id = self.id
         copy.properties = deepcopy(self.properties)
         copy.bbox = deepcopy(self.bbox)
         copy.path = self.path

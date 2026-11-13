@@ -23,12 +23,13 @@ from swiss_locator.core.filters.map_geo_admin_stac import (
 from swiss_locator.core.filters.swiss_locator_filter import SwissLocatorFilter
 from swiss_locator.core.results import STACResult
 from swiss_locator.swissgeodownloader.api.api_caller_task import DownloadFilesTask
-from swiss_locator.swissgeodownloader.api.catalogs import STAC_CATALOGS, ApiViageo
-from swiss_locator.swissgeodownloader.api.datageoadmin import ApiDataGeoAdmin
-from swiss_locator.swissgeodownloader.api.response_objects import (
-    SgdStacCollection,
-    assetFileName,
+from swiss_locator.swissgeodownloader.api.catalogs import (
+    STAC_CATALOGS,
+    ApiBaselStadt,
+    ApiViageo,
 )
+from swiss_locator.swissgeodownloader.api.datageoadmin import ApiDataGeoAdmin
+from swiss_locator.swissgeodownloader.api.response_objects import SgdStacCollection
 from swiss_locator.swissgeodownloader.api.stac_catalog import ApiStacCatalog
 from swiss_locator.swissgeodownloader.utils.qgis_layer_creator_task import (
     createQgisLayersInTask,
@@ -44,6 +45,8 @@ FILE_TYPE_ICONS = {
     "xyz": "/mActionAddRasterLayer.svg",
     "grid": "/mActionAddRasterLayer.svg",
     "shapefile": "/mActionAddBasicShape.svg",
+    "shp": "/mActionAddBasicShape.svg",
+    "flatgeobuf": "/mActionAddOgrLayer.svg",
     "csv": "/mActionAddDelimitedTextLayer.svg",
     "jpeg": "/mActionAddImage.svg",
     "interlis": "/mActionAddLayer.svg",
@@ -158,6 +161,7 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
         display_names = {
             ApiDataGeoAdmin.CATALOG_ID: self.tr("Swiss Geoportal STAC file download"),
             ApiViageo.CATALOG_ID: self.tr("viageo.ch STAC file download"),
+            ApiBaselStadt.CATALOG_ID: self.tr("Basel-Stadt STAC file download"),
         }
         return display_names[self.catalog.CATALOG_ID]
 
@@ -217,8 +221,16 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
         file_count = sum(
             [len(item["assets"].values()) for item in response["features"]]
         )
+        # The files of a single item, each in its own format, are the formats to
+        #  choose from: all are listed (e.g. Basel-Stadt)
+        media_types = {
+            asset.get("type")
+            for item in response["features"]
+            for asset in item["assets"].values()
+        }
+        formats_of_one_item = item_count == 1 and len(media_types) == file_count
 
-        if (
+        if formats_of_one_item or (
             item_count <= files_per_collection_limit
             and file_count <= files_per_collection_limit
         ):
@@ -231,7 +243,12 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
                     asset_result = STACResult(
                         stac_collection.id(),
                         stac_collection.title(),
-                        assetFileName(asset_id, asset.get("href")),
+                        self.catalog.fileName(
+                            stac_collection.id(),
+                            item.get("id"),
+                            asset_id,
+                            asset.get("href"),
+                        ),
                         asset.get("description"),
                         asset.get("type"),
                         asset.get("href"),
@@ -291,7 +308,7 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
 
     @staticmethod
     def get_matching_result_icon(file_type):
-        parts = file_type.replace(".", " ").replace("+", " ").split()
+        parts = file_type.replace(".", " ").replace("+", " ").replace("-", " ").split()
 
         if "zip" in parts:
             return FILE_TYPE_ICONS.get("zip")

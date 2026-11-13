@@ -33,7 +33,7 @@ from swiss_locator.core.filters.map_geo_admin_stac import (
 )
 from swiss_locator.core.filters.swiss_locator_filter_stac import SwissLocatorFilterSTAC
 from swiss_locator.core.results import result_from_data
-from swiss_locator.swissgeodownloader.api.catalogs import ApiViageo
+from swiss_locator.swissgeodownloader.api.catalogs import ApiBaselStadt, ApiViageo
 from swiss_locator.swissgeodownloader.api.datageoadmin import ApiDataGeoAdmin
 from swiss_locator.swissgeodownloader.api.response_objects import SgdStacCollection
 
@@ -63,6 +63,10 @@ class TestLocatorFilterSTAC(unittest.TestCase):
             )
         }
         cls.viageo = ApiViageo("en")
+        cls.basel_collections = {
+            "DEFI": cls.collection("DEFI", "Defibrillatoren", ApiBaselStadt)
+        }
+        cls.basel = ApiBaselStadt("en")
 
     @staticmethod
     def collection(collection_id, title, catalog) -> SgdStacCollection:
@@ -84,6 +88,16 @@ class TestLocatorFilterSTAC(unittest.TestCase):
 
     def _make_viageo_filter(self):
         return self._make_filter(self.viageo, self.viageo_collections)
+
+    def _make_basel_filter(self):
+        return self._make_filter(self.basel, self.basel_collections)
+
+    @staticmethod
+    def _display_strings(_filter, items):
+        results = []
+        _filter.resultFetched.connect(lambda r: results.append(r.displayString))
+        _filter.handle_content(json.dumps({"features": items}), None)
+        return results
 
     def test_local_search(self):
         _filter = self._make_filter()
@@ -184,6 +198,56 @@ class TestLocatorFilterSTAC(unittest.TestCase):
         self.assertEqual(geoadmin.name(), "SwissLocatorFilterSTAC")
         self.assertEqual(viageo.name(), "SwissLocatorFilterSTAC_viageo")
         self.assertEqual(viageo.clone().name(), viageo.name())
+        basel = self._make_basel_filter()
+        self.assertEqual(basel.name(), "SwissLocatorFilterSTAC_baselstadt")
+        self.assertEqual(basel.prefix(), geoadmin.prefix())
+
+    def test_formats_of_a_single_item_are_listed(self):
+        """Basel-Stadt serves each dataset as a single item in 6 or 8 formats,
+        more than the files per result: all are listed, named as the server
+        names the zip files."""
+        formats = {
+            "csv": "application/vnd.geo+csv",
+            "fgb": "application/vnd.flatgeobuf",
+            "gdb": "application/x-filegdb",
+            "geojson": "application/geo+json",
+            "gpkg": "application/geopackage+sqlite3",
+            "shp": "application/vnd.shp",
+        }
+        item = {
+            "id": "latest",
+            "collection": "DEFI",
+            "assets": {
+                key: {
+                    "href": f"{ApiBaselStadt.URL}/download/DEFI/latest/{key}",
+                    "type": t,
+                }
+                for key, t in formats.items()
+            },
+        }
+        self.assertEqual(
+            self._display_strings(self._make_basel_filter(), [item]),
+            [f"DEFI_latest_{key}.zip" for key in formats],
+        )
+
+    def test_files_of_a_single_item_in_one_format_open_the_filter_dialog(self):
+        """data.geo.admin.ch has single items with many files of a format,
+        e.g. the climate scenarios: the filter dialog is offered."""
+        item = {
+            "id": "ch2025",
+            "collection": "ch.swisstopo.swissalti3d",
+            "assets": {
+                f"scenario_{i}.nc": {
+                    "href": f"https://example.com/scenario_{i}.nc",
+                    "type": "application/x-netcdf",
+                }
+                for i in range(6)
+            },
+        }
+        self.assertEqual(
+            self._display_strings(self._make_filter(), [item]),
+            ["open filter dialog to choose files"],
+        )
 
     def test_items_requested_from_the_catalog_of_the_filter(self):
         urls = []

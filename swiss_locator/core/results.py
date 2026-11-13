@@ -280,6 +280,10 @@ class STACResult(ResultBase):
         # Necessary for Swiss Geo Downloader compatibility
         return self.is_streamed
 
+    def mediaType(self):
+        # Necessary for Swiss Geo Downloader compatibility
+        return self.media_type
+
     @property
     def simple_file_type(self):
         try:
