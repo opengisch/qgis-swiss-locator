@@ -258,6 +258,18 @@ class TestSTACResultProperties(unittest.TestCase):
         r = STACResult("c", "n", "asset", "d", "image/tiff", "http://example.com")
         self.assertFalse(r.is_streamable)
 
+    def test_not_streamable_zipped(self):
+        """Basel-Stadt serves its FlatGeobuf zipped, QGIS 4.3 streams FlatGeobuf."""
+        r = STACResult(
+            "DEFI",
+            "n",
+            "DEFI_latest_fgb.zip",
+            "d",
+            "application/vnd.flatgeobuf",
+            "https://api.geo.bs.ch/stac/v1/download/DEFI/latest/fgb",
+        )
+        self.assertFalse(r.is_streamable)
+
     def test_not_streamable_las_zip(self):
         r = STACResult(
             "c", "n", "asset", "d", "application/vnd.laszip", "http://example.com"

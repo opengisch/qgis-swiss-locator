@@ -217,7 +217,9 @@ class ApiStacCatalog:
                 fileTypesPerAsset = []
                 if file.filetype:
                     fileTypesPerAsset.append(file.filetype)
-                    if file.isCloudOptimized():
+                    # A zipped file, as Basel-Stadt serves its FlatGeobuf,
+                    #  cannot be read over the network
+                    if file.isCloudOptimized() and not file.id.lower().endswith(".zip"):
                         fileTypesPerAsset.append(
                             f"{file.filetype}, {FILETYPE_STREAMED}"
                         )
