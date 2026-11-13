@@ -10,17 +10,20 @@ and of the cantons. It needs an internet connection.
 | [wmts.geo.admin.ch](https://wmts.geo.admin.ch) | WMTS layers |
 | [vectortiles.geo.admin.ch](https://vectortiles.geo.admin.ch) | base maps |
 | [data.geo.admin.ch](https://data.geo.admin.ch) | downloads |
+| [viageo.ch](https://viageo.ch) | downloads |
 | [opendata.swiss](https://opendata.swiss) and the WMS services it references | WMS layers |
 | [opengisch.github.io/qgis-swiss-locator](https://opengisch.github.io/qgis-swiss-locator/data/v1/index.json) | WMS layers, features |
 
 The data belongs to its publishers: check their terms of use before you
 publish it.
 
-## The data catalogue (STAC)
+## The data catalogues (STAC)
 
-The [downloads](downloads.md) come from the data catalogue of the
-federal geoportal, [data.geo.admin.ch](https://data.geo.admin.ch). It follows
-the STAC standard (SpatioTemporal Asset Catalog), and organises the data in:
+The [downloads](downloads/index.md) come from two data catalogues: that of the
+federal geoportal, [data.geo.admin.ch](https://data.geo.admin.ch), and
+[viageo.ch](https://viageo.ch), which publishes the geodata of cantons and
+municipalities. Both follow the STAC standard (SpatioTemporal Asset Catalog),
+and organise the data in:
 
 - **collections**, the datasets, such as swissALTI3D;
 - **items**, the parts of a dataset in space or time, such as a tile of one
@@ -28,20 +31,22 @@ the STAC standard (SpatioTemporal Asset Catalog), and organises the data in:
 - **assets**, the files of an item, by format, resolution and coordinate
   system.
 
-When QGIS starts, the plugin downloads the list of the collections, in the
-background. Their titles and descriptions in the language of the plugin come
-from the metadata catalogue [geocat.ch](https://www.geocat.ch). A search looks
-for the text in the titles and identifiers of this list, without a request.
-For each collection found, the plugin then asks for its first files: when they
-are few, they are listed; otherwise, the collection opens the filter panel.
+When QGIS starts, the plugin downloads the list of the collections of each
+catalogue, in the background. The titles and descriptions of data.geo.admin.ch
+in the language of the plugin come from the metadata catalogue
+[geocat.ch](https://www.geocat.ch); those of viageo.ch are in French. A search
+looks for the text in the titles and identifiers of these lists, without a
+request. For each collection found, the plugin then asks for its first files:
+when they are few, they are listed; otherwise, the collection opens the filter
+panel.
 
 The filter panel asks the catalogue for the items of the chosen extent, and
 lists their assets by file type, resolution, timestamp and coordinate system.
 It comes from the plugin [Swiss Geo Downloader](https://pimoll.github.io/swissgeodownloader/),
 by Patricia Moll.
 
-A Cloud Optimized GeoTIFF or Point Cloud added as *streamed* stays on
-data.geo.admin.ch: QGIS reads the parts it displays over the network.
+A Cloud Optimized GeoTIFF or Point Cloud added as *streamed* stays on the
+server of its catalogue: QGIS reads the parts it displays over the network.
 
 ## Files published by the plugin
 

@@ -11,7 +11,6 @@ from qgis.core import (
     QgsApplication,
     QgsFeedback,
     QgsLocatorResult,
-    QgsStacCollection,
 )
 from qgis.gui import QgisInterface
 
@@ -19,12 +18,18 @@ from swiss_locator.core.constants import USER_AGENT
 from swiss_locator.core.filters.filter_type import FilterType
 from swiss_locator.core.filters.map_geo_admin_stac import (
     collections_to_searchable_strings,
-    map_geo_admin_stac_items_url,
+    stac_items_url,
 )
 from swiss_locator.core.filters.swiss_locator_filter import SwissLocatorFilter
 from swiss_locator.core.results import STACResult
 from swiss_locator.swissgeodownloader.api.api_caller_task import DownloadFilesTask
+from swiss_locator.swissgeodownloader.api.catalogs import STAC_CATALOGS, ApiViageo
 from swiss_locator.swissgeodownloader.api.datageoadmin import ApiDataGeoAdmin
+from swiss_locator.swissgeodownloader.api.response_objects import (
+    SgdStacCollection,
+    assetFileName,
+)
+from swiss_locator.swissgeodownloader.api.stac_catalog import ApiStacCatalog
 from swiss_locator.swissgeodownloader.utils.qgis_layer_creator_task import (
     createQgisLayersInTask,
 )
@@ -59,51 +64,68 @@ FILE_TYPE_ICONS = {
 
 class SwissLocatorFilterSTAC(SwissLocatorFilter):
     """
-    Handles filtering and downloading files from the Swiss Geoportal
-    STAC data catalog.
-    Since the catalog does not provide a search endpoint to query collection
+    Handles filtering and downloading files from a STAC data catalog: the
+    Swiss Geoportal (data.geo.admin.ch) or viageo.ch. Each catalog has its
+    own filter, all with the same prefix, so the results are grouped by source.
+    Since the catalogs do not provide a search endpoint to query collection
     names or titles, the search functionality is implemented by initially
     fetching all collections and storing titles and ids in a searchable list.
     """
 
     HEADERS = {b"User-Agent": USER_AGENT}
 
-    show_filter_widget = pyqtSignal(str)
+    # Catalog id, collection id
+    show_filter_widget = pyqtSignal(str, str)
 
-    def __init__(self, iface: QgisInterface = None, crs: str = None, data=None):
+    def __init__(
+        self,
+        iface: QgisInterface = None,
+        crs: str = None,
+        data=None,
+        catalog_id: str = ApiDataGeoAdmin.CATALOG_ID,
+    ):
         super().__init__(FilterType.STAC, iface, crs)
 
         self.stac_fetch_task: QgsTask | None = None
         self.stac_download_task: QgsTask | None = None
         self.stac_layer_create_task: QgsTask | None = None
-        self.stac_api_data_geo_admin = ApiDataGeoAdmin(self.lang)
-        self.available_collections: dict[str, QgsStacCollection] = {}
+        self.available_collections: dict[str, SgdStacCollection] = {}
         self.search_strings = []
         self.collection_ids = []
 
         if not data:
+            self.catalog: ApiStacCatalog = STAC_CATALOGS[catalog_id](self.lang)
             self.fetch_stac_collections()
         else:
-            self.available_collections = data[0]
-            self.search_strings = data[1]
-            self.collection_ids = data[2]
+            # Clones share the catalog, creating the one of data.geo.admin.ch
+            #  reads the geocat metadata file
+            (
+                self.catalog,
+                self.available_collections,
+                self.search_strings,
+                self.collection_ids,
+            ) = data
 
     def fetch_stac_collections(self):
-        self.info(self.tr("Fetching Swisstopo STAC collections"))
+        description = self.tr("Fetching the STAC collections of {}").format(
+            self.catalog.NAME
+        )
+        self.info(description)
         self.stac_fetch_task = QgsTask.fromFunction(
-            self.tr("Fetching Swisstopo STAC collections"),
-            self.stac_api_data_geo_admin.getCollections,
+            description,
+            self.catalog.getCollections,
             on_finished=self.receive_stac_collections,
         )
-
         QgsApplication.taskManager().addTask(self.stac_fetch_task)
 
     def receive_stac_collections(
-        self, exception=None, stac_collections: dict[str, QgsStacCollection] = None
+        self, exception=None, stac_collections: dict[str, SgdStacCollection] = None
     ):
         if exception or not stac_collections:
             self.info(
-                self.tr("Not able to download Swisstopo STAC collections")
+                self.tr("Not able to download the STAC collections of {}").format(
+                    self.catalog.NAME
+                )
                 + f": {str(exception)}",
                 Qgis.MessageLevel.Critical,
             )
@@ -116,11 +138,28 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
     def clone(self):
         return SwissLocatorFilterSTAC(
             crs=self.crs,
-            data=(self.available_collections, self.search_strings, self.collection_ids),
+            data=(
+                self.catalog,
+                self.available_collections,
+                self.search_strings,
+                self.collection_ids,
+            ),
         )
 
+    def name(self):
+        # QGIS saves the settings of a filter (enabled, prefix) under its name:
+        #  the filter of data.geo.admin.ch keeps the one it had on its own
+        if self.catalog.CATALOG_ID == ApiDataGeoAdmin.CATALOG_ID:
+            return super().name()
+        return f"{super().name()}_{self.catalog.CATALOG_ID}"
+
     def displayName(self):
-        return self.tr("Swiss Geoportal STAC file download")
+        # Shown above the results, it tells where the files come from
+        display_names = {
+            ApiDataGeoAdmin.CATALOG_ID: self.tr("Swiss Geoportal STAC file download"),
+            ApiViageo.CATALOG_ID: self.tr("viageo.ch STAC file download"),
+        }
+        return display_names[self.catalog.CATALOG_ID]
 
     def prefix(self):
         return "chd"
@@ -151,8 +190,8 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
         # One more item than the limit is requested to know if there are more.
         requests = []
         for collection_id in matching_collections:
-            url, params = map_geo_admin_stac_items_url(
-                collection_id, files_per_result_limit + 1
+            url, params = stac_items_url(
+                self.catalog.URL, collection_id, files_per_result_limit + 1
             )
             requests.append(self.request_for_url(url, params, self.HEADERS))
 
@@ -186,15 +225,17 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
             results = []
             # Analyse response and create stac result objects
             for item in response["features"]:
+                # The projection extension can be on the asset or on the item
+                item_epsg = item.get("properties", {}).get("proj:epsg")
                 for asset_id, asset in item["assets"].items():
                     asset_result = STACResult(
                         stac_collection.id(),
                         stac_collection.title(),
-                        asset_id,
+                        assetFileName(asset_id, asset.get("href")),
                         asset.get("description"),
                         asset.get("type"),
                         asset.get("href"),
-                        coordsys=str(asset.get("proj:epsg") or ""),
+                        coordsys=str(asset.get("proj:epsg") or item_epsg or ""),
                     )
                     results.append(asset_result)
                     if asset_result.is_streamable:
@@ -280,7 +321,7 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
             self.info(msg, level)
 
         self.stac_download_task = DownloadFilesTask(
-            self.stac_api_data_geo_admin,
+            self.catalog,
             self.iface.messageBar(),
             self.tr("download {}").format(asset.asset_id),
             fileList=[asset],
@@ -333,4 +374,4 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
         self.info(msg, level)
 
     def open_filter_widget(self, collection: STACResult):
-        self.show_filter_widget.emit(collection.collection_id)
+        self.show_filter_widget.emit(self.catalog.CATALOG_ID, collection.collection_id)

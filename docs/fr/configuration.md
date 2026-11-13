@@ -12,6 +12,10 @@ l'extension y est listée, avec son préfixe :
 - le bouton de droite ouvre la configuration de l'extension (les fonds de plan
   n'en ont pas).
 
+Le téléchargement de données a une recherche par catalogue, avec le même
+préfixe : **Swiss Geoportal STAC file download** et
+**viageo.ch STAC file download**.
+
 ![Les options du localisateur de QGIS](assets/screenshots/options-locator.png)
 
 ## Dans l'extension
@@ -51,7 +55,7 @@ Chaque recherche, sauf les fonds de plan, a son onglet :
 | Couches WMS | haute | 5 |
 | Couches WMTS | moyenne | 8 |
 | Objets | haute | 8 |
-| Télécharger des données | basse | 5, et 5 fichiers par résultat |
+| Télécharger des données | basse | 5 par catalogue, et 5 fichiers par résultat |
 
 ### Recherche d'objets {#feature-search}
 

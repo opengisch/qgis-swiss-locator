@@ -10,7 +10,8 @@ QGIS, as you would on [map.geo.admin.ch](https://map.geo.admin.ch), and find:
 - **base maps** of swisstopo, as vector tiles;
 - **features** of the layers of the geoportal, such as a public transport stop
   or a mountain hut;
-- **files to download** from the data catalogue of the geoportal (STAC).
+- **files to download** from the data catalogues of the geoportal and of
+  [viageo.ch](https://viageo.ch), for cantons and municipalities (STAC).
 
 It also draws the terrain of swissALTI3D in the **elevation profiles** of
 QGIS, and [geocodes](geocoding.md) **tables of addresses** with Processing.
@@ -27,7 +28,7 @@ QGIS, and [geocodes](geocoding.md) **tables of addresses** with Processing.
 
 [Getting started](getting-started.md) explains the locator bar. Then
 [search for locations and features](search/index.md),
-[add layers](layers/index.md) or [download data](downloads.md).
+[add layers](layers/index.md) or [download data](downloads/index.md).
 
 ## About
 

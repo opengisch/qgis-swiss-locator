@@ -12,7 +12,8 @@ Suchleiste von QGIS einen Begriff ein, wie auf
 - **Basiskarten** von swisstopo, als Vektorkacheln;
 - **Objekte** aus den Layern des Geoportals, etwa eine Haltestelle des
   öffentlichen Verkehrs oder eine Berghütte;
-- **Dateien zum Herunterladen** aus dem Datenkatalog des Geoportals (STAC).
+- **Dateien zum Herunterladen** aus den Datenkatalogen des Geoportals und von
+  [viageo.ch](https://viageo.ch), für Kantone und Gemeinden (STAC).
 
 Zudem zeichnet das Plugin das Gelände von swissALTI3D in die **Höhenprofile**
 von QGIS und [geokodiert](geocoding.md) **Adresstabellen** mit der
@@ -33,7 +34,7 @@ Verarbeitung.
 [Erste Schritte](getting-started.md) erklärt die Suchleiste. Danach können
 Sie [Orte und Objekte suchen](search/index.md),
 [Layer hinzufügen](layers/index.md) oder
-[Daten herunterladen](downloads.md).
+[Daten herunterladen](downloads/index.md).
 
 ## Über das Plugin
 

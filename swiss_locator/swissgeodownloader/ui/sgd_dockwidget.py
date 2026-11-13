@@ -42,13 +42,14 @@ from swiss_locator.swissgeodownloader.api.api_caller_task import (
     GetFileListTask,
     DownloadFilesTask,
 )
-from swiss_locator.swissgeodownloader.api.datageoadmin import API_EPSG, ApiDataGeoAdmin
+from swiss_locator.swissgeodownloader.api.catalogs import createCatalogs
 from swiss_locator.swissgeodownloader.api.response_objects import (
     ALL_VALUE,
     CURRENT_VALUE,
     SgdStacCollection,
     SgdAsset,
 )
+from swiss_locator.swissgeodownloader.api.stac_catalog import API_EPSG, ApiStacCatalog
 from swiss_locator.swissgeodownloader.ui.bbox_drawer import BboxPainter
 from swiss_locator.swissgeodownloader.ui.collection_list_table import (
     CollectionListTable,
@@ -169,8 +170,8 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
             "coordsys": self.guiCoordsysL,
         }
 
-        # API caller task
-        self.collectionsRequest: GetCollectionsTask | None = None
+        # API caller tasks, collections are requested per catalog
+        self.collectionsRequests: dict[str, GetCollectionsTask] = {}
         self.fileListRequest: GetFileListTask | None = None
         self.guiRequestCancelBtn.setHidden(True)
 
@@ -203,18 +204,24 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
 
         self.deactivateFilterFields()
 
-        # Finally, initialize apis and request available collections
-        self.apiDGA = ApiDataGeoAdmin(self.locale)
-        self.loadCollectionList()
+        # Finally, initialize apis. The collections of a catalog are
+        #  requested when one of them is shown for the first time
+        self.apis: dict[str, ApiStacCatalog] = createCatalogs(self.locale)
 
-    def setCurrentCollection(self, collectionId: str):
+    def currentApi(self) -> ApiStacCatalog:
+        return self.apis[self.currentCollection.catalogId()]
+
+    def setCurrentCollection(self, catalogId: str, collectionId: str):
         self.onUnselectCollection()
 
         def searchAndSelectCollection():
             self.collectionListTbl.searchAndSelectByID(collectionId)
 
-        if self.collectionsRequest in QgsApplication.taskManager().activeTasks():
-            self.collectionsRequest.taskCompleted.connect(searchAndSelectCollection)
+        request = self.collectionsRequests.get(catalogId)
+        if not request:
+            request = self.loadCollectionList(catalogId)
+        if request in QgsApplication.taskManager().activeTasks():
+            request.taskCompleted.connect(searchAndSelectCollection)
         else:
             searchAndSelectCollection()
 
@@ -223,20 +230,22 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
         self.closingPlugin.emit()
         event.accept()
 
-    def loadCollectionList(self):
+    def loadCollectionList(self, catalogId: str) -> GetCollectionsTask:
         # Create separate task for request to not block ui
         self.spinnerCol.start()
-        self.collectionsRequest = GetCollectionsTask(
-            self.apiDGA, self.msgBar, "get STAC collections"
+        request = GetCollectionsTask(
+            self.apis[catalogId], self.msgBar, "get STAC collections"
         )
         # Listen for finished api call
-        self.collectionsRequest.taskCompleted.connect(
-            lambda: self.onReceiveCollections(self.collectionsRequest.output)
+        request.taskCompleted.connect(
+            lambda: self.onReceiveCollections(catalogId, request.output)
         )
-        self.collectionsRequest.taskTerminated.connect(
-            lambda: self.onReceiveCollections({})
+        request.taskTerminated.connect(
+            lambda: self.onReceiveCollections(catalogId, None)
         )
-        QgsApplication.taskManager().addTask(self.collectionsRequest)
+        self.collectionsRequests[catalogId] = request
+        QgsApplication.taskManager().addTask(request)
+        return request
 
     def onMapRefSysChanged(self):
         """Listen for map canvas reference system changes and apply the new
@@ -325,7 +334,9 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
         self.resetFileList()
         self.collectionListTbl.resetSearch()
         self.collectionListTbl.unselect()
-        self.loadCollectionList()
+        self.collectionList = {}
+        for catalogId in list(self.collectionsRequests) or self.apis:
+            self.loadCollectionList(catalogId)
 
     def onInfoClicked(self):
         self.showDialog(
@@ -345,12 +356,21 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
             return
         self.bboxPainter.switchNumberVisibility()
 
-    def onReceiveCollections(self, collectionList: dict[str, SgdStacCollection]):
-        """Receive list of available collections"""
-        self.collectionList = collectionList
-        self.collectionListTbl.fill(
-            self.collectionList.values() if self.collectionList else []
-        )
+    def onReceiveCollections(
+        self, catalogId: str, collectionList: dict[str, SgdStacCollection] | None
+    ):
+        """Receive list of available collections of a catalog, add them to
+        the collections of the other catalogs"""
+        if collectionList is None:
+            # The request failed, request again on the next selection
+            self.collectionsRequests.pop(catalogId, None)
+        for collectionId, collection in (collectionList or {}).items():
+            other = self.collectionList.get(collectionId)
+            # Collection ids are expected to be unique across the catalogs
+            if other and other.catalogId() != catalogId:
+                continue
+            self.collectionList[collectionId] = collection
+        self.collectionListTbl.fill(self.collectionList.values())
         self.spinnerCol.stop()
 
     def onCollectionSelectionChange(self, collectionId: str):
@@ -368,7 +388,7 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
 
         if not self.currentCollection.analysed():
             caller = AnalyseCollectionTask(
-                self.apiDGA,
+                self.currentApi(),
                 self.msgBar,
                 "analyse STAC collection",
                 collection=self.currentCollection,
@@ -521,7 +541,7 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
         # Call api
         # Create a separate task for request to not block ui
         self.fileListRequest = GetFileListTask(
-            self.apiDGA,
+            self.currentApi(),
             self.msgBar,
             self.tr("get file list"),
             collectionId=self.currentCollection.id(),
@@ -787,7 +807,7 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
     def startDownload(self):
         # Create separate task for request to not block ui
         caller = DownloadFilesTask(
-            self.apiDGA,
+            self.currentApi(),
             self.msgBar,
             self.tr("download files"),
             fileList=self.filesListDownload,

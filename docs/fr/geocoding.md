@@ -84,7 +84,7 @@ Pour de plus grandes tables, écrivez d'abord à
 [info@geo.admin.ch](mailto:info@geo.admin.ch), comme le demandent les
 conditions d'utilisation, ou utilisez le répertoire officiel des adresses de
 bâtiments de swisstopo, un jeu de données du
-[catalogue de données](downloads.md).
+[catalogue de données](downloads/index.md).
 
 ## Dans les modèles et les scripts
 

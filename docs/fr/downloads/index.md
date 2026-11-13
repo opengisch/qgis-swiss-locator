@@ -2,17 +2,25 @@
 
 Préfixe : `chd`
 
-Téléchargez des fichiers du catalogue de données du géoportail,
-[data.geo.admin.ch](https://data.geo.admin.ch), et ajoutez-les à la carte :
-modèles altimétriques, images aériennes, limites, cartes et plus encore. La
-recherche porte sur les noms des jeux de données.
+Téléchargez des fichiers et ajoutez-les à la carte, depuis deux catalogues de
+données :
+
+- celui du géoportail fédéral, [data.geo.admin.ch](https://data.geo.admin.ch) :
+  modèles altimétriques, images aériennes, limites, cartes et plus encore ;
+- [viageo.ch](https://viageo.ch), les géodonnées des
+  [cantons et des communes](viageo.md).
+
+La recherche porte sur les noms des jeux de données. Chaque catalogue liste ses
+résultats sous son propre nom, et est une recherche à part dans les
+[options de QGIS](../configuration.md#in-the-options-of-qgis) : décochez-en un pour
+l'écarter, ou donnez-lui son propre préfixe.
 
 ## Un jeu de données de quelques fichiers
 
 Tapez `chd swissboundaries3d`. Quand un jeu de données a peu de fichiers, ils
 sont listés directement, avec leur format.
 
-![Les fichiers de swissBOUNDARIES3D](assets/screenshots/downloads-search.png)
+![Les fichiers de swissBOUNDARIES3D](../assets/screenshots/downloads-search.png)
 
 Double-cliquez sur un fichier et choisissez un dossier : le fichier est
 téléchargé, puis ajouté à la carte. Les archives (ZIP) sont seulement
@@ -32,7 +40,7 @@ Tapez `chd swissalti3d`. Le modèle altimétrique est découpé en tuiles d'un
 kilomètre carré, trop nombreuses pour être listées : le résultat ouvre un
 panneau de filtre.
 
-![La recherche de swissALTI3D](assets/screenshots/downloads-filter-search.png)
+![La recherche de swissALTI3D](../assets/screenshots/downloads-filter-search.png)
 
 Dans le panneau **Swiss Locator : Filtrer les fichiers à télécharger** :
 
@@ -44,7 +52,7 @@ Dans le panneau **Swiss Locator : Filtrer les fichiers à télécharger** :
    fichiers sont dessinées sur la carte.
 3. Cliquez sur **Télécharger**.
 
-![Les fichiers de swissALTI3D autour de Lausanne](assets/screenshots/downloads-filter.png)
+![Les fichiers de swissALTI3D autour de Lausanne](../assets/screenshots/downloads-filter.png)
 
 Le nombre de fichiers listés directement dans la barre de localisation peut
-être défini dans la [configuration](configuration.md).
+être défini dans la [configuration](../configuration.md).

@@ -1,7 +1,5 @@
 from qgis.core import QgsStacCollection
 
-from swiss_locator.core.constants import STAC_BASE_URL
-
 
 def collections_to_searchable_strings(collections: dict[str, QgsStacCollection]):
     collection_ids = []
@@ -14,7 +12,7 @@ def collections_to_searchable_strings(collections: dict[str, QgsStacCollection])
     return collection_search_strings, collection_ids
 
 
-def map_geo_admin_stac_items_url(collection_id: str, limit: int):
-    url = f"{STAC_BASE_URL}/collections/{collection_id}/items"
+def stac_items_url(catalog_url: str, collection_id: str, limit: int):
+    url = f"{catalog_url}/collections/{collection_id}/items"
     base_params = {"limit": str(limit)}
     return url, base_params

@@ -2,17 +2,24 @@
 
 Prefisso: `chd`
 
-Scaricare file dal catalogo dei dati del geoportale,
-[data.geo.admin.ch](https://data.geo.admin.ch), e aggiungerli alla mappa:
-modelli altimetrici, immagini aeree, confini, carte e altro ancora. La ricerca
-considera i nomi dei set di dati.
+Scaricare file e aggiungerli alla mappa, da due cataloghi di dati:
+
+- quello del geoportale federale, [data.geo.admin.ch](https://data.geo.admin.ch):
+  modelli altimetrici, immagini aeree, confini, carte e altro ancora;
+- [viageo.ch](https://viageo.ch), i geodati di
+  [cantoni e comuni](viageo.md).
+
+La ricerca considera i nomi dei set di dati. Ogni catalogo elenca i suoi
+risultati sotto il proprio nome, ed è una ricerca a sé nelle
+[opzioni di QGIS](../configuration.md#in-the-options-of-qgis): deselezionarne uno
+per escluderlo, o dargli un prefisso proprio.
 
 ## Un set di dati con pochi file
 
 Digitare `chd swissboundaries3d`. Quando un set di dati ha pochi file, questi
 vengono elencati direttamente, con il loro formato.
 
-![I file di swissBOUNDARIES3D](assets/screenshots/downloads-search.png)
+![I file di swissBOUNDARIES3D](../assets/screenshots/downloads-search.png)
 
 Fare doppio clic su un file e scegliere una cartella: il file viene scaricato,
 poi aggiunto alla mappa. Gli archivi (ZIP) vengono solo scaricati, salvo se
@@ -30,7 +37,7 @@ Digitare `chd swissalti3d`. Il modello altimetrico è suddiviso in riquadri di u
 chilometro quadrato, troppi per essere elencati: il risultato apre un pannello
 di filtro.
 
-![Ricerca di swissALTI3D](assets/screenshots/downloads-filter-search.png)
+![Ricerca di swissALTI3D](../assets/screenshots/downloads-filter-search.png)
 
 Nel pannello **Swiss Locator: Filter files to download**:
 
@@ -42,7 +49,7 @@ Nel pannello **Swiss Locator: Filter files to download**:
    (**Timestamp**). I contorni dei file vengono disegnati sulla mappa.
 3. Fare clic su **Download**.
 
-![I file di swissALTI3D intorno a Losanna](assets/screenshots/downloads-filter.png)
+![I file di swissALTI3D intorno a Losanna](../assets/screenshots/downloads-filter.png)
 
 Il numero di file elencati direttamente nella barra di localizzazione può essere
-impostato nella [configurazione](configuration.md).
+impostato nella [configurazione](../configuration.md).

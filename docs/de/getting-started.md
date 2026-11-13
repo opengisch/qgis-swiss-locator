@@ -34,7 +34,7 @@ mit einem Präfix und einem Leerzeichen, um nur eine davon auszuführen:
 | `chw` | [WMTS-Layer](layers/wmts.md) |
 | `chb` | [Basiskarten](layers/base-maps.md), als Vektorkacheln |
 | `chf` | [Objekte](search/features.md) |
-| `chd` | [Daten herunterladen](downloads.md) |
+| `chd` | [Daten herunterladen](downloads/index.md), vom Geoportal und von viageo.ch |
 
 Beispielsweise sucht `chs Lausanne` nur nach Orten namens Lausanne.
 

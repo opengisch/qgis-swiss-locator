@@ -11,7 +11,8 @@ per trovare:
 - **mappe di base** di swisstopo, in tile vettoriali;
 - **oggetti** dei layer del geoportale, come una fermata dei trasporti pubblici
   o una capanna alpina;
-- **file da scaricare** dal catalogo dei dati del geoportale (STAC).
+- **file da scaricare** dai cataloghi dei dati del geoportale e di
+  [viageo.ch](https://viageo.ch), per cantoni e comuni (STAC).
 
 Il plugin disegna inoltre il terreno di swissALTI3D nei **profili altimetrici**
 di QGIS, e [geocodifica](geocoding.md) **tabelle di indirizzi** con Processing.
@@ -28,7 +29,7 @@ di QGIS, e [geocodifica](geocoding.md) **tabelle di indirizzi** con Processing.
 
 [Primi passi](getting-started.md) spiega la barra di localizzazione. Poi è
 possibile [cercare luoghi e oggetti](search/index.md),
-[aggiungere layer](layers/index.md) o [scaricare dati](downloads.md).
+[aggiungere layer](layers/index.md) o [scaricare dati](downloads/index.md).
 
 ## Informazioni
 

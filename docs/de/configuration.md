@@ -11,6 +11,10 @@ dort mit ihrem Präfix aufgeführt:
 - die Schaltfläche rechts öffnet die Konfiguration des Plugins (die Basiskarten
   haben keine).
 
+Das Herunterladen von Daten hat eine Suche pro Katalog, mit demselben Präfix:
+**Schweizer Geoportal STAC Datei-Download** und
+**viageo.ch STAC file download**.
+
 ![Die Einstellungen der Suche in den Optionen von QGIS](assets/screenshots/options-locator.png)
 
 ## Im Plugin
@@ -51,7 +55,7 @@ Jede Suche, ausser den Basiskarten, hat ihren eigenen Reiter:
 | WMS-Layer | Hoch | 5 |
 | WMTS-Layer | Mittel | 8 |
 | Objekte | Hoch | 8 |
-| Daten herunterladen | Tief | 5, und 5 Dateien pro Resultat |
+| Daten herunterladen | Tief | 5 pro Katalog, und 5 Dateien pro Resultat |
 
 ### Objektsuche {#feature-search}
 

@@ -11,6 +11,9 @@ with its prefix:
 - the button on the right opens the configuration of the plugin (the base maps
   have none).
 
+Downloading data has one search per catalogue, with the same prefix:
+**Swiss Geoportal STAC file download** and **viageo.ch STAC file download**.
+
 ![The locator options of QGIS](assets/screenshots/options-locator.png)
 
 ## In the plugin
@@ -49,7 +52,7 @@ Each search, but the base maps, has its tab:
 | WMS layers | high | 5 |
 | WMTS layers | medium | 8 |
 | Features | high | 8 |
-| Downloading data | low | 5, and 5 files per result |
+| Downloading data | low | 5 per catalogue, and 5 files per result |
 
 ### Feature search
 
