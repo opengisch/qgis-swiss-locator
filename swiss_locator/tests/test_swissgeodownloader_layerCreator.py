@@ -3,7 +3,7 @@ import tempfile
 import unittest
 import zipfile
 
-from qgis.core import QgsStacAsset
+from qgis.core import QgsPointCloudClassifiedRenderer, QgsStacAsset
 from qgis.testing import start_app
 
 from swiss_locator.core.results import STACResult
@@ -13,7 +13,9 @@ from swiss_locator.swissgeodownloader.api.response_objects import (
 )
 from swiss_locator.swissgeodownloader.utils.qgis_layer_creator_task import (
     QgisLayerCreatorTask,
+    QgsPointCloudLayer3DRenderer,
     extractPointClouds,
+    setup3DRenderer,
 )
 
 start_app()
@@ -144,6 +146,50 @@ class TestPointCloudsOf(unittest.TestCase):
                 [(las, "tile_2019.las", "pdal", "2056")],
             )
             self.assertEqual(pointCloudsOf("tile.tif", "image/tiff", tif), [])
+
+
+class FakePointCloudLayer:
+    """The part of QgsPointCloudLayer setup3DRenderer uses, to test it
+    without a point cloud file."""
+
+    def __init__(self, renderer3D=None, sync=True):
+        self._renderer = QgsPointCloudClassifiedRenderer(
+            "Classification", QgsPointCloudClassifiedRenderer.defaultCategories()
+        )
+        self._renderer3D = renderer3D
+        self._sync = sync
+
+    def renderer(self):
+        return self._renderer
+
+    def renderer3D(self):
+        return self._renderer3D
+
+    def sync3DRendererTo2DRenderer(self):
+        return self._sync
+
+    def setRenderer3D(self, renderer3D):
+        self._renderer3D = renderer3D
+
+
+@unittest.skipIf(QgsPointCloudLayer3DRenderer is None, "QGIS built without 3D")
+class TestSetup3DRenderer(unittest.TestCase):
+    def test_3d_renderer_follows_2d_renderer(self):
+        layer = FakePointCloudLayer()
+        setup3DRenderer(layer)
+        self.assertEqual(layer.renderer3D().symbol().symbolType(), "classification")
+
+    def test_existing_3d_renderer_is_kept(self):
+        existing = QgsPointCloudLayer3DRenderer()
+        layer = FakePointCloudLayer(renderer3D=existing)
+        setup3DRenderer(layer)
+        self.assertIs(layer.renderer3D(), existing)
+
+    def test_no_3d_renderer_without_sync(self):
+        """Like QGIS, leave the layer alone when 3D is not synced to 2D."""
+        layer = FakePointCloudLayer(sync=False)
+        setup3DRenderer(layer)
+        self.assertIsNone(layer.renderer3D())
 
 
 if __name__ == "__main__":

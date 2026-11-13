@@ -35,6 +35,12 @@ from qgis.core import (
     QgsVectorLayer,
 )
 
+try:
+    from qgis._3d import QgsPointCloudLayer3DRenderer
+except ImportError:
+    # QGIS built without 3D
+    QgsPointCloudLayer3DRenderer = None
+
 from swiss_locator.swissgeodownloader.api.response_objects import SgdAsset
 from swiss_locator.swissgeodownloader.utils.utilities import log, translate
 
@@ -85,6 +91,19 @@ def extractPointClouds(zipPath: str) -> list[str]:
                     shutil.copyfileobj(src, dst)
             paths.append(path)
     return paths
+
+
+def setup3DRenderer(layer: QgsPointCloudLayer):
+    """Give a point cloud the 3D renderer QGIS gives to the point clouds it
+    adds itself, so it shows in 3D map views. The layer keeps it in sync with
+    its 2D renderer, which PDAL only sets once the file is indexed."""
+    if QgsPointCloudLayer3DRenderer is None:
+        return
+    if layer.renderer3D() or not layer.sync3DRendererTo2DRenderer():
+        return
+    renderer3D = QgsPointCloudLayer3DRenderer()
+    renderer3D.convertFrom2DRenderer(layer.renderer())
+    layer.setRenderer3D(renderer3D)
 
 
 def createQgisLayersInTask(fileList: list[SgdAsset], callback):
@@ -221,6 +240,7 @@ class QgisLayerCreatorTask(QgsTask):
                     layer.setCrs(
                         QgsCoordinateReferenceSystem(f"EPSG:{pointCloud.coordsys}")
                     )
+                setup3DRenderer(layer)
                 self.layerList.append(layer)
         if not result:
             if self.isCanceled():
