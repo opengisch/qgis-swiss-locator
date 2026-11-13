@@ -11,6 +11,7 @@ cantoni. Richiede una connessione a Internet.
 | [vectortiles.geo.admin.ch](https://vectortiles.geo.admin.ch) | mappe di base |
 | [data.geo.admin.ch](https://data.geo.admin.ch) | download di dati |
 | [viageo.ch](https://viageo.ch) | download di dati |
+| [geo.bs.ch](https://www.geo.bs.ch) | download di dati |
 | [opendata.swiss](https://opendata.swiss) e i servizi WMS che vi sono referenziati | layer |
 | [opengisch.github.io/qgis-swiss-locator](https://opengisch.github.io/qgis-swiss-locator/data/v1/index.json) | layer, oggetti |
 
@@ -19,11 +20,11 @@ verificarne le condizioni d'uso.
 
 ## I cataloghi dei dati (STAC)
 
-Il [download di dati](downloads/index.md) attinge a due cataloghi di dati: quello del
-geoportale federale, [data.geo.admin.ch](https://data.geo.admin.ch), e
-[viageo.ch](https://viageo.ch), che pubblica i geodati di cantoni e comuni.
-Entrambi seguono lo standard STAC (SpatioTemporal Asset Catalog) e organizzano
-i dati in:
+Il [download di dati](downloads/index.md) attinge a tre cataloghi di dati:
+quello del geoportale federale, [data.geo.admin.ch](https://data.geo.admin.ch);
+[viageo.ch](https://viageo.ch), che pubblica i geodati di cantoni e comuni; e
+quello del Cantone di Basilea Città, [geo.bs.ch](https://www.geo.bs.ch). Tutti
+seguono lo standard STAC (SpatioTemporal Asset Catalog) e organizzano i dati in:
 
 - **collection**, i set di dati, come swissALTI3D;
 - **item**, le parti di un set di dati nello spazio o nel tempo, come un
@@ -34,10 +35,11 @@ i dati in:
 All'avvio di QGIS, il plugin scarica l'elenco delle collection di ogni catalogo
 in background. I titoli e le descrizioni di data.geo.admin.ch nella lingua del
 plugin provengono dal catalogo di metadati [geocat.ch](https://www.geocat.ch);
-quelli di viageo.ch sono in francese. Una ricerca cerca il testo nei titoli e
-negli identificativi di questi elenchi, senza richieste. Per ogni
-collection trovata, il plugin chiede poi i suoi primi file: se sono pochi,
-vengono elencati; altrimenti la collection apre il pannello di filtro.
+quelli di viageo.ch sono in francese, quelli di Basilea Città in tedesco. Una
+ricerca cerca il testo nei titoli e negli identificativi di questi elenchi,
+senza richieste. Per ogni collection trovata, il plugin chiede poi i suoi primi
+file: se sono pochi, o i formati di un solo item come a Basilea Città, vengono
+elencati; altrimenti la collection apre il pannello di filtro.
 
 Il pannello di filtro chiede al catalogo gli item dell'estensione scelta ed
 elenca i loro asset per tipo di file, risoluzione, data e sistema di

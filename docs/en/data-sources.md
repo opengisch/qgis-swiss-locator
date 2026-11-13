@@ -11,6 +11,7 @@ and of the cantons. It needs an internet connection.
 | [vectortiles.geo.admin.ch](https://vectortiles.geo.admin.ch) | base maps |
 | [data.geo.admin.ch](https://data.geo.admin.ch) | downloads |
 | [viageo.ch](https://viageo.ch) | downloads |
+| [geo.bs.ch](https://www.geo.bs.ch) | downloads |
 | [opendata.swiss](https://opendata.swiss) and the WMS services it references | WMS layers |
 | [opengisch.github.io/qgis-swiss-locator](https://opengisch.github.io/qgis-swiss-locator/data/v1/index.json) | WMS layers, features |
 
@@ -19,11 +20,12 @@ publish it.
 
 ## The data catalogues (STAC)
 
-The [downloads](downloads/index.md) come from two data catalogues: that of the
-federal geoportal, [data.geo.admin.ch](https://data.geo.admin.ch), and
+The [downloads](downloads/index.md) come from three data catalogues: that of
+the federal geoportal, [data.geo.admin.ch](https://data.geo.admin.ch);
 [viageo.ch](https://viageo.ch), which publishes the geodata of cantons and
-municipalities. Both follow the STAC standard (SpatioTemporal Asset Catalog),
-and organise the data in:
+municipalities; and that of the canton of Basel-Stadt,
+[geo.bs.ch](https://www.geo.bs.ch). All follow the STAC standard
+(SpatioTemporal Asset Catalog), and organise the data in:
 
 - **collections**, the datasets, such as swissALTI3D;
 - **items**, the parts of a dataset in space or time, such as a tile of one
@@ -34,11 +36,12 @@ and organise the data in:
 When QGIS starts, the plugin downloads the list of the collections of each
 catalogue, in the background. The titles and descriptions of data.geo.admin.ch
 in the language of the plugin come from the metadata catalogue
-[geocat.ch](https://www.geocat.ch); those of viageo.ch are in French. A search
-looks for the text in the titles and identifiers of these lists, without a
-request. For each collection found, the plugin then asks for its first files:
-when they are few, they are listed; otherwise, the collection opens the filter
-panel.
+[geocat.ch](https://www.geocat.ch); those of viageo.ch are in French, those of
+Basel-Stadt in German. A search looks for the text in the titles and
+identifiers of these lists, without a request. For each collection found, the
+plugin then asks for its first files: when they are few, or the formats of a
+single item, as on Basel-Stadt, they are listed; otherwise, the collection
+opens the filter panel.
 
 The filter panel asks the catalogue for the items of the chosen extent, and
 lists their assets by file type, resolution, timestamp and coordinate system.

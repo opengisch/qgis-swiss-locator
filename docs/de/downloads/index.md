@@ -2,13 +2,15 @@
 
 Präfix: `chd`
 
-Laden Sie Dateien aus zwei Datenkatalogen herunter und fügen Sie sie zur Karte
+Laden Sie Dateien aus drei Datenkatalogen herunter und fügen Sie sie zur Karte
 hinzu:
 
 - dem des Geoportals des Bundes, [data.geo.admin.ch](https://data.geo.admin.ch):
   Höhenmodelle, Luftbilder, Grenzen, Karten und mehr;
 - [viageo.ch](https://viageo.ch), den Geodaten von
-  [Kantonen und Gemeinden](viageo.md).
+  [Kantonen und Gemeinden](viageo.md);
+- [geo.bs.ch](https://www.geo.bs.ch), den Geodaten des Kantons
+  [Basel-Stadt](basel-stadt.md).
 
 Die Suche berücksichtigt die Namen der Datensätze. Jeder Katalog listet seine
 Resultate unter seinem eigenen Namen auf und ist eine eigene Suche in den
@@ -23,10 +25,11 @@ werden sie direkt mit ihrem Format aufgelistet.
 ![Die Dateien von swissBOUNDARIES3D](../assets/screenshots/downloads-search.png)
 
 Doppelklicken Sie auf eine Datei und wählen Sie einen Ordner: Die Datei wird
-heruntergeladen und dann zur Karte hinzugefügt. Archive (ZIP) werden nur
-heruntergeladen, ausser sie enthalten eine Punktwolke, wie swissSURFACE3D bis
-2023: Die Punktwolke wird neben dem Archiv entpackt und zur Karte hinzugefügt.
-QGIS indexiert sie, bevor es sie anzeigt, was einen Moment dauert.
+heruntergeladen und dann zur Karte hinzugefügt. Archive (ZIP) des Geoportals
+werden nur heruntergeladen, ausser sie enthalten eine Punktwolke, wie
+swissSURFACE3D bis 2023: Die Punktwolke wird neben dem Archiv entpackt und zur
+Karte hinzugefügt. QGIS indexiert sie, bevor es sie anzeigt, was einen Moment
+dauert.
 
 Dateien, die QGIS über das Netzwerk lesen kann, etwa Cloud Optimized GeoTIFF
 und Cloud Optimized Point Cloud (COPC), erscheinen zweimal: Der zweite Eintrag,

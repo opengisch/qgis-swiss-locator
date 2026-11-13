@@ -11,6 +11,7 @@ des cantons. Elle nécessite une connexion Internet.
 | [vectortiles.geo.admin.ch](https://vectortiles.geo.admin.ch) | fonds de plan |
 | [data.geo.admin.ch](https://data.geo.admin.ch) | téléchargement de données |
 | [viageo.ch](https://viageo.ch) | téléchargement de données |
+| [geo.bs.ch](https://www.geo.bs.ch) | téléchargement de données |
 | [opendata.swiss](https://opendata.swiss) et les services WMS qu'il référence | couches |
 | [opengisch.github.io/qgis-swiss-locator](https://opengisch.github.io/qgis-swiss-locator/data/v1/index.json) | couches, objets |
 
@@ -19,11 +20,13 @@ d'utilisation avant de les publier.
 
 ## Les catalogues de données (STAC)
 
-Le [téléchargement de données](downloads/index.md) puise dans deux catalogues de
-données : celui du géoportail fédéral, [data.geo.admin.ch](https://data.geo.admin.ch),
-et [viageo.ch](https://viageo.ch), qui publie les géodonnées des cantons et des
-communes. Tous deux suivent le standard STAC (SpatioTemporal Asset Catalog) et
-organisent les données en :
+Le [téléchargement de données](downloads/index.md) puise dans trois catalogues
+de données : celui du géoportail fédéral,
+[data.geo.admin.ch](https://data.geo.admin.ch) ;
+[viageo.ch](https://viageo.ch), qui publie les géodonnées des cantons et des
+communes ; et celui du canton de Bâle-Ville,
+[geo.bs.ch](https://www.geo.bs.ch). Tous suivent le standard STAC
+(SpatioTemporal Asset Catalog) et organisent les données en :
 
 - **collections**, les jeux de données, comme swissALTI3D ;
 - **items**, les parties d'un jeu de données dans l'espace ou le temps, comme
@@ -34,10 +37,11 @@ organisent les données en :
 Au démarrage de QGIS, l'extension télécharge la liste des collections de chaque
 catalogue, en arrière-plan. Les titres et descriptions de data.geo.admin.ch
 dans la langue de l'extension viennent du catalogue de métadonnées
-[geocat.ch](https://www.geocat.ch) ; ceux de viageo.ch sont en français. Une
-recherche cherche le texte dans les titres et identifiants de ces listes, sans
-requête. Pour chaque collection trouvée, l'extension demande ensuite ses
-premiers fichiers : s'ils sont peu nombreux, ils sont listés ; sinon, la
+[geocat.ch](https://www.geocat.ch) ; ceux de viageo.ch sont en français, ceux
+de Bâle-Ville en allemand. Une recherche cherche le texte dans les titres et
+identifiants de ces listes, sans requête. Pour chaque collection trouvée,
+l'extension demande ensuite ses premiers fichiers : s'ils sont peu nombreux, ou
+les formats d'un seul item, comme à Bâle-Ville, ils sont listés ; sinon, la
 collection ouvre le panneau de filtre.
 
 Le panneau de filtre demande au catalogue les items de l'étendue choisie, et

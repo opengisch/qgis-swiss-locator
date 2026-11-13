@@ -12,7 +12,8 @@ elencata con il suo prefisso:
   ne hanno).
 
 Il download di dati ha una ricerca per catalogo, con lo stesso prefisso:
-**Swiss Geoportal STAC file download** e **viageo.ch STAC file download**.
+**Swiss Geoportal STAC file download**,
+**viageo.ch STAC file download** e **Basel-Stadt STAC file download**.
 
 ![Le opzioni del localizzatore di QGIS](assets/screenshots/options-locator.png)
 
