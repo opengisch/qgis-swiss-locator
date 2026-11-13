@@ -9,7 +9,7 @@ de points LiDAR. Ses titres sont en français : tapez `lidar`, `orthophoto` ou
 
 ![Les nuages de points des deux catalogues](../assets/screenshots/downloads-viageo.png)
 
-Ses résultats fonctionnent [comme ceux du géoportail](index.md) : une image
+Ses résultats fonctionnent [comme ceux du géoportail](swisstopo.md) : une image
 aérienne ou une bathymétrie est un seul fichier, à télécharger ou à ajouter en
 *streamed* ; un nuage de points ouvre le panneau de filtre. Certains fichiers
 sont gros, comme l'image aérienne de Pully de juin 2026, 35 Go : ajoutez-la en

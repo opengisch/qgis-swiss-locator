@@ -1,11 +1,12 @@
-# Scaricare dati (STAC)
+# Dati federali (swisstopo)
 
 Prefisso: `chd`
 
 Scaricare file e aggiungerli alla mappa, da tre cataloghi di dati:
 
-- quello del geoportale federale, [data.geo.admin.ch](https://data.geo.admin.ch):
-  modelli altimetrici, immagini aeree, confini, carte e altro ancora;
+- quello del geoportale federale, [data.geo.admin.ch](https://data.geo.admin.ch),
+  gestito da swisstopo: modelli altimetrici, immagini aeree, confini, carte e
+  altro ancora;
 - [viageo.ch](https://viageo.ch), i geodati di
   [cantoni e comuni](viageo.md);
 - [geo.bs.ch](https://www.geo.bs.ch), i geodati del Cantone di

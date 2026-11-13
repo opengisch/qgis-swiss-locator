@@ -20,7 +20,7 @@ d'utilisation avant de les publier.
 
 ## Les catalogues de données (STAC)
 
-Le [téléchargement de données](downloads/index.md) puise dans trois catalogues
+Le [téléchargement de données](downloads/swisstopo.md) puise dans trois catalogues
 de données : celui du géoportail fédéral,
 [data.geo.admin.ch](https://data.geo.admin.ch) ;
 [viageo.ch](https://viageo.ch), qui publie les géodonnées des cantons et des

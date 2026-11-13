@@ -29,7 +29,7 @@ QGIS, and [geocodes](geocoding.md) **tables of addresses** with Processing.
 
 [Getting started](getting-started.md) explains the locator bar. Then
 [search for locations and features](search/index.md),
-[add layers](layers/index.md) or [download data](downloads/index.md).
+[add layers](layers/index.md) or [download data](downloads/swisstopo.md).
 
 ## About
 

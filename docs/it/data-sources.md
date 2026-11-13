@@ -20,7 +20,7 @@ verificarne le condizioni d'uso.
 
 ## I cataloghi dei dati (STAC)
 
-Il [download di dati](downloads/index.md) attinge a tre cataloghi di dati:
+Il [download di dati](downloads/swisstopo.md) attinge a tre cataloghi di dati:
 quello del geoportale federale, [data.geo.admin.ch](https://data.geo.admin.ch);
 [viageo.ch](https://viageo.ch), che pubblica i geodati di cantoni e comuni; e
 quello del Cantone di Basilea Città, [geo.bs.ch](https://www.geo.bs.ch). Tutti

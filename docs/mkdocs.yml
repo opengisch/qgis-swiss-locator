@@ -28,6 +28,8 @@ theme:
     - navigation.footer
     - navigation.indexes
     - navigation.instant
+    # A closed section opens its first page: Downloading data opens swisstopo
+    - navigation.prune
     - navigation.top
     - navigation.tracking
     - search.highlight
@@ -73,6 +75,13 @@ extra:
 extra_javascript:
   - assets/javascripts/shortcuts.js
 
+plugins:
+  - search
+  # The address of the former page of the downloads
+  - redirects:
+      redirect_maps:
+        downloads/index.md: downloads/swisstopo.md
+
 markdown_extensions:
   - admonition
   - attr_list
@@ -99,7 +108,7 @@ nav:
       - WMTS layers: layers/wmts.md
       - Base maps: layers/base-maps.md
   - Downloading data (STAC):
-      - downloads/index.md
+      - swisstopo: downloads/swisstopo.md
       - viageo.ch: downloads/viageo.md
       - Basel-Stadt: downloads/basel-stadt.md
   - Elevation profile: elevation-profile.md
