@@ -11,6 +11,7 @@ der Kantone ab. Es benötigt eine Internetverbindung.
 | [vectortiles.geo.admin.ch](https://vectortiles.geo.admin.ch) | Basiskarten |
 | [data.geo.admin.ch](https://data.geo.admin.ch) | Daten herunterladen |
 | [viageo.ch](https://viageo.ch) | Daten herunterladen |
+| [geo.bs.ch](https://www.geo.bs.ch) | Daten herunterladen |
 | [opendata.swiss](https://opendata.swiss) und die dort referenzierten WMS-Dienste | WMS-Layer |
 | [opengisch.github.io/qgis-swiss-locator](https://opengisch.github.io/qgis-swiss-locator/data/v1/index.json) | WMS-Layer, Objekte |
 
@@ -19,11 +20,12 @@ bevor Sie die Daten veröffentlichen.
 
 ## Die Datenkataloge (STAC)
 
-Das [Herunterladen von Daten](downloads/index.md) greift auf zwei Datenkataloge zu:
-den des Geoportals des Bundes, [data.geo.admin.ch](https://data.geo.admin.ch),
-und [viageo.ch](https://viageo.ch), das die Geodaten von Kantonen und Gemeinden
-veröffentlicht. Beide folgen dem Standard STAC (SpatioTemporal Asset Catalog)
-und gliedern die Daten in:
+Das [Herunterladen von Daten](downloads/index.md) greift auf drei Datenkataloge
+zu: den des Geoportals des Bundes,
+[data.geo.admin.ch](https://data.geo.admin.ch); [viageo.ch](https://viageo.ch),
+das die Geodaten von Kantonen und Gemeinden veröffentlicht; und den des Kantons
+Basel-Stadt, [geo.bs.ch](https://www.geo.bs.ch). Alle folgen dem Standard STAC
+(SpatioTemporal Asset Catalog) und gliedern die Daten in:
 
 - **Collections**, die Datensätze, etwa swissALTI3D;
 - **Items**, die Teile eines Datensatzes in Raum oder Zeit, etwa eine Kachel
@@ -31,13 +33,15 @@ und gliedern die Daten in:
 - **Assets**, die Dateien eines Items, nach Format, Auflösung und
   Koordinatensystem.
 
-Beim Start von QGIS lädt das Plugin die Liste der Collections jedes Katalogs
-im Hintergrund herunter. Die Titel und Beschreibungen von data.geo.admin.ch in
-der Sprache des Plugins stammen aus dem Metadatenkatalog
-[geocat.ch](https://www.geocat.ch); die von viageo.ch sind französisch. Eine
-Suche sucht den Text in den Titeln und Kennungen dieser Listen, ohne Anfrage. Für jede gefundene
-Collection fragt das Plugin dann ihre ersten Dateien ab: Sind es wenige, werden
-sie aufgelistet; sonst öffnet die Collection das Filterfenster.
+Beim Start von QGIS lädt das Plugin die Liste der Collections jedes Katalogs im
+Hintergrund herunter. Die Titel und Beschreibungen von data.geo.admin.ch in der
+Sprache des Plugins stammen aus dem Metadatenkatalog
+[geocat.ch](https://www.geocat.ch); die von viageo.ch sind französisch, die von
+Basel-Stadt deutsch. Eine Suche sucht den Text in den Titeln und Kennungen
+dieser Listen, ohne Anfrage. Für jede gefundene Collection fragt das Plugin
+dann ihre ersten Dateien ab: Sind es wenige, oder die Formate eines einzigen
+Items wie bei Basel-Stadt, werden sie aufgelistet; sonst öffnet die Collection
+das Filterfenster.
 
 Das Filterfenster fragt beim Katalog die Items der gewählten Ausdehnung ab und
 listet ihre Assets nach Dateityp, Auflösung, Zeitstand und Koordinatensystem

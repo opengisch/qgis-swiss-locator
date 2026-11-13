@@ -269,7 +269,14 @@ class STACResult(ResultBase):
 
     @property
     def is_streamable(self):
-        return bool(self.asset_id and self.href and self.uri().isValid())
+        # A zipped file, as Basel-Stadt serves its FlatGeobuf, cannot be read
+        #  over the network, whatever its media type
+        return bool(
+            self.asset_id
+            and self.href
+            and not self.asset_id.lower().endswith(".zip")
+            and self.uri().isValid()
+        )
 
     @property
     def is_streamed(self):
@@ -279,6 +286,10 @@ class STACResult(ResultBase):
     def isStreamable(self):
         # Necessary for Swiss Geo Downloader compatibility
         return self.is_streamed
+
+    def mediaType(self):
+        # Necessary for Swiss Geo Downloader compatibility
+        return self.media_type
 
     @property
     def simple_file_type(self):

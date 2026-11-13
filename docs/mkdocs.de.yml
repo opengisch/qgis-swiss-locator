@@ -27,6 +27,7 @@ nav:
   - Daten herunterladen (STAC):
       - downloads/index.md
       - viageo.ch: downloads/viageo.md
+      - Basel-Stadt: downloads/basel-stadt.md
   - Höhenprofil: elevation-profile.md
   - Konfiguration: configuration.md
   - Datenquellen: data-sources.md

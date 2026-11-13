@@ -13,8 +13,8 @@ l'extension y est listée, avec son préfixe :
   n'en ont pas).
 
 Le téléchargement de données a une recherche par catalogue, avec le même
-préfixe : **Swiss Geoportal STAC file download** et
-**viageo.ch STAC file download**.
+préfixe : **Swiss Geoportal STAC file download**,
+**viageo.ch STAC file download** et **Basel-Stadt STAC file download**.
 
 ![Les options du localisateur de QGIS](assets/screenshots/options-locator.png)
 

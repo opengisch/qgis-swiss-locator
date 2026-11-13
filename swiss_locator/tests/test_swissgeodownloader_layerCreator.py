@@ -15,7 +15,9 @@ from swiss_locator.swissgeodownloader.utils.qgis_layer_creator_task import (
     QgisLayerCreatorTask,
     QgsPointCloudLayer3DRenderer,
     extractPointClouds,
+    isZippedDataset,
     setup3DRenderer,
+    zippedDatasets,
 )
 
 start_app()
@@ -146,6 +148,83 @@ class TestPointCloudsOf(unittest.TestCase):
                 [(las, "tile_2019.las", "pdal", "2056")],
             )
             self.assertEqual(pointCloudsOf("tile.tif", "image/tiff", tif), [])
+
+
+GEOJSON = (
+    b'{"type": "FeatureCollection", "features": [{"type": "Feature", '
+    b'"properties": {"name": "Rathaus"}, '
+    b'"geometry": {"type": "Point", "coordinates": [7.588, 47.558]}}]}'
+)
+
+
+class TestZippedDatasets(unittest.TestCase):
+    """Basel-Stadt serves each format of a dataset zipped, under the media
+    type of the format."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.dir = self.tmp.name
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def createZip(self, name, members: dict[str, bytes]) -> str:
+        path = os.path.join(self.dir, name)
+        with zipfile.ZipFile(path, "w") as zf:
+            for member, data in members.items():
+                zf.writestr(member, data)
+        return path
+
+    def zippedAsset(self, name, mediaType, members) -> SgdAsset:
+        path = self.createZip(name, members)
+        key = name.split("_")[-1].removesuffix(".zip")
+        asset = createAsset(key, mediaType, f"https://x/DEFI/latest/{key}", path)
+        # As ApiBaselStadt names it
+        asset.id = name
+        return asset
+
+    def test_datasets_of_a_zip(self):
+        path = self.createZip(
+            "DEFI_latest_gdb.zip",
+            {
+                "defi.gdb/a00000001.gdbtable": b"",
+                "defi.gdb/a00000001.gdbtablx": b"",
+                "defi.gpkg": b"",
+                "defi.qgz": b"",
+                "shp/defi.shp": b"",
+                "shp/defi.dbf": b"",
+                "readme.txt": b"",
+            },
+        )
+        self.assertEqual(
+            zippedDatasets(path),
+            [f"/vsizip/{path}/{d}" for d in ("defi.gdb", "defi.gpkg", "shp/defi.shp")],
+        )
+
+    def test_zipped_dataset_is_added(self):
+        asset = self.zippedAsset(
+            "DEFI_latest_geojson.zip",
+            "application/geo+json",
+            {"defibrillatoren.geojson": GEOJSON},
+        )
+        self.assertTrue(isZippedDataset(asset))
+        task = QgisLayerCreatorTask("test", [asset])
+        self.assertTrue(task.run())
+        self.assertEqual(
+            [(layer.isValid(), layer.featureCount()) for layer in task.layerList],
+            [(True, 1)],
+        )
+
+    def test_zip_of_data_geo_admin_is_only_downloaded(self):
+        asset = self.zippedAsset(
+            "swissboundaries3d_gpkg.zip",
+            "application/x.geopackage+zip",
+            {"swissboundaries3d.geojson": GEOJSON},
+        )
+        self.assertFalse(isZippedDataset(asset))
+        task = QgisLayerCreatorTask("test", [asset])
+        self.assertTrue(task.run())
+        self.assertEqual(task.layerList, [])
 
 
 class FakePointCloudLayer:

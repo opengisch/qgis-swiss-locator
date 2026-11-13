@@ -101,6 +101,7 @@ nav:
   - Downloading data (STAC):
       - downloads/index.md
       - viageo.ch: downloads/viageo.md
+      - Basel-Stadt: downloads/basel-stadt.md
   - Elevation profile: elevation-profile.md
   - Configuration: configuration.md
   - Data sources: data-sources.md

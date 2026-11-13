@@ -27,6 +27,7 @@ nav:
   - Scaricare dati (STAC):
       - downloads/index.md
       - viageo.ch: downloads/viageo.md
+      - Basilea Città: downloads/basel-stadt.md
   - Profilo altimetrico: elevation-profile.md
   - Configurazione: configuration.md
   - Fonti dei dati: data-sources.md

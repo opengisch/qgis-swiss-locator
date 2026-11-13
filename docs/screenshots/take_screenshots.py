@@ -76,6 +76,7 @@ BERN = (2600600, 1199700, SCALE[2])
 LAUTERBRUNNEN = (2636500, 1157000, SCALE[10])
 ALETSCH = (2643000, 1142000, SCALE[20])
 LANGNAU = (2626900, 1197600, SCALE[5])
+BASEL = (2611500, 1267500, SCALE[10])
 
 # What is typed in the locator bar, by language
 LAYER_SEARCH = {
@@ -536,6 +537,16 @@ def shot_downloads_viageo():
     close_locator()
 
 
+def shot_downloads_basel():
+    stac = stac_filter("baselstadt")
+    wait_until(lambda: stac.available_collections)
+    base_map_background(BASEL)
+    search("chd defibrillatoren")
+    find_result(text=stac.displayName())
+    save("downloads-basel")
+    close_locator()
+
+
 def shot_geocoding():
     import processing
 
@@ -688,6 +699,7 @@ SHOTS = {
     "features": shot_features,
     "downloads": shot_downloads,
     "downloads_viageo": shot_downloads_viageo,
+    "downloads_basel": shot_downloads_basel,
     "geocoding": shot_geocoding,
     "profile": shot_profile,
     "configuration": shot_configuration,

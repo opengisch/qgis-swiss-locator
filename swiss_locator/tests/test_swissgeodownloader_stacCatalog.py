@@ -3,7 +3,7 @@ import unittest
 from qgis.core import QgsBox3D, QgsGeometry, QgsStacAsset, QgsStacItem
 from qgis.testing import start_app
 
-from swiss_locator.swissgeodownloader.api.catalogs import ApiViageo
+from swiss_locator.swissgeodownloader.api.catalogs import ApiBaselStadt, ApiViageo
 
 start_app()
 
@@ -38,6 +38,7 @@ class TestProcessItems(unittest.TestCase):
         result = ApiViageo()._processItems(
             [viageoTile("2538_1150", 6.63), viageoTile("2539_1150", 6.64)],
             FakeTask(),
+            "9ad6c580-94b8-4887-a2ad-3c22e91f5629",
         )
         self.assertEqual(
             [(f.id, f.filetype, f.coordsys) for f in result["files"]],
@@ -49,6 +50,41 @@ class TestProcessItems(unittest.TestCase):
             ],
         )
         self.assertEqual(result["filters"]["coordsys"], ["2056"])
+
+    def test_basel_stadt_formats(self):
+        """The URL of a file of Basel-Stadt ends with its format, the file is
+        named as the server names it."""
+        item = QgsStacItem(
+            "latest",
+            "1.0.0",
+            QgsGeometry(),
+            {"datetime": "2026-11-12T02:00:05Z"},
+            [],
+            {},
+            QgsBox3D(7.55, 47.52, None, 7.63, 47.59, None),
+        )
+        item.setAssets(
+            {
+                key: QgsStacAsset(
+                    f"{ApiBaselStadt.URL}/download/DEFI/latest/{key}", "", "", t, []
+                )
+                for key, t in (
+                    ("fgb", "application/vnd.flatgeobuf"),
+                    ("gpkg", "application/geopackage+sqlite3"),
+                    ("shp", "application/vnd.shp"),
+                )
+            }
+        )
+        result = ApiBaselStadt()._processItems([item], FakeTask(), "DEFI")
+        # The FlatGeobuf is zipped: not streamed, though QGIS 4.3 streams FlatGeobuf
+        self.assertEqual(
+            [(f.id, f.filetype) for f in result["files"]],
+            [
+                ("DEFI_latest_fgb.zip", "vnd.flatgeobuf"),
+                ("DEFI_latest_gpkg.zip", "geopackage+sqlite3"),
+                ("DEFI_latest_shp.zip", "vnd.shp"),
+            ],
+        )
 
 
 if __name__ == "__main__":

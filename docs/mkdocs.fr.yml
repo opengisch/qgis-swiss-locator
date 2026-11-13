@@ -27,6 +27,7 @@ nav:
   - Télécharger des données (STAC):
       - downloads/index.md
       - viageo.ch: downloads/viageo.md
+      - Bâle-Ville: downloads/basel-stadt.md
   - Profil altimétrique: elevation-profile.md
   - Configuration: configuration.md
   - Sources des données: data-sources.md

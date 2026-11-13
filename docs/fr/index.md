@@ -11,8 +11,9 @@ et trouvez :
 - les **fonds de plan** de swisstopo, en tuiles vectorielles;
 - des **objets** des couches du géoportail, comme un arrêt de transports
   publics ou une cabane de montagne;
-- des **fichiers à télécharger** des catalogues de données du géoportail et de
-  [viageo.ch](https://viageo.ch), pour les cantons et les communes (STAC).
+- des **fichiers à télécharger** des catalogues de données du géoportail, de
+  [viageo.ch](https://viageo.ch) pour les cantons et les communes, et de
+  [Bâle-Ville](https://www.geo.bs.ch) (STAC).
 
 Elle dessine aussi le terrain de swissALTI3D dans les **profils d'élévation**
 de QGIS, et [géocode](geocoding.md) des **tables d'adresses** avec les

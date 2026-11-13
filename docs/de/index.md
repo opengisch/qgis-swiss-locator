@@ -12,8 +12,9 @@ Suchleiste von QGIS einen Begriff ein, wie auf
 - **Basiskarten** von swisstopo, als Vektorkacheln;
 - **Objekte** aus den Layern des Geoportals, etwa eine Haltestelle des
   öffentlichen Verkehrs oder eine Berghütte;
-- **Dateien zum Herunterladen** aus den Datenkatalogen des Geoportals und von
-  [viageo.ch](https://viageo.ch), für Kantone und Gemeinden (STAC).
+- **Dateien zum Herunterladen** aus den Datenkatalogen des Geoportals, von
+  [viageo.ch](https://viageo.ch) für Kantone und Gemeinden und von
+  [Basel-Stadt](https://www.geo.bs.ch) (STAC).
 
 Zudem zeichnet das Plugin das Gelände von swissALTI3D in die **Höhenprofile**
 von QGIS und [geokodiert](geocoding.md) **Adresstabellen** mit der

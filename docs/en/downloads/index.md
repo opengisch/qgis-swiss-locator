@@ -2,12 +2,14 @@
 
 Prefix: `chd`
 
-Download files and add them to the map, from two data catalogues:
+Download files and add them to the map, from three data catalogues:
 
 - that of the federal geoportal, [data.geo.admin.ch](https://data.geo.admin.ch):
   elevation models, aerial images, boundaries, maps and more;
 - [viageo.ch](https://viageo.ch), the geodata of
-  [cantons and municipalities](viageo.md).
+  [cantons and municipalities](viageo.md);
+- [geo.bs.ch](https://www.geo.bs.ch), the geodata of the canton of
+  [Basel-Stadt](basel-stadt.md).
 
 The search looks in the names of the datasets. Each catalogue lists its
 results under its own name, and is a search of its own in the
@@ -22,10 +24,10 @@ directly, with their format.
 ![The files of swissBOUNDARIES3D](../assets/screenshots/downloads-search.png)
 
 Double-click a file and choose a folder: the file is downloaded, then added to
-the map. Archives (ZIP) are only downloaded, unless they hold a point cloud,
-such as swissSURFACE3D up to 2023: the point cloud is extracted next to the
-archive and added to the map. QGIS indexes it before drawing it, which takes a
-moment.
+the map. Archives (ZIP) of the geoportal are only downloaded, unless they hold
+a point cloud, such as swissSURFACE3D up to 2023: the point cloud is extracted
+next to the archive and added to the map. QGIS indexes it before drawing it,
+which takes a moment.
 
 Files that QGIS can read over the network, such as Cloud Optimized GeoTIFF and
 Cloud Optimized Point Cloud (COPC), are listed twice: the second entry, marked

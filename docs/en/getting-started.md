@@ -32,7 +32,7 @@ Start with a prefix and a space to run only one of them:
 | `chw` | [WMTS layers](layers/wmts.md) |
 | `chb` | [Base maps](layers/base-maps.md), as vector tiles |
 | `chf` | [Features](search/features.md) |
-| `chd` | [Downloading data](downloads/index.md), from the geoportal and viageo.ch |
+| `chd` | [Downloading data](downloads/index.md), from the geoportal, viageo.ch and Basel-Stadt |
 
 For instance, `chs Lausanne` only searches the places named Lausanne.
 

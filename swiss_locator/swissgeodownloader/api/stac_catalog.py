@@ -28,6 +28,7 @@ from swiss_locator.swissgeodownloader.api.response_objects import (
     FILETYPE_STREAMED,
     SgdAsset,
     SgdStacCollection,
+    assetFileName,
 )
 from swiss_locator.swissgeodownloader.api.stac_client import STACClient
 from swiss_locator.swissgeodownloader.utils.filter_utils import (
@@ -88,6 +89,10 @@ class ApiStacCatalog:
     def addMetadataToCollection(self, collection: SgdStacCollection, task: QgsTask):
         """Complete the metadata of a collection, e.g. with translations."""
 
+    def fileName(self, collectionId: str, itemId: str, assetId: str, href: str) -> str:
+        """Name of the file of an asset, once downloaded."""
+        return assetFileName(assetId, href)
+
     def analyseCollectionItems(
         self, task: QgsTask, collection: SgdStacCollection
     ) -> SgdStacCollection:
@@ -125,7 +130,11 @@ class ApiStacCatalog:
                 if assetId in estimate.keys():
                     continue
                 # Check Content-Length header: Make a HEAD request to get the file size
-                header = fetch(task, QUrl(asset.href()), method="head")
+                try:
+                    header = fetch(task, QUrl(asset.href()), method="head")
+                except Exception:
+                    # Some servers refuse HEAD requests, e.g. geo.bs.ch
+                    header = None
                 if header and header.hasRawHeader(b"Content-Length"):
                     estimate[asset.mediaType()] = int(
                         header.rawHeader(b"Content-Length")
@@ -151,9 +160,11 @@ class ApiStacCatalog:
             task.exception = f"{msg}: {task.exception or e}"
             raise Exception(task.exception)
 
-        return self._processItems(stacItemsResponse, task)
+        return self._processItems(stacItemsResponse, task, collectionId)
 
-    def _processItems(self, stacItemResponse: list[QgsStacItem], task: QgsTask) -> dict:
+    def _processItems(
+        self, stacItemResponse: list[QgsStacItem], task: QgsTask, collectionId: str
+    ) -> dict:
         filterItems = {
             "filetype": [],
             "category": [],
@@ -189,6 +200,7 @@ class ApiStacCatalog:
 
                 # Create file object
                 file = SgdAsset(assetId, asset)
+                file.id = self.fileName(collectionId, item.id(), assetId, file.href)
                 file.properties = additionalAssetProperties.get(assetId, {})
 
                 try:
@@ -205,7 +217,9 @@ class ApiStacCatalog:
                 fileTypesPerAsset = []
                 if file.filetype:
                     fileTypesPerAsset.append(file.filetype)
-                    if file.isCloudOptimized():
+                    # A zipped file, as Basel-Stadt serves its FlatGeobuf,
+                    #  cannot be read over the network
+                    if file.isCloudOptimized() and not file.id.lower().endswith(".zip"):
                         fileTypesPerAsset.append(
                             f"{file.filetype}, {FILETYPE_STREAMED}"
                         )

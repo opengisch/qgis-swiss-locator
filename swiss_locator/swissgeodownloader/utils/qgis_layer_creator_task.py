@@ -28,8 +28,11 @@ from qgis.core import (
     Qgis,
     QgsApplication,
     QgsCoordinateReferenceSystem,
+    QgsCoordinateTransformContext,
     QgsPointCloudLayer,
     QgsProject,
+    QgsProviderRegistry,
+    QgsProviderSublayerDetails,
     QgsRasterLayer,
     QgsTask,
     QgsVectorLayer,
@@ -45,6 +48,20 @@ from swiss_locator.swissgeodownloader.api.response_objects import SgdAsset
 from swiss_locator.swissgeodownloader.utils.utilities import log, translate
 
 POINT_CLOUD_EXTENSIONS = (".las", ".laz")
+# Files and folders (FileGDB) of a zip that are datasets
+DATASET_EXTENSIONS = (
+    ".csv",
+    ".dwg",
+    ".dxf",
+    ".fgb",
+    ".gdb",
+    ".geojson",
+    ".gpkg",
+    ".itf",
+    ".shp",
+    ".tif",
+    ".xtf",
+)
 
 
 class PointCloudSource(NamedTuple):
@@ -91,6 +108,47 @@ def extractPointClouds(zipPath: str) -> list[str]:
                     shutil.copyfileobj(src, dst)
             paths.append(path)
     return paths
+
+
+def isZippedDataset(file: SgdAsset) -> bool:
+    """A downloaded zip file whose STAC media type is the format of the dataset
+    inside, e.g. a GeoPackage from Basel-Stadt. The zip files of
+    data.geo.admin.ch have zip media types, e.g. application/x.geopackage+zip."""
+    return (
+        ".zip" in file.id
+        and "zip" not in (file.mediaType() or "").lower()
+        and zipfile.is_zipfile(file.path)
+    )
+
+
+def zippedDatasets(zipPath: str) -> list[str]:
+    """The datasets of a zip file, as paths GDAL reads inside the zip"""
+    datasets = []
+    with zipfile.ZipFile(zipPath) as zf:
+        for name in zf.namelist():
+            parts = name.rstrip("/").split("/")
+            # The dataset is the first part with its extension, e.g. the
+            #  folder of a FileGDB
+            for i, part in enumerate(parts):
+                if part.lower().endswith(DATASET_EXTENSIONS):
+                    dataset = "/".join(parts[: i + 1])
+                    if dataset not in datasets:
+                        datasets.append(dataset)
+                    break
+    return [f"/vsizip/{zipPath}/{dataset}" for dataset in datasets]
+
+
+def layersOfZippedDatasets(zipPath: str) -> list[QgsVectorLayer | QgsRasterLayer]:
+    options = QgsProviderSublayerDetails.LayerOptions(QgsCoordinateTransformContext())
+    layers = []
+    for dataset in zippedDatasets(zipPath):
+        for sublayer in QgsProviderRegistry.instance().querySublayers(dataset):
+            if sublayer.type() not in (Qgis.LayerType.Vector, Qgis.LayerType.Raster):
+                continue
+            layer = sublayer.toLayer(options)
+            if layer and layer.isValid():
+                layers.append(layer)
+    return layers
 
 
 def setup3DRenderer(layer: QgsPointCloudLayer):
@@ -169,7 +227,14 @@ class QgisLayerCreatorTask(QgsTask):
             #  present in the file system and (3) is not a .zip
             if file.isStreamable or os.path.exists(file.path):
                 if ".zip" in file.id:
-                    # Can't add zip files to QGIS
+                    # Add the dataset of a zip whose format is known, other zip
+                    #  files are only downloaded
+                    if not file.isStreamable and isZippedDataset(file):
+                        for layer in layersOfZippedDatasets(file.path):
+                            if layer.source() in already_added:
+                                self.alreadyAdded += 1
+                            else:
+                                self.layerList.append(layer)
                     continue
                 if file.path in already_added:
                     self.alreadyAdded += 1

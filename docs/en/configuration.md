@@ -12,7 +12,8 @@ with its prefix:
   have none).
 
 Downloading data has one search per catalogue, with the same prefix:
-**Swiss Geoportal STAC file download** and **viageo.ch STAC file download**.
+**Swiss Geoportal STAC file download**, **viageo.ch STAC file download** and
+**Basel-Stadt STAC file download**.
 
 ![The locator options of QGIS](assets/screenshots/options-locator.png)
 

@@ -12,8 +12,8 @@ dort mit ihrem Präfix aufgeführt:
   haben keine).
 
 Das Herunterladen von Daten hat eine Suche pro Katalog, mit demselben Präfix:
-**Schweizer Geoportal STAC Datei-Download** und
-**viageo.ch STAC file download**.
+**Schweizer Geoportal STAC Datei-Download**,
+**viageo.ch STAC file download** und **Basel-Stadt STAC file download**.
 
 ![Die Einstellungen der Suche in den Optionen von QGIS](assets/screenshots/options-locator.png)
 

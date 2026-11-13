@@ -2,13 +2,15 @@
 
 Préfixe : `chd`
 
-Téléchargez des fichiers et ajoutez-les à la carte, depuis deux catalogues de
+Téléchargez des fichiers et ajoutez-les à la carte, depuis trois catalogues de
 données :
 
 - celui du géoportail fédéral, [data.geo.admin.ch](https://data.geo.admin.ch) :
   modèles altimétriques, images aériennes, limites, cartes et plus encore ;
 - [viageo.ch](https://viageo.ch), les géodonnées des
-  [cantons et des communes](viageo.md).
+  [cantons et des communes](viageo.md) ;
+- [geo.bs.ch](https://www.geo.bs.ch), les géodonnées du canton de
+  [Bâle-Ville](basel-stadt.md).
 
 La recherche porte sur les noms des jeux de données. Chaque catalogue liste ses
 résultats sous son propre nom, et est une recherche à part dans les
@@ -23,8 +25,8 @@ sont listés directement, avec leur format.
 ![Les fichiers de swissBOUNDARIES3D](../assets/screenshots/downloads-search.png)
 
 Double-cliquez sur un fichier et choisissez un dossier : le fichier est
-téléchargé, puis ajouté à la carte. Les archives (ZIP) sont seulement
-téléchargées, sauf si elles contiennent un nuage de points, comme
+téléchargé, puis ajouté à la carte. Les archives (ZIP) du géoportail sont
+seulement téléchargées, sauf si elles contiennent un nuage de points, comme
 swissSURFACE3D jusqu'en 2023 : le nuage de points est extrait à côté de
 l'archive et ajouté à la carte. QGIS l'indexe avant de l'afficher, ce qui prend
 un moment.

@@ -34,7 +34,7 @@ celles de QGIS. Commencez par un préfixe et un espace pour n'en lancer qu'une :
 | `chw` | [Couches WMTS](layers/wmts.md) |
 | `chb` | [Fonds de plan](layers/base-maps.md), en tuiles vectorielles |
 | `chf` | [Objets](search/features.md) |
-| `chd` | [Télécharger des données](downloads/index.md), du géoportail et de viageo.ch |
+| `chd` | [Télécharger des données](downloads/index.md), du géoportail, de viageo.ch et de Bâle-Ville |
 
 Par exemple, `chs Lausanne` ne recherche que les lieux nommés Lausanne.
 
