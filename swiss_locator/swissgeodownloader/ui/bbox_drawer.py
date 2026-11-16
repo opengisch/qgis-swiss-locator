@@ -19,15 +19,13 @@
  ***************************************************************************/
 """
 
-from qgis.PyQt.QtCore import QPointF, QSizeF
-from qgis.PyQt.QtGui import QColor, QTextDocument
+from qgis.PyQt.QtCore import QRectF, Qt
+from qgis.PyQt.QtGui import QColor, QFont, QPainter
 from qgis.core import (
-    QgsAnnotationManager,
     QgsCoordinateTransform,
     QgsGeometry,
     QgsPointXY,
     QgsRectangle,
-    QgsTextAnnotation,
     QgsWkbTypes,
 )
 from qgis.gui import QgsRubberBand
@@ -42,15 +40,9 @@ class BboxPainter:
     MAX_VISIBLE_SCALE = 100000
     MAX_BBOX_TO_DISPLAY = 8000
 
-    def __init__(
-        self,
-        canvas,
-        transformer: QgsCoordinateTransform,
-        annotationManager: QgsAnnotationManager,
-    ):
+    def __init__(self, canvas, transformer: QgsCoordinateTransform):
         self.canvas = canvas
         self.transformer = transformer
-        self.annotationManager = annotationManager
         self.bboxItems = {}
         self.numberIsVisible = True
         self.meanBboxWidth = 0
@@ -67,41 +59,18 @@ class BboxPainter:
                 QgsRectangle(*tuple(file.bbox)), self.transformer
             )
             rectangle = QgsRectangle(*tuple(coordinates))
-            # Bbox shape
-            bbox = BboxMapItem(self.canvas, rectangle, file.id)
+            # Bbox shape, labelled with the row number of the file in the list
+            bbox = BboxMapItem(self.canvas, rectangle, file.id, str(idx + 1))
             self.bboxItems[file.id] = bbox
 
             self.meanBboxWidth += rectangle.width()
-
-            # Row number as annotation
-            html = (
-                '<div style="font-size: 20px; color: rgb(0,102,255); '
-                'text-align: center; background-color: rgb(255,255,255)">'
-                "<strong>" + str(idx + 1) + "</strong></div>"
-            )
-            a = QgsTextAnnotation()
-            c = QTextDocument()
-            c.setHtml(html)
-            a.setDocument(c)
-            a.setMarkerSymbol(None)
-            a.setFillSymbol(None)
-            labelPos = QgsPointXY(rectangle.center())
-            a.setMapPosition(labelPos)
-            numberLen = len(str(idx + 1)) - 1
-            # Dimensions for white background box depending on number length
-            sizes = [[6, 3], [9, 4], [14, 7], [18, 9]]
-            a.setFrameSizeMm(QSizeF(sizes[numberLen][0], 14))
-            a.setFrameOffsetFromReferencePointMm(QPointF(-sizes[numberLen][1], -4))
-            a.setMapPositionCrs(self.transformer.destinationCrs())
-            # Add annotation to annotation manager so it can be removed
-            self.annotationManager.addAnnotation(a)
 
         if self.meanBboxWidth and len(fileList.values()):
             self.meanBboxWidth = self.meanBboxWidth / len(fileList.values())
         self.switchNumberVisibility()
 
     def switchNumberVisibility(self):
-        # Check if annotation numbering should be visible
+        # Check if the row numbers should be visible
         mapScale = self.canvas.scale()
         if self.meanBboxWidth:
             isVisible = round(mapScale) / max(round(self.meanBboxWidth), 1) <= 70
@@ -109,17 +78,14 @@ class BboxPainter:
             isVisible = round(mapScale) <= self.MAX_VISIBLE_SCALE
         if self.numberIsVisible is not isVisible:
             self.numberIsVisible = isVisible
-            # Switch visibility of all annotations
-            for ann in self.annotationManager.annotations():
-                ann.setVisible(self.numberIsVisible)
+            for bbox in self.bboxItems.values():
+                bbox.setNumberVisible(self.numberIsVisible)
 
     def removeAll(self):
         for item in self.bboxItems.values():
             item.reset()
             del item
         self.bboxItems = {}
-        for ann in self.annotationManager.annotations():
-            self.annotationManager.removeAnnotation(ann)
         self.numberIsVisible = True
         self.meanBboxWidth = 0
 
@@ -144,18 +110,26 @@ class BboxPainter:
 
 
 class BboxMapItem(QgsRubberBand):
-    """Creates a rectangle from a QgsRubberBand in the map."""
+    """Creates a rectangle from a QgsRubberBand in the map, with a number in
+    its centre. It is drawn on the map canvas only, not added to the project."""
 
     COLOR_SELECT = QColor(171, 0, 12, 30)
     COLOR_UNSELECT = QColor(171, 171, 171, 0)
     COLOR_BORDER = QColor(171, 0, 12)
     COLOR_BORDER_UNSELECTED = QColor(100, 100, 100)
     WIDTH_BORDER = 3
+    COLOR_NUMBER = QColor(0, 102, 255)
+    COLOR_NUMBER_BACKGROUND = QColor(255, 255, 255)
 
-    def __init__(self, canvas, rectangle, bboxId):
+    def __init__(self, canvas, rectangle, bboxId, number: str = ""):
         self.canvas = canvas
         self.rectangle = rectangle
         self.bboxId = bboxId
+        self.number = number
+        self.numberVisible = True
+        self.numberFont = QFont()
+        self.numberFont.setPixelSize(20)
+        self.numberFont.setBold(True)
         super().__init__(self.canvas, QgsWkbTypes.GeometryType.PolygonGeometry)
 
         self.setToGeometry(QgsGeometry().fromRect(self.rectangle))
@@ -168,6 +142,29 @@ class BboxMapItem(QgsRubberBand):
         self.yMin = self.rectangle.yMinimum()
         self.yMax = self.rectangle.yMaximum()
         self.show()
+
+    def setNumberVisible(self, visible: bool):
+        if visible != self.numberVisible:
+            self.numberVisible = visible
+            self.update()
+
+    def paint(self, painter: QPainter):
+        super().paint(painter)
+        if not self.number or not self.numberVisible:
+            return
+        painter.save()
+        painter.setFont(self.numberFont)
+        metrics = painter.fontMetrics()
+        label = QRectF(
+            0, 0, metrics.horizontalAdvance(self.number) + 6, metrics.height()
+        )
+        label.moveCenter(self.toCanvasCoordinates(self.rectangle.center()) - self.pos())
+        # Only where it fits: what is drawn out of the item is not repainted
+        if self.boundingRect().contains(label):
+            painter.fillRect(label, self.COLOR_NUMBER_BACKGROUND)
+            painter.setPen(self.COLOR_NUMBER)
+            painter.drawText(label, Qt.AlignmentFlag.AlignCenter, self.number)
+        painter.restore()
 
     def isInside(self, point):
         return (
