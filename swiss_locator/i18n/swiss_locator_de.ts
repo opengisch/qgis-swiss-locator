@@ -208,6 +208,19 @@
     </message>
 </context>
 <context>
+    <name>FileListTable</name>
+    <message>
+        <location filename="../swissgeodownloader/ui/file_list_table.py"/>
+        <source>Deselect all</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/file_list_table.py"/>
+        <source>Select all</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>GeocodeAddressesAlgorithm</name>
     <message>
         <location filename="../processing/geocode_addresses_algorithm.py"/>
@@ -427,6 +440,19 @@
 </context>
 <context>
     <name>SwissGeoDownloaderDockWidget</name>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
+        <source>Select on map</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
+        <source>Select the files to download on the map:
+• click a footprint to select or deselect its files
+• drag a rectangle to select the files it touches
+• hold {} while dragging to deselect them</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message>
         <location filename="../swissgeodownloader/ui/sgd_dockwidget.py"/>
         <source>To download Swiss geo data it is recommended to use the Swiss coordinate reference system.
