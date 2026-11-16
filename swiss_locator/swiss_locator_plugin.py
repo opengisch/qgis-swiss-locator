@@ -83,6 +83,8 @@ class SwissLocatorPlugin:
         self.locator_filters: list[SwissLocatorFilter] = []
         self.stac_filter_widget: QgsDockWidget | None = None
         self.welcome_dialog: WelcomeDialog | None = None
+        # The modal dialog the welcome dialog waits for to close
+        self.welcome_dialog_blocker: QDialog | None = None
         self.provider: SwissLocatorProcessingProvider | None = None
 
         if Qgis.QGIS_VERSION_INT >= 33700:
@@ -126,7 +128,7 @@ class SwissLocatorPlugin:
 
         if WelcomeDialog.is_due():
             if self.iface.mainWindow().isVisible():
-                # Enabled from the plugin manager
+                # Enabled or upgraded from the plugin manager
                 self.show_welcome_dialog()
             else:
                 # Loaded at the launch of QGIS: once its window shows
@@ -138,6 +140,11 @@ class SwissLocatorPlugin:
         except TypeError:
             # Not connected
             pass
+        if self.welcome_dialog_blocker:
+            self.welcome_dialog_blocker.finished.disconnect(
+                self.welcome_dialog_unblocked
+            )
+            self.welcome_dialog_blocker = None
         if self.welcome_dialog:
             self.welcome_dialog.finished.disconnect(self.welcome_dialog_finished)
             self.welcome_dialog.deleteLater()
@@ -225,11 +232,23 @@ class SwissLocatorPlugin:
             self.update_stac_filters()
 
     def show_welcome_dialog(self):
-        if self.welcome_dialog:
+        if self.welcome_dialog or self.welcome_dialog_blocker:
+            return
+        blocker = QApplication.activeModalWidget()
+        if isinstance(blocker, QDialog):
+            # The plugin manager, modal, when the plugin is enabled or upgraded
+            # from it: opened now, the dialog would block it, hidden behind it
+            self.welcome_dialog_blocker = blocker
+            blocker.finished.connect(self.welcome_dialog_unblocked)
             return
         self.welcome_dialog = WelcomeDialog(self.iface.mainWindow())
         self.welcome_dialog.finished.connect(self.welcome_dialog_finished)
         self.welcome_dialog.open()
+
+    def welcome_dialog_unblocked(self):
+        self.welcome_dialog_blocker.finished.disconnect(self.welcome_dialog_unblocked)
+        self.welcome_dialog_blocker = None
+        QTimer.singleShot(0, self.show_welcome_dialog)
 
     def welcome_dialog_finished(self):
         open_settings = self.welcome_dialog.open_settings
