@@ -1,5 +1,5 @@
 """
-Data files generated weekly by CI and published on GitHub Pages.
+Data files generated nightly by CI and published on GitHub Pages.
 
 - spec.py: what is published and in which format. Standard library only, so
   the generators in scripts/ share it with the plugin.
