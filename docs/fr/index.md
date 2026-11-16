@@ -23,7 +23,13 @@ Elle dessine aussi le terrain de swissALTI3D dans les **profils d'élévation**
 de QGIS, et [géocode](geocoding.md) des **tables d'adresses** avec les
 traitements.
 
-![Les chemins de randonnée du géoportail, ajoutés depuis la barre de localisation](assets/screenshots/layers-result.png)
+En une minute : un fond de plan, un lieu et un profil d'élévation, puis les
+données lidar de swissSURFACE3D, choisies sur la carte, téléchargées et
+affichées en 3D.
+
+<video controls muted playsinline preload="none" width="100%"
+       poster="assets/images/demo.jpg"
+       src="https://github.com/user-attachments/assets/e1571d17-ff0a-41a3-ae48-93357aeb86c0"></video>
 
 ## Pour commencer
 

@@ -19,7 +19,7 @@ It also draws the terrain of swissALTI3D in the
 of QGIS, and [geocodes](https://opengisch.github.io/qgis-swiss-locator/en/geocoding/)
 tables of addresses with Processing.
 
-![Hiking trails added from the locator bar](docs/en/assets/screenshots/layers-result.png)
+https://github.com/user-attachments/assets/e1571d17-ff0a-41a3-ae48-93357aeb86c0
 
 ## Documentation
 

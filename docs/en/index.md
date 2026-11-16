@@ -21,7 +21,12 @@ of QGIS, as you would on [map.geo.admin.ch](https://map.geo.admin.ch), and find:
 It also draws the terrain of swissALTI3D in the **elevation profiles** of
 QGIS, and [geocodes](geocoding.md) **tables of addresses** with Processing.
 
-![Hiking trails of the geoportal, added from the locator bar](assets/screenshots/layers-result.png)
+In a minute: a base map, a place and an elevation profile, then the lidar
+data of swissSURFACE3D, selected on the map, downloaded and shown in 3D.
+
+<video controls muted playsinline preload="none" width="100%"
+       poster="assets/images/demo.jpg"
+       src="https://github.com/user-attachments/assets/e1571d17-ff0a-41a3-ae48-93357aeb86c0"></video>
 
 ## Get started
 

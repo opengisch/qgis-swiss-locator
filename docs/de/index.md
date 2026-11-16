@@ -24,7 +24,13 @@ Zudem zeichnet das Plugin das Gelände von swissALTI3D in die **Höhenprofile**
 von QGIS und [geokodiert](geocoding.md) **Adresstabellen** mit der
 Verarbeitung.
 
-![Wanderwege des Geoportals, über die Suchleiste hinzugefügt](assets/screenshots/layers-result.png)
+In einer Minute: eine Basiskarte, ein Ort und ein Höhenprofil, dann die
+Lidar-Daten von swissSURFACE3D, auf der Karte ausgewählt, heruntergeladen und
+in 3D angezeigt.
+
+<video controls muted playsinline preload="none" width="100%"
+       poster="assets/images/demo.jpg"
+       src="https://github.com/user-attachments/assets/e1571d17-ff0a-41a3-ae48-93357aeb86c0"></video>
 
 ## Loslegen
 
