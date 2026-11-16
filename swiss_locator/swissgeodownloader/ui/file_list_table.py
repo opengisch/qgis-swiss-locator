@@ -147,11 +147,12 @@ class FileListTable(QObject):
             )
 
     def showFile(self, fileId: str):
-        """Selects the row of a file and scrolls to it."""
+        """Selects the row of a file and scrolls it to the top: the bottom of
+        the table is often hidden by the scroll area of the dock widget."""
         if fileId in self.items:
             index = self.items[fileId].index()
             self.tbl.selectRow(index.row())
-            self.tbl.scrollTo(index)
+            self.tbl.scrollTo(index, QAbstractItemView.ScrollHint.PositionAtTop)
 
     def onEmptyList(self, message):
         self.clear()
