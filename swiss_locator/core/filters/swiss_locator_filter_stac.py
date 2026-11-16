@@ -173,17 +173,22 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
         return "chd"
 
     def perform_local_search(self, search_term: str):
-        """Perform search on a list of strings containing the STAC collection
-        id and title, and return a sorted list of corresponding collection IDs
-         for the found matches. Results are ordered by the match positions.
+        """Search the STAC collections by title and id, then by description
+        and keywords, and return the IDs of the matching collections. Those
+        matching by title or id come first, each group ordered by the match
+        position.
         """
         search_term = search_term.lower()
-        matches = [
-            (i, s.find(search_term)) for (i, s) in enumerate(self.search_strings)
-        ]
-        valid_matches = [(i, pos) for (i, pos) in matches if pos >= 0]
-        sorted_matches = sorted(valid_matches, key=lambda x: x[1])
-        return [self.collection_ids[idx] for idx, _ in sorted_matches]
+        matches = []
+        for idx, (title_and_id, details) in enumerate(self.search_strings):
+            pos = title_and_id.find(search_term)
+            if pos >= 0:
+                matches.append((0, pos, idx))
+                continue
+            pos = details.find(search_term)
+            if pos >= 0:
+                matches.append((1, pos, idx))
+        return [self.collection_ids[idx] for _, _, idx in sorted(matches)]
 
     def perform_fetch_results(self, search: str, feedback: QgsFeedback):
         result_limit = self.settings.filters[self.type.value]["limit"].value()
