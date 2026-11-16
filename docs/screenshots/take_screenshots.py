@@ -246,18 +246,6 @@ def stac_filter(catalog_id: str):
     )
 
 
-def answer_welcome_dialog():
-    """At its first launch, the plugin asks which local catalogues to search:
-    all of them, the downloads show them."""
-    plugin = plugins["swiss_locator"]
-    if not wait_until(lambda: plugin.welcome_dialog, timeout=20_000):
-        log("The welcome dialog of the plugin did not open")
-        return
-    dialog = plugin.welcome_dialog
-    dialog.local_catalogs.set_catalog_ids(list(dialog.local_catalogs.check_boxes))
-    dialog.accept()
-
-
 def set_view(view):
     """Centre the map on a point of EPSG:2056, at a scale."""
     x, y, scale = view
@@ -723,7 +711,6 @@ def main():
     window.showNormal()
     window.resize(WINDOW_SIZE)
     window.move(0, 0)
-    answer_welcome_dialog()
     for dock in window.findChildren(QDockWidget):
         if dock.objectName() == "Browser":
             dock.close()
