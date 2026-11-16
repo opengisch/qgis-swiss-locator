@@ -51,9 +51,13 @@ In the panel **Swiss Locator: Filter files to download**:
    bookmark.
 2. **Request file list**, then choose the **file type**, the **resolution**
    and the **timestamp**. The footprints of the files are drawn on the map.
-3. **Download**.
+3. Choose the files: check or uncheck them in the list, or all at once with
+   **Select all** or **Deselect all**. With **Select on map**, click a
+   footprint to select or deselect its files, or drag a rectangle to select
+   the files it touches; hold ++ctrl++ while dragging to deselect them.
+4. **Download**.
 
-![The files of swissALTI3D around Lausanne](../assets/screenshots/downloads-filter.png)
+![The files of swissALTI3D around Lausanne, those in the lake deselected](../assets/screenshots/downloads-filter.png)
 
 The number of files listed directly in the locator bar can be set in the
 [configuration](../configuration.md).

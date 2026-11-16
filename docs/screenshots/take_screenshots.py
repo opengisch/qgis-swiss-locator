@@ -107,6 +107,8 @@ FEATURE_LAYERS = [
 ]
 # The line of fake_lidar.py
 PROFILE_LINE = ((2626300.0, 1197200.0), (2627500.0, 1198000.0))
+# Tiles of swissALTI3D in the lake, south of Lausanne: xmin, ymin, xmax, ymax
+LAKE_GENEVA = (2533300, 1145700, 2542700, 1148900)
 # The table of the geocoding example: there is no Seftigenstrasse 355, and
 # there are many Bahnhofstrasse 1
 ADDRESSES = (
@@ -395,6 +397,22 @@ def close_locator():
     wait(300)
 
 
+def drag_on_map(rectangle, modifier=Qt.KeyboardModifier.NoModifier):
+    """Drag the mouse over the map, across a rectangle in map coordinates."""
+    canvas = iface.mapCanvas()
+    viewport = canvas.viewport()
+    xmin, ymin, xmax, ymax = rectangle
+    start, end = (
+        canvas.getCoordinateTransform().transform(QgsPointXY(x, y)).toQPointF()
+        for x, y in ((xmin, ymax), (xmax, ymin))
+    )
+    QTest.mousePress(viewport, Qt.MouseButton.LeftButton, modifier, start.toPoint())
+    for step in range(1, 11):
+        QTest.mouseMove(viewport, (start + (end - start) * step / 10).toPoint())
+    QTest.mouseRelease(viewport, Qt.MouseButton.LeftButton, modifier, end.toPoint())
+    wait(300)
+
+
 # --------------------------------------------------------------------------
 # The shots
 # --------------------------------------------------------------------------
@@ -519,7 +537,11 @@ def shot_downloads():
         lambda: not dock.findChild(QPushButton, "guiRequestCancelBtn").isVisible()
     )
     wait_for_map()
-    save("downloads-filter", markers=[center_of(request)])
+    # Deselect the files in the lake: Ctrl and drag a rectangle on the map
+    dock.mapSelectBtn.click()
+    drag_on_map(LAKE_GENEVA, Qt.KeyboardModifier.ControlModifier)
+    wait_for_map()
+    save("downloads-filter", markers=[center_of(dock.mapSelectBtn)])
     dock.close()
 
 

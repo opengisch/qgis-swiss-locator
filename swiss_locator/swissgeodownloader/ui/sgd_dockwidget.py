@@ -20,10 +20,11 @@
 """
 
 import os
+import sys
 
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import pyqtSignal
-from qgis.PyQt.QtWidgets import QFileDialog, QMessageBox
+from qgis.PyQt.QtWidgets import QFileDialog, QMessageBox, QPushButton
 from qgis.core import (
     QgsRasterLayer,
     QgsVectorLayer,
@@ -31,6 +32,7 @@ from qgis.core import (
     QgsApplication,
     QgsCoordinateReferenceSystem,
     QgsCoordinateTransform,
+    QgsPointXY,
     QgsProject,
     QgsRectangle,
 )
@@ -51,6 +53,7 @@ from swiss_locator.swissgeodownloader.api.response_objects import (
 )
 from swiss_locator.swissgeodownloader.api.stac_catalog import API_EPSG, ApiStacCatalog
 from swiss_locator.swissgeodownloader.ui.bbox_drawer import BboxPainter
+from swiss_locator.swissgeodownloader.ui.bbox_select_tool import BboxSelectTool
 from swiss_locator.swissgeodownloader.ui.collection_list_table import (
     CollectionListTable,
 )
@@ -139,6 +142,31 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
 
         self.fileListTbl = FileListTable(self, self.guiFileListLayout)
         self.fileListTbl.sig_selectionChanged.connect(self.onFileSelectionChange)
+
+        # Map tool to select and deselect files by their bbox on the map
+        self.mapSelectBtn = QPushButton(
+            QgsApplication.getThemeIcon("/mActionSelectRectangle.svg"),
+            self.tr("Select on map"),
+            self,
+        )
+        # Qt maps the Ctrl modifier to the Cmd key on macOS
+        deselectKey = "⌘" if sys.platform == "darwin" else "Ctrl"
+        self.mapSelectBtn.setToolTip(
+            self.tr(
+                "Select the files to download on the map:\n"
+                "• click a footprint to select or deselect its files\n"
+                "• drag a rectangle to select the files it touches\n"
+                "• hold {} while dragging to deselect them"
+            ).format(deselectKey)
+        )
+        self.mapSelectBtn.setCheckable(True)
+        self.mapSelectBtn.clicked.connect(self.onMapSelectBtnClicked)
+        self.fileListTbl.buttonLayout.insertWidget(1, self.mapSelectBtn)
+        self.mapSelectTool = BboxSelectTool(self.canvas)
+        # Unchecks the button when another map tool is chosen
+        self.mapSelectTool.setButton(self.mapSelectBtn)
+        self.mapSelectTool.sig_clicked.connect(self.onMapClickedForSelection)
+        self.mapSelectTool.sig_rectangle.connect(self.onMapRectangleForSelection)
 
         # Create spinners to indicate data loading
         # Spinner for getCollections request
@@ -487,6 +515,7 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
 
     def onUnselectCollection(self):
         self.currentCollection = None
+        self.stopMapSelect()
 
         self.onReceiveFileList([])
         self.guiGroupExtent.setDisabled(True)
@@ -701,11 +730,46 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
                     # Only reset one filter at a time
                     break
 
-    def onFileSelectionChange(self, fileId, isChecked):
-        self.fileListFiltered[fileId].selected = isChecked
-        self.bboxPainter.switchSelectState(fileId)
+    def onFileSelectionChange(self, fileIds: list[str], isChecked: bool):
+        for fileId in fileIds:
+            self.fileListFiltered[fileId].selected = isChecked
+            self.bboxPainter.setSelectState(fileId, isChecked)
         self.updateSummary()
         self.updateDownloadBtnState()
+
+    def onMapSelectBtnClicked(self, checked: bool):
+        if checked:
+            self.canvas.setMapTool(self.mapSelectTool)
+        else:
+            self.stopMapSelect()
+
+    def stopMapSelect(self):
+        if self.canvas.mapTool() is self.mapSelectTool:
+            self.iface.actionPan().trigger()
+
+    def onMapClickedForSelection(self, point: QgsPointXY):
+        # Several files can share the same bbox (e.g. one per year)
+        fileIds = [
+            fileId
+            for fileId in self.bboxPainter.fileIdsAt(point)
+            if fileId in self.fileListFiltered
+        ]
+        if not fileIds:
+            return
+        select = not all(self.fileListFiltered[fileId].selected for fileId in fileIds)
+        self.fileListTbl.setChecked(fileIds, select)
+        self.fileListTbl.showFile(fileIds[0])
+
+    def onMapRectangleForSelection(self, rectangle: QgsRectangle, deselect: bool):
+        fileIds = [
+            fileId
+            for fileId in self.bboxPainter.fileIdsIntersecting(rectangle)
+            if fileId in self.fileListFiltered
+        ]
+        if not fileIds:
+            return
+        self.fileListTbl.setChecked(fileIds, not deselect)
+        self.fileListTbl.showFile(fileIds[0])
 
     def updateSummary(self):
         if self.fileListFiltered:
@@ -862,6 +926,7 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
             )
 
     def cleanCanvas(self):
+        self.stopMapSelect()
         if self.bboxPainter:
             self.bboxPainter.removeAll()
 

@@ -46,17 +46,23 @@ di filtro.
 
 ![Ricerca di swissALTI3D](../assets/screenshots/downloads-filter-search.png)
 
-Nel pannello **Swiss Locator: Filter files to download**:
+Nel pannello **Swiss Locator: Filtra i file da scaricare**:
 
-1. **Extent**: per impostazione predefinita, i file che coprono la vista della
-   mappa. Può essere anche l'estensione completa del set di dati, l'estensione
-   di un layer, di una mappa di un layout di stampa o di un segnalibro.
-2. Fare clic su **Request file list**, poi scegliere il tipo di file
-   (**File type**), la risoluzione (**Resolution [m]**) e la data
-   (**Timestamp**). I contorni dei file vengono disegnati sulla mappa.
-3. Fare clic su **Download**.
+1. **Estensione**: per impostazione predefinita, i file che coprono la vista
+   della mappa. Può essere anche l'estensione completa del set di dati,
+   l'estensione di un layer, di una mappa di un layout di stampa o di un
+   segnalibro.
+2. Fare clic su **Richiedi l'elenco dei file**, poi scegliere il
+   **Tipo di file**, la **Risoluzione [m]** e la **Data**. I contorni dei file
+   vengono disegnati sulla mappa.
+3. Scegliere i file: selezionarli o deselezionarli nell'elenco, oppure tutti
+   insieme con **Select all** o **Deselect all**. Con **Select on map**, fare
+   clic su un contorno per selezionare o deselezionare i suoi file, oppure
+   trascinare un rettangolo per selezionare i file che tocca; tenere premuto
+   ++ctrl++ durante il trascinamento per deselezionarli.
+4. Fare clic su **Scarica**.
 
-![I file di swissALTI3D intorno a Losanna](../assets/screenshots/downloads-filter.png)
+![I file di swissALTI3D intorno a Losanna, quelli nel lago deselezionati](../assets/screenshots/downloads-filter.png)
 
 Il numero di file elencati direttamente nella barra di localizzazione può essere
 impostato nella [configurazione](../configuration.md).

@@ -56,9 +56,14 @@ Im Bedienfeld **Swiss Locator: Filtere Dateien für den Download**:
 2. Klicken Sie auf **Dateiliste anfordern** und wählen Sie dann **Dateityp**,
    **Auflösung** und **Zeitstand**. Die Umrisse der Dateien werden auf der
    Karte gezeichnet.
-3. Klicken Sie auf **Download**.
+3. Wählen Sie die Dateien: Haken Sie sie in der Liste an oder ab, oder alle
+   auf einmal mit **Select all** oder **Deselect all**. Mit
+   **Select on map** klicken Sie auf einen Umriss, um seine Dateien aus- oder
+   abzuwählen, oder ziehen ein Rechteck auf, um die Dateien auszuwählen, die
+   es berührt; halten Sie dabei ++ctrl++ gedrückt, um sie abzuwählen.
+4. Klicken Sie auf **Download**.
 
-![Die Dateien von swissALTI3D um Lausanne](../assets/screenshots/downloads-filter.png)
+![Die Dateien von swissALTI3D um Lausanne, die im See abgewählt](../assets/screenshots/downloads-filter.png)
 
 Wie viele Dateien direkt in der Suchleiste aufgelistet werden, lässt sich in
 der [Konfiguration](../configuration.md) einstellen.
