@@ -21,7 +21,12 @@ di QGIS, come su [map.geo.admin.ch](https://map.geo.admin.ch), per trovare:
 Il plugin disegna inoltre il terreno di swissALTI3D nei **profili altimetrici**
 di QGIS, e [geocodifica](geocoding.md) **tabelle di indirizzi** con Processing.
 
-![I percorsi escursionistici del geoportale, aggiunti dalla barra di localizzazione](assets/screenshots/layers-result.png)
+In un minuto: una mappa di base, un luogo e un profilo altimetrico, poi i dati
+lidar di swissSURFACE3D, scelti sulla carta, scaricati e mostrati in 3D.
+
+<video controls muted playsinline preload="none" width="100%"
+       poster="assets/images/demo.jpg"
+       src="https://github.com/user-attachments/assets/e1571d17-ff0a-41a3-ae48-93357aeb86c0"></video>
 
 ## Per iniziare
 
