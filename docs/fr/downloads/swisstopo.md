@@ -57,9 +57,14 @@ Dans le panneau **Swiss Locator : Filtrer les fichiers à télécharger** :
 2. Cliquez sur **Demander la liste des fichiers**, puis choisissez le
    **Type de données**, la **Résolution [m]** et la **Date**. Les emprises des
    fichiers sont dessinées sur la carte.
-3. Cliquez sur **Télécharger**.
+3. Choisissez les fichiers : cochez-les ou décochez-les dans la liste, ou tous
+   à la fois avec **Select all** ou **Deselect all**. Avec **Select on map**,
+   cliquez sur une emprise pour sélectionner ou désélectionner ses fichiers,
+   ou tracez un rectangle pour sélectionner les fichiers qu'il touche ; tenez
+   ++ctrl++ enfoncée en le traçant pour les désélectionner.
+4. Cliquez sur **Télécharger**.
 
-![Les fichiers de swissALTI3D autour de Lausanne](../assets/screenshots/downloads-filter.png)
+![Les fichiers de swissALTI3D autour de Lausanne, ceux du lac désélectionnés](../assets/screenshots/downloads-filter.png)
 
 Le nombre de fichiers listés directement dans la barre de localisation peut
 être défini dans la [configuration](../configuration.md).
