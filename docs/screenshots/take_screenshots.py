@@ -304,8 +304,6 @@ def base_map_background(view):
     iface.mapCanvas().refresh()
     search("chb ")
     trigger(find_result(data="ch.swisstopo.basemap.vt"))
-    # The first layer gives the project its CRS, Web Mercator for the tiles
-    QgsProject.instance().setCrs(QgsCoordinateReferenceSystem("EPSG:2056"))
     # The welcome page hides the map of an empty project, the map must be
     # shown at its actual size before zooming
     wait(1000)

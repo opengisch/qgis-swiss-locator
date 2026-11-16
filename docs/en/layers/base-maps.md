@@ -10,6 +10,11 @@ Add a base map of swisstopo, as vector tiles:
 
 Vector tiles stay sharp at any scale.
 
+Added to an empty project, a base map puts the project in LV95 (EPSG:2056),
+rather than in Web Mercator, the CRS of the tiles. When **Use a default CRS**
+is chosen in **Settings ▸ Options ▸ CRS and Transforms ▸ CRS Handling**, the
+project keeps that CRS.
+
 ## Example
 
 Type `chb` followed by a space: the three base maps are listed.
