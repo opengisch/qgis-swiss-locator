@@ -137,6 +137,11 @@
     </message>
     <message>
         <location filename="../ui/config.ui"/>
+        <source>Local data catalogs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../ui/config.ui"/>
         <source>Maximum number of files per result</source>
         <translation>Nombre max. de fichiers par résultat</translation>
     </message>
@@ -324,6 +329,19 @@
         <location filename="../swissgeodownloader/api/api_caller_task.py"/>
         <source>file list received</source>
         <translation>liste des fichiers reçue</translation>
+    </message>
+</context>
+<context>
+    <name>LocalCatalogsWidget</name>
+    <message>
+        <location filename="../gui/local_catalogs_widget.py"/>
+        <source>viageo.ch (canton of Vaud and its municipalities)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/local_catalogs_widget.py"/>
+        <source>Basel-Stadt (geo.bs.ch)</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -747,6 +765,44 @@ Plus d'informations :
         <location filename="../core/filters/swiss_locator_filter_wmts.py"/>
         <source>Swiss Geoportal WMTS Layers</source>
         <translation>Couches WMTS du géoportail suisse</translation>
+    </message>
+</context>
+<context>
+    <name>WelcomeDialog</name>
+    <message>
+        <location filename="../gui/welcome_dialog.py"/>
+        <source>Swiss Locator</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/welcome_dialog.py"/>
+        <source>Welcome to Swiss Locator</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/welcome_dialog.py"/>
+        <source>Search the geodata of Switzerland from the locator bar of QGIS: places, layers, features and files to download.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/welcome_dialog.py"/>
+        <source>Local data catalogs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/welcome_dialog.py"/>
+        <source>On top of the files of the Swiss Geoportal, search and download those of local catalogs:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/welcome_dialog.py"/>
+        <source>To change these choices later, open the settings of the plugin from Settings ▸ Options ▸ Locator.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/welcome_dialog.py"/>
+        <source>Open Settings</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
