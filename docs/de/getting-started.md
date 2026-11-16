@@ -6,6 +6,13 @@
 suchen Sie nach *Swiss Locator* und klicken Sie auf **Erweiterung installieren**.
 Das Plugin benötigt QGIS 3.44 oder neuer, QGIS 4 inbegriffen.
 
+Beim ersten Start fragt das Plugin, welche lokalen Datenkataloge es zusätzlich
+zu jenem des Geoportals durchsuchen soll: [viageo.ch](downloads/viageo.md) für
+den Kanton Waadt und seine Gemeinden, und [Basel-Stadt](downloads/basel-stadt.md).
+Aktivieren Sie die gewünschten und klicken Sie auf **OK**, oder auf
+**Open Settings** für die [Konfiguration](configuration.md#in-the-plugin) des
+Plugins, wo sich die Auswahl später ändern lässt.
+
 ## Suchen
 
 Die Suchleiste befindet sich unten links im QGIS-Fenster, ihr Feld zeigt

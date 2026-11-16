@@ -6,6 +6,13 @@ Dans QGIS, ouvrez **Extensions ▸ Installer/Gérer les extensions**, recherchez
 *Swiss Locator* et cliquez sur **Installer l'extension**. L'extension nécessite
 QGIS 3.44 ou plus récent, QGIS 4 compris.
 
+À son premier lancement, l'extension demande quels catalogues de données locaux
+rechercher, en plus de celui du géoportail : [viageo.ch](downloads/viageo.md)
+pour le canton de Vaud et ses communes, et [Bâle-Ville](downloads/basel-stadt.md).
+Cochez ceux qu'il vous faut et cliquez sur **OK**, ou sur **Open Settings** pour
+la [configuration](configuration.md#in-the-plugin) de l'extension, où le choix
+peut être modifié par la suite.
+
 ## Rechercher
 
 La barre de localisation se trouve en bas à gauche de la fenêtre de QGIS.

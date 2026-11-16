@@ -32,7 +32,7 @@ from qgis.PyQt.QtCore import (
 )
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply, QNetworkAccessManager
-from qgis.PyQt.QtWidgets import QLabel, QWidget, QTabWidget
+from qgis.PyQt.QtWidgets import QLabel, QWidget
 from qgis.core import (
     QgsMessageLog,
     Qgis,
@@ -92,6 +92,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
     HEADERS = {b"User-Agent": USER_AGENT}
 
     message_emitted = pyqtSignal(str, str, Qgis.MessageLevel, QWidget)
+    # The configuration of the plugin was saved
+    config_changed = pyqtSignal()
 
     def __init__(
         self, filter_type: FilterType, iface: QgisInterface = None, crs: str = None
@@ -189,12 +191,9 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
     def openConfigWidget(self, parent=None):
         dlg = ConfigDialog(parent)
-        wid = dlg.findChild(
-            QTabWidget, "tabWidget", Qt.FindChildOption.FindDirectChildrenOnly
-        )
-        tab = wid.findChild(QWidget, self.type.value)
-        wid.setCurrentWidget(tab)
-        dlg.exec()
+        dlg.set_current_tab(self.type)
+        if dlg.exec():
+            self.config_changed.emit()
 
     def create_transforms(self):
         # this should happen in the main thread

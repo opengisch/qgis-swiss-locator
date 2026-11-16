@@ -12,8 +12,9 @@ with its prefix:
   have none).
 
 Downloading data has one search per catalogue, with the same prefix:
-**Swiss Geoportal STAC file download**, **viageo.ch STAC file download** and
-**Basel-Stadt STAC file download**.
+**Swiss Geoportal STAC file download**, plus **viageo.ch STAC file download**
+and **Basel-Stadt STAC file download** for the
+[local catalogues chosen](#in-the-plugin).
 
 ![The locator options of QGIS](assets/screenshots/options-locator.png)
 
@@ -46,6 +47,11 @@ Each search, but the base maps, has its tab:
 
 **Maximum number of files per result** (downloading data)
 :   A dataset with more files than this opens the filter panel instead.
+
+**Local data catalogs** (downloading data)
+:   The catalogues searched on top of that of the geoportal: viageo.ch, for the
+    canton of Vaud and its municipalities, and Basel-Stadt. The plugin asks at
+    its first launch.
 
 | Search | Priority | Results |
 |--------|----------|---------|

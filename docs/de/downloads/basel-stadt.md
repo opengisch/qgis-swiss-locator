@@ -9,6 +9,9 @@ Formaten vor, alle aufgelistet: GeoPackage, GeoJSON, FlatGeobuf, Shapefile,
 FileGDB, CSV und für manche DXF und DWG. Geben Sie zum Beispiel
 `chd defibrillatoren` ein.
 
+Die Suche läuft, sobald Basel-Stadt unter den
+[lokalen Katalogen](../configuration.md#in-the-plugin) gewählt ist.
+
 ![Die Formate der Defibrillatoren von Basel-Stadt](../assets/screenshots/downloads-basel.png)
 
 Doppelklicken Sie auf ein Format und wählen Sie einen Ordner: Die Datei, ein

@@ -30,6 +30,10 @@ STAC_CATALOGS: dict[str, type[ApiStacCatalog]] = {
     for catalog in (ApiDataGeoAdmin, ApiViageo, ApiBaselStadt)
 }
 
+# The catalogs of cantons and municipalities: the user chooses those to search
+#  in the locator, on top of data.geo.admin.ch
+LOCAL_STAC_CATALOGS: tuple[type[ApiStacCatalog], ...] = (ApiViageo, ApiBaselStadt)
+
 
 def createCatalogs(locale: str) -> dict[str, ApiStacCatalog]:
     return {catalogId: catalog(locale) for catalogId, catalog in STAC_CATALOGS.items()}

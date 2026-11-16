@@ -6,6 +6,13 @@ In QGIS, open **Plugins ▸ Manage and Install Plugins**, search for
 *Swiss Locator* and click **Install Plugin**. The plugin needs QGIS 3.44 or
 newer, QGIS 4 included.
 
+At its first launch, the plugin asks which local data catalogues to search, on
+top of that of the geoportal: [viageo.ch](downloads/viageo.md) for the canton of
+Vaud and its municipalities, and [Basel-Stadt](downloads/basel-stadt.md). Check
+those you need and click **OK**, or **Open Settings** for the
+[configuration](configuration.md#in-the-plugin) of the plugin, where the choice
+can be changed later.
+
 ## Search
 
 The locator bar is at the bottom left of the QGIS window. Click in it, or press

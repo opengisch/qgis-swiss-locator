@@ -7,6 +7,9 @@ communes : la bathymétrie des lacs, des images aériennes de 2 cm et des nuages
 de points LiDAR. Ses titres sont en français : tapez `lidar`, `orthophoto` ou
 `bathymétrie`, avec les accents.
 
+Sa recherche est lancée une fois viageo.ch choisi parmi les
+[catalogues locaux](../configuration.md#in-the-plugin).
+
 ![Les nuages de points des deux catalogues](../assets/screenshots/downloads-viageo.png)
 
 Ses résultats fonctionnent [comme ceux du géoportail](swisstopo.md) : une image

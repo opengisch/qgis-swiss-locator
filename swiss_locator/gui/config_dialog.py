@@ -29,6 +29,7 @@ from qgis.PyQt.QtWidgets import (
     QAbstractItemView,
     QComboBox,
     QSpinBox,
+    QWidget,
 )
 from qgis.PyQt.uic import loadUiType
 from qgis.core import Qgis, QgsLocatorFilter
@@ -40,6 +41,7 @@ from qgis.gui import (
     QgsSettingsIntegerSpinBoxWrapper,
 )
 
+from .local_catalogs_widget import LocalCatalogsWidget
 from .qtwebkit_conf import with_qt_web_kit
 from ..core.filters.filter_type import FilterType
 from ..core.language import get_language
@@ -68,6 +70,7 @@ class ConfigDialog(QDialog, DialogUi):
             if item.checkState() == Qt.CheckState.Checked:
                 layers_list.append(item.text())
         self.settings.feature_search_layers_list.setValue(layers_list)
+        self.settings.stac_local_catalogs.setValue(self.local_catalogs.catalog_ids())
         super().accept()
 
     def __init__(self, parent=None):
@@ -145,6 +148,10 @@ class ConfigDialog(QDialog, DialogUi):
             )
             self.wrappers.append(sbw_stac)
 
+        self.local_catalogs = LocalCatalogsWidget(self.stac_local_catalogs_group)
+        self.local_catalogs.set_catalog_ids(self.settings.stac_local_catalogs.value())
+        self.stac_local_catalogs_layout.addWidget(self.local_catalogs)
+
         self.search_line_edit.textChanged.connect(self.filter_rows)
         self.select_all_button.pressed.connect(self.select_all)
         self.unselect_all_button.pressed.connect(lambda: self.select_all(False))
@@ -188,6 +195,11 @@ class ConfigDialog(QDialog, DialogUi):
                     self.show_map_tip, self.settings.show_map_tip
                 )
             )
+
+    def set_current_tab(self, filter_type: FilterType):
+        self.tabWidget.setCurrentWidget(
+            self.tabWidget.findChild(QWidget, filter_type.value)
+        )
 
     def select_all(self, select: bool = True):
         for r in range(self.feature_search_layers_list.rowCount()):

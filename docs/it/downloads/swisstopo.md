@@ -12,6 +12,10 @@ Scaricare file e aggiungerli alla mappa, da tre cataloghi di dati:
 - [geo.bs.ch](https://www.geo.bs.ch), i geodati del Cantone di
   [Basilea Città](basel-stadt.md).
 
+Il geoportale è sempre cercato; viageo.ch e Basilea Città una volta scelti,
+al primo avvio del plugin o nella sua
+[configurazione](../configuration.md#in-the-plugin).
+
 La ricerca considera i nomi dei set di dati. Ogni catalogo elenca i suoi
 risultati sotto il proprio nome, ed è una ricerca a sé nelle
 [opzioni di QGIS](../configuration.md#in-the-options-of-qgis): deselezionarne uno
