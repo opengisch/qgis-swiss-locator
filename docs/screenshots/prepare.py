@@ -10,6 +10,7 @@ release and the data published on GitHub Pages, and sets the language.
 import io
 import json
 import os
+import re
 import shutil
 import sys
 import urllib.request
@@ -24,6 +25,7 @@ LATEST_RELEASE = (
     "https://api.github.com/repos/opengisch/qgis-swiss-locator/releases/latest"
 )
 LOCALES = {"en": "en_US", "fr": "fr_CH", "de": "de_CH", "it": "it_CH"}
+WELCOME_DIALOG = os.path.join(REPO, "swiss_locator", "gui", "welcome_dialog.py")
 
 
 def get(url: str) -> bytes:
@@ -61,9 +63,16 @@ def install_translations(plugin_dir: str):
     print(f"Translations of release {release['tag_name']}")
 
 
+def welcome_dialog_version() -> int:
+    with open(WELCOME_DIALOG) as f:
+        return int(re.search(r"^WELCOME_DIALOG_VERSION = (\d+)$", f.read(), re.M)[1])
+
+
 def write_settings(profile_dir: str, lang: str):
     """The language, the plugin, and a new project at launch rather than the
-    welcome page, which cannot be grabbed under Xvfb."""
+    welcome page, which cannot be grabbed under Xvfb. The plugin searches all
+    the local catalogues, and does not ask at launch: their searches are
+    registered with the others."""
     settings_dir = os.path.join(profile_dir, "QGIS")
     os.makedirs(settings_dir, exist_ok=True)
     locale = LOCALES[lang]
@@ -76,6 +85,10 @@ globalLocale={locale}
 
 [PythonPlugins]
 swiss_locator=true
+
+[plugins]
+swiss_locator_plugin\\welcome_dialog_version={welcome_dialog_version()}
+swiss_locator_plugin\\stac_local_catalogs=viageo, baselstadt
 
 [qgis]
 checkVersion=false

@@ -132,8 +132,8 @@
     </message>
     <message>
         <location filename="../ui/config.ui"/>
-        <source>STAC file download</source>
-        <translation>STAC Datei Download</translation>
+        <source>STAC catalogs</source>
+        <translation>STAC-Kataloge</translation>
     </message>
     <message>
         <location filename="../ui/config.ui"/>

@@ -308,7 +308,7 @@
      </widget>
      <widget class="QWidget" name="stac">
       <attribute name="title">
-       <string>STAC file download</string>
+       <string>STAC catalogs</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_8">
        <item row="0" column="0">
