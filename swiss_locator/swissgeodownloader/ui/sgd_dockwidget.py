@@ -93,7 +93,6 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
         self.iface = interface
         self.locale = locale
         self.canvas = self.iface.mapCanvas()
-        self.annManager = QgsProject.instance().annotationManager()
 
         # Initialize variables
         self.collectionList: dict[str, SgdStacCollection] = {}
@@ -130,9 +129,7 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
         self.guiExtentWidget.setOutputExtentFromCurrent()
 
         # Initialize class to draw bbox of files in map
-        self.bboxPainter = BboxPainter(
-            self.canvas, self.transformApi2Proj, self.annManager
-        )
+        self.bboxPainter = BboxPainter(self.canvas, self.transformApi2Proj)
 
         # Collection and file list table
         self.collectionListTbl = CollectionListTable(self, self.guiDatasets)
