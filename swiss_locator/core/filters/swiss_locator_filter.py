@@ -47,10 +47,11 @@ from qgis.core import (
     QgsLocatorContext,
     QgsFeedback,
     QgsRasterLayer,
+    QgsSettings,
     QgsVectorTileLayer,
     QgsVectorTileUtils,
 )
-from qgis.gui import QgsRubberBand, QgisInterface
+from qgis.gui import QgsGui, QgsRubberBand, QgisInterface
 
 from swiss_locator import DEBUG
 from swiss_locator.core.constants import (
@@ -482,6 +483,7 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 empty_project = not QgsProject.instance().mapLayers()
 
                 if empty_project:
+                    self.keep_swiss_crs_in_empty_project()
                     # Set the Swiss extent in EPSG:3857 (VT's CRS)
                     extent = QgsRectangle(624991, 5725825, 1209826, 6089033)
                     ch_layer.setExtent(extent)
@@ -535,6 +537,32 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 self.current_timer.timeout.connect(self.clearPreviousResults)
                 self.current_timer.setSingleShot(True)
                 self.current_timer.start(5000)
+
+    def keep_swiss_crs_in_empty_project(self):
+        """Keep the project in the Swiss CRS when layers in another CRS (the
+        base maps are in EPSG:3857) are the first added to an empty project.
+
+        Unless the user set a CRS for new projects, QGIS gives an empty project
+        the CRS of the first layer added, when the layer tree canvas bridge
+        updates the canvas, after the layers are added: the CRS is set then.
+        """
+        behavior = QgsSettings().enumValue(
+            "projections/newProjectCrsBehavior",
+            QgsGui.ProjectCrsBehavior.UseCrsOfFirstLayerAdded,
+            QgsSettings.Section.App,
+        )
+        if self.iface is None or behavior == QgsGui.ProjectCrsBehavior.UsePresetCrs:
+            return
+
+        # Read now: self.crs follows the canvas, which takes the CRS of the layer
+        crs = QgsCoordinateReferenceSystem(f"EPSG:{self.crs}")
+        bridge = self.iface.layerTreeCanvasBridge()
+
+        def set_crs(*_):
+            bridge.canvasLayersChanged.disconnect(set_crs)
+            QgsProject.instance().setCrs(crs)
+
+        bridge.canvasLayersChanged.connect(set_crs)
 
     def show_map_tip(self, layer, feature_id, point):
         if layer and feature_id:
