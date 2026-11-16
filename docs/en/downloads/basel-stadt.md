@@ -8,6 +8,9 @@ routes, defibrillators and more. Each dataset comes in several formats, all
 listed: GeoPackage, GeoJSON, FlatGeobuf, Shapefile, FileGDB, CSV, and for some
 DXF and DWG. Its titles are in German: type `chd defibrillatoren`.
 
+Its search runs once Basel-Stadt is chosen among the
+[local catalogues](../configuration.md#in-the-plugin).
+
 ![The formats of the defibrillators of Basel-Stadt](../assets/screenshots/downloads-basel.png)
 
 Double-click a format and choose a folder: the file, an archive (ZIP), is

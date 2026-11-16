@@ -60,6 +60,14 @@ class Settings:
             cls.feature_search_layers_list = QgsSettingsEntryStringList(
                 "feature_search_layers_list", settings_node, []
             )
+            # The ids of the local STAC catalogs searched, see LOCAL_STAC_CATALOGS
+            cls.stac_local_catalogs = QgsSettingsEntryStringList(
+                "stac_local_catalogs", settings_node, []
+            )
+            # The version of the welcome dialog last shown, see WelcomeDialog
+            cls.welcome_dialog_version = QgsSettingsEntryInteger(
+                "welcome_dialog_version", settings_node, 0
+            )
 
             filters = {
                 FilterType.Location.value: {

@@ -7,6 +7,9 @@ its municipalities: the bathymetry of the lakes, aerial images of 2 cm and
 LiDAR point clouds. Its titles are in French: type `lidar`, `orthophoto` or
 `bathymétrie`, with the accents.
 
+Its search runs once viageo.ch is chosen among the
+[local catalogues](../configuration.md#in-the-plugin).
+
 ![The point clouds of both catalogues](../assets/screenshots/downloads-viageo.png)
 
 Its results work [as those of the geoportal](swisstopo.md): an aerial image or a

@@ -12,6 +12,10 @@ hinzu:
 - [geo.bs.ch](https://www.geo.bs.ch), den Geodaten des Kantons
   [Basel-Stadt](basel-stadt.md).
 
+Das Geoportal wird immer durchsucht, viageo.ch und Basel-Stadt sobald sie
+gewählt sind: beim ersten Start des Plugins oder in seiner
+[Konfiguration](../configuration.md#in-the-plugin).
+
 Die Suche berücksichtigt die Namen der Datensätze. Jeder Katalog listet seine
 Resultate unter seinem eigenen Namen auf und ist eine eigene Suche in den
 [Optionen von QGIS](../configuration.md#in-the-options-of-qgis): Deaktivieren Sie

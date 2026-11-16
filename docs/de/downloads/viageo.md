@@ -7,6 +7,9 @@ seiner Gemeinden: die Bathymetrie der Seen, Luftbilder mit 2 cm Auflösung und
 LiDAR-Punktwolken. Die Titel sind französisch: Geben Sie `lidar`, `orthophoto`
 oder `bathymétrie` ein, mit den Akzenten.
 
+Seine Suche läuft, sobald viageo.ch unter den
+[lokalen Katalogen](../configuration.md#in-the-plugin) gewählt ist.
+
 ![Die Punktwolken beider Kataloge](../assets/screenshots/downloads-viageo.png)
 
 Die Resultate funktionieren [wie die des Geoportals](swisstopo.md): Ein Luftbild

@@ -2,6 +2,7 @@ import json
 import os
 from copy import deepcopy
 
+from qgis.PyQt import sip
 from qgis.PyQt.QtCore import pyqtSignal
 from qgis.core import (
     QgsTask,
@@ -124,6 +125,9 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
     def receive_stac_collections(
         self, exception=None, stac_collections: dict[str, SgdStacCollection] = None
     ):
+        if sip.isdeleted(self):
+            # Deregistered meanwhile: its catalog is no longer searched
+            return
         if exception or not stac_collections:
             self.info(
                 self.tr("Not able to download the STAC collections of {}").format(

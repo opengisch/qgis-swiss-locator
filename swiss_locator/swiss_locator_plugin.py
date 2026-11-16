@@ -17,14 +17,22 @@
 """
 
 import os
-from functools import partial
 
-from qgis.PyQt.QtCore import QCoreApplication, QLocale, QSettings, QTranslator, Qt
-from qgis.PyQt.QtWidgets import QWidget
+from qgis.PyQt.QtCore import (
+    QCoreApplication,
+    QLocale,
+    QSettings,
+    QTimer,
+    QTranslator,
+    Qt,
+)
+from qgis.PyQt.QtWidgets import QApplication, QDialog, QWidget
 from qgis.core import Qgis, QgsApplication, QgsMessageLog, NULL, QgsSettingsTree
 from qgis.gui import QgsDockWidget, QgisInterface, QgsMessageBarItem
 
+from swiss_locator.core.filters.filter_type import FilterType
 from swiss_locator.core.filters.opendata_swiss import WMS_LAYERS_INDEX
+from swiss_locator.core.filters.swiss_locator_filter import SwissLocatorFilter
 from swiss_locator.core.filters.swiss_locator_filter_feature import (
     SwissLocatorFilterFeature,
 )
@@ -40,9 +48,13 @@ from swiss_locator.core.filters.swiss_locator_filter_vector_tiles import (
 )
 from swiss_locator.core.filters.swiss_locator_filter_wmts import SwissLocatorFilterWMTS
 from swiss_locator.core.language import get_language
+from swiss_locator.core.settings import PLUGIN_NAME, Settings
+from swiss_locator.gui.config_dialog import ConfigDialog
+from swiss_locator.gui.welcome_dialog import WelcomeDialog
 from swiss_locator.map_geo_admin.layers import SEARCHABLE_LAYERS
 from swiss_locator.processing.provider import SwissLocatorProcessingProvider
 from swiss_locator.swissgeodownloader.api.catalogs import STAC_CATALOGS
+from swiss_locator.swissgeodownloader.api.datageoadmin import ApiDataGeoAdmin
 from swiss_locator.swissgeodownloader.ui.sgd_dockwidget import (
     SwissGeoDownloaderDockWidget,
 )
@@ -52,8 +64,6 @@ try:
 except ImportError:
     # Should fail only for QGIS < 3.26, where profiles weren't available
     SwissProfileSource = None
-
-from swiss_locator.core.settings import PLUGIN_NAME
 
 
 class SwissLocatorPlugin:
@@ -69,8 +79,10 @@ class SwissLocatorPlugin:
         self.translator.load(qgis_locale, "swiss_locator", "_", locale_path)
         QCoreApplication.installTranslator(self.translator)
 
-        self.locator_filters = []
+        self.settings = Settings()
+        self.locator_filters: list[SwissLocatorFilter] = []
         self.stac_filter_widget: QgsDockWidget | None = None
+        self.welcome_dialog: WelcomeDialog | None = None
         self.provider: SwissLocatorProcessingProvider | None = None
 
         if Qgis.QGIS_VERSION_INT >= 33700:
@@ -98,18 +110,9 @@ class SwissLocatorPlugin:
             SwissLocatorFilterLayer,
             SwissLocatorFilterVectorTiles,
             SwissLocatorFilterFeature,
-            # One filter per catalog, so the results are grouped by source
-            *(
-                partial(SwissLocatorFilterSTAC, catalog_id=catalog_id)
-                for catalog_id in STAC_CATALOGS
-            ),
         ):
-            locatorFilter = _filter(self.iface)
-            self.iface.registerLocatorFilter(locatorFilter)
-            locatorFilter.message_emitted.connect(self.show_message)
-            if isinstance(locatorFilter, SwissLocatorFilterSTAC):
-                locatorFilter.show_filter_widget.connect(self.open_stac_filter_widget)
-            self.locator_filters.append(locatorFilter)
+            self.register_filter(_filter(self.iface))
+        self.update_stac_filters()
 
         if Qgis.QGIS_VERSION_INT >= 33700:
             QgsApplication.profileSourceRegistry().registerProfileSource(
@@ -121,14 +124,27 @@ class SwissLocatorPlugin:
                 Qgis.MessageLevel.Info,
             )
 
+        if WelcomeDialog.is_due():
+            if self.iface.mainWindow().isVisible():
+                # Enabled from the plugin manager
+                self.show_welcome_dialog()
+            else:
+                # Loaded at the launch of QGIS: once its window shows
+                self.iface.initializationCompleted.connect(self.show_welcome_dialog)
+
     def unload(self):
-        for locator_filter in self.locator_filters:
-            locator_filter.message_emitted.disconnect(self.show_message)
-            if isinstance(locator_filter, SwissLocatorFilterSTAC):
-                locator_filter.show_filter_widget.disconnect(
-                    self.open_stac_filter_widget
-                )
-            self.iface.deregisterLocatorFilter(locator_filter)
+        try:
+            self.iface.initializationCompleted.disconnect(self.show_welcome_dialog)
+        except TypeError:
+            # Not connected
+            pass
+        if self.welcome_dialog:
+            self.welcome_dialog.finished.disconnect(self.welcome_dialog_finished)
+            self.welcome_dialog.deleteLater()
+            self.welcome_dialog = None
+
+        for locator_filter in list(self.locator_filters):
+            self.deregister_filter(locator_filter)
 
         if Qgis.QGIS_VERSION_INT >= 33700:
             if Qgis.QGIS_VERSION_INT >= 39900:  # Change to 40000 from QGIS 4.0 onwards
@@ -158,6 +174,76 @@ class SwissLocatorPlugin:
             self.provider = None
 
         QgsSettingsTree.unregisterPluginTreeNode(PLUGIN_NAME)
+
+    def register_filter(self, locator_filter: SwissLocatorFilter):
+        self.iface.registerLocatorFilter(locator_filter)
+        locator_filter.message_emitted.connect(self.show_message)
+        locator_filter.config_changed.connect(self.config_changed)
+        if isinstance(locator_filter, SwissLocatorFilterSTAC):
+            locator_filter.show_filter_widget.connect(self.open_stac_filter_widget)
+        self.locator_filters.append(locator_filter)
+
+    def deregister_filter(self, locator_filter: SwissLocatorFilter):
+        locator_filter.message_emitted.disconnect(self.show_message)
+        locator_filter.config_changed.disconnect(self.config_changed)
+        if isinstance(locator_filter, SwissLocatorFilterSTAC):
+            locator_filter.show_filter_widget.disconnect(self.open_stac_filter_widget)
+        self.locator_filters.remove(locator_filter)
+        # Deletes the filter
+        self.iface.deregisterLocatorFilter(locator_filter)
+
+    def update_stac_filters(self):
+        """One filter per STAC catalog, so the results are grouped by source:
+        data.geo.admin.ch and the local catalogs chosen in the settings"""
+        catalog_ids = [
+            ApiDataGeoAdmin.CATALOG_ID,
+            *self.settings.stac_local_catalogs.value(),
+        ]
+        registered = set()
+        for locator_filter in list(self.locator_filters):
+            if isinstance(locator_filter, SwissLocatorFilterSTAC):
+                if locator_filter.catalog.CATALOG_ID in catalog_ids:
+                    registered.add(locator_filter.catalog.CATALOG_ID)
+                else:
+                    self.deregister_filter(locator_filter)
+        for catalog_id in STAC_CATALOGS:
+            if catalog_id in catalog_ids and catalog_id not in registered:
+                self.register_filter(
+                    SwissLocatorFilterSTAC(self.iface, catalog_id=catalog_id)
+                )
+
+    def config_changed(self):
+        """The configuration of the plugin was saved. It opens from the options
+        of QGIS, whose locator page holds the filters until it closes: update
+        the filters of the catalogs then."""
+        options = QApplication.activeModalWidget()
+        if isinstance(options, QDialog):
+            options.finished.connect(
+                lambda: QTimer.singleShot(0, self.update_stac_filters)
+            )
+        else:
+            self.update_stac_filters()
+
+    def show_welcome_dialog(self):
+        if self.welcome_dialog:
+            return
+        self.welcome_dialog = WelcomeDialog(self.iface.mainWindow())
+        self.welcome_dialog.finished.connect(self.welcome_dialog_finished)
+        self.welcome_dialog.open()
+
+    def welcome_dialog_finished(self):
+        open_settings = self.welcome_dialog.open_settings
+        self.welcome_dialog.deleteLater()
+        self.welcome_dialog = None
+        self.update_stac_filters()
+        if open_settings:
+            QTimer.singleShot(0, self.open_config_dialog)
+
+    def open_config_dialog(self):
+        dialog = ConfigDialog(self.iface.mainWindow())
+        dialog.set_current_tab(FilterType.STAC)
+        if dialog.exec():
+            self.update_stac_filters()
 
     def show_message(
         self, title: str, msg: str, level: Qgis.MessageLevel, widget: QWidget = None

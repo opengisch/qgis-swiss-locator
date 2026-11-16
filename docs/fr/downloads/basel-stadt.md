@@ -9,6 +9,9 @@ existe en plusieurs formats, tous listés : GeoPackage, GeoJSON, FlatGeobuf,
 Shapefile, FileGDB, CSV, et pour certains DXF et DWG. Ses titres sont en
 allemand : tapez `chd defibrillatoren`.
 
+Sa recherche est lancée une fois Bâle-Ville choisi parmi les
+[catalogues locaux](../configuration.md#in-the-plugin).
+
 ![Les formats des défibrillateurs de Bâle-Ville](../assets/screenshots/downloads-basel.png)
 
 Double-cliquez sur un format et choisissez un dossier : le fichier, une archive

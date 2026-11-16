@@ -12,12 +12,13 @@ elencata con il suo prefisso:
   ne hanno).
 
 Il download di dati ha una ricerca per catalogo, con lo stesso prefisso:
-**Swiss Geoportal STAC file download**,
-**viageo.ch STAC file download** e **Basel-Stadt STAC file download**.
+**Swiss Geoportal STAC file download**, più
+**viageo.ch STAC file download** e **Basel-Stadt STAC file download** per i
+[cataloghi locali scelti](#in-the-plugin).
 
 ![Le opzioni del localizzatore di QGIS](assets/screenshots/options-locator.png)
 
-## Nel plugin
+## Nel plugin {#in-the-plugin}
 
 La configurazione del plugin si apre dal pulsante di una ricerca nelle opzioni
 descritte sopra.
@@ -47,6 +48,10 @@ Ogni ricerca, tranne le mappe di base, ha la sua scheda:
 **Maximum number of files per result** (download di dati)
 :   Un set di dati con un numero maggiore di file apre il pannello di filtro
     invece di elencarli.
+
+**Local data catalogs** (download di dati)
+:   I cataloghi cercati oltre a quello del geoportale: viageo.ch, per il Canton
+    Vaud e i suoi comuni, e Basilea Città. Il plugin lo chiede al primo avvio.
 
 | Ricerca | Priorità | Risultati |
 |---------|----------|-----------|

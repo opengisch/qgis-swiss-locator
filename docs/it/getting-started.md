@@ -6,6 +6,13 @@ In QGIS, aprire **Plugins ▸ Gestisci ed Installa Plugin...**, cercare
 *Swiss Locator* e fare clic su **Installa Plugin**. Il plugin richiede QGIS 3.44
 o successivo, QGIS 4 compreso.
 
+Al primo avvio, il plugin chiede quali cataloghi di dati locali cercare, oltre a
+quello del geoportale: [viageo.ch](downloads/viageo.md) per il Canton Vaud e i
+suoi comuni, e [Basilea Città](downloads/basel-stadt.md). Selezionare quelli
+desiderati e fare clic su **OK**, oppure su **Open Settings** per la
+[configurazione](configuration.md#in-the-plugin) del plugin, dove la scelta può
+essere modificata in seguito.
+
 ## Ricerca
 
 La barra di localizzazione si trova in basso a sinistra della finestra di QGIS.

@@ -12,12 +12,13 @@ dort mit ihrem Präfix aufgeführt:
   haben keine).
 
 Das Herunterladen von Daten hat eine Suche pro Katalog, mit demselben Präfix:
-**Schweizer Geoportal STAC Datei-Download**,
-**viageo.ch STAC file download** und **Basel-Stadt STAC file download**.
+**Schweizer Geoportal STAC Datei-Download**, dazu
+**viageo.ch STAC file download** und **Basel-Stadt STAC file download** für die
+[gewählten lokalen Kataloge](#in-the-plugin).
 
 ![Die Einstellungen der Suche in den Optionen von QGIS](assets/screenshots/options-locator.png)
 
-## Im Plugin
+## Im Plugin {#in-the-plugin}
 
 Die Konfiguration des Plugins öffnet sich über die Schaltfläche einer Suche in
 den obigen Optionen.
@@ -48,6 +49,11 @@ Jede Suche, ausser den Basiskarten, hat ihren eigenen Reiter:
 **Max. Anzahl von Dateien pro Ergebnis** (Daten herunterladen)
 :   Ein Datensatz mit mehr Dateien öffnet das Filterfenster, statt sie
     aufzulisten.
+
+**Local data catalogs** (Daten herunterladen)
+:   Die Kataloge, die zusätzlich zu jenem des Geoportals durchsucht werden:
+    viageo.ch für den Kanton Waadt und seine Gemeinden, und Basel-Stadt. Das
+    Plugin fragt beim ersten Start danach.
 
 | Suche | Priorität | Resultate |
 |-------|-----------|-----------|

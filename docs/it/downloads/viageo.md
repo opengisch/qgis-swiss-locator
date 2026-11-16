@@ -7,6 +7,9 @@ comuni: la batimetria dei laghi, immagini aeree di 2 cm e nuvole di punti
 LiDAR. I suoi titoli sono in francese: digitare `lidar`, `orthophoto` o
 `bathymétrie`, con gli accenti.
 
+La sua ricerca viene eseguita una volta scelto viageo.ch tra i
+[cataloghi locali](../configuration.md#in-the-plugin).
+
 ![Le nuvole di punti dei due cataloghi](../assets/screenshots/downloads-viageo.png)
 
 I suoi risultati funzionano [come quelli del geoportale](swisstopo.md): un'immagine

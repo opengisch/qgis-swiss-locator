@@ -9,6 +9,9 @@ disponibile in più formati, tutti elencati: GeoPackage, GeoJSON, FlatGeobuf,
 Shapefile, FileGDB, CSV e per alcuni DXF e DWG. I suoi titoli sono in tedesco:
 digitare `chd defibrillatoren`.
 
+La sua ricerca viene eseguita una volta scelta Basilea Città tra i
+[cataloghi locali](../configuration.md#in-the-plugin).
+
 ![I formati dei defibrillatori di Basilea Città](../assets/screenshots/downloads-basel.png)
 
 Fare doppio clic su un formato e scegliere una cartella: il file, un archivio

@@ -11,6 +11,10 @@ Download files and add them to the map, from three data catalogues:
 - [geo.bs.ch](https://www.geo.bs.ch), the geodata of the canton of
   [Basel-Stadt](basel-stadt.md).
 
+The geoportal is always searched; viageo.ch and Basel-Stadt once chosen, at
+the first launch of the plugin or in its
+[configuration](../configuration.md#in-the-plugin).
+
 The search looks in the names of the datasets. Each catalogue lists its
 results under its own name, and is a search of its own in the
 [options of QGIS](../configuration.md#in-the-options-of-qgis): uncheck one to

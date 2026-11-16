@@ -13,6 +13,10 @@ données :
 - [geo.bs.ch](https://www.geo.bs.ch), les géodonnées du canton de
   [Bâle-Ville](basel-stadt.md).
 
+Le géoportail est toujours recherché ; viageo.ch et Bâle-Ville une fois
+choisis, au premier lancement de l'extension ou dans sa
+[configuration](../configuration.md#in-the-plugin).
+
 La recherche porte sur les noms des jeux de données. Chaque catalogue liste ses
 résultats sous son propre nom, et est une recherche à part dans les
 [options de QGIS](../configuration.md#in-the-options-of-qgis) : décochez-en un pour
