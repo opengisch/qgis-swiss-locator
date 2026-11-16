@@ -1,5 +1,7 @@
 from unittest import mock
 
+from qgis.PyQt.QtCore import QCoreApplication
+from qgis.PyQt.QtWidgets import QDialog
 from qgis.testing import start_app, unittest
 from qgis.testing.mocked import get_iface
 
@@ -61,6 +63,39 @@ class TestWelcomeDialog(SettingsTestCase):
         self.assertTrue(dialog.open_settings)
         self.assertEqual(self.settings.stac_local_catalogs.value(), [VIAGEO])
         self.assertFalse(WelcomeDialog.is_due())
+
+
+@mock.patch.object(SwissLocatorFilterSTAC, "fetch_stac_collections")
+class TestWelcomeDialogShown(SettingsTestCase):
+    def setUp(self):
+        super().setUp()
+        self.plugin = SwissLocatorPlugin(get_iface())
+        # Stands for the plugin manager, which runs modal
+        self.plugin_manager = QDialog()
+        self.plugin_manager.setModal(True)
+
+    def close_plugin_manager(self):
+        self.plugin_manager.reject()
+        QCoreApplication.processEvents()
+
+    def test_shown_at_once(self, _):
+        self.plugin.show_welcome_dialog()
+        self.assertTrue(self.plugin.welcome_dialog.isVisible())
+        self.plugin.welcome_dialog.reject()
+
+    def test_waits_for_the_plugin_manager(self, _):
+        self.plugin_manager.show()
+        self.plugin.show_welcome_dialog()
+        self.assertIsNone(self.plugin.welcome_dialog)
+
+        self.close_plugin_manager()
+        self.assertTrue(self.plugin.welcome_dialog.isVisible())
+        self.plugin.welcome_dialog.reject()
+
+        # Shown once only
+        self.plugin_manager.show()
+        self.close_plugin_manager()
+        self.assertIsNone(self.plugin.welcome_dialog)
 
 
 class TestConfigDialog(SettingsTestCase):
