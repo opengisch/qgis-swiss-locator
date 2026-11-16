@@ -1,8 +1,12 @@
 # Swiss Locator
 
-Swiss Locator holt das Geoportal des Bundes in QGIS. Geben Sie in der
-Suchleiste von QGIS einen Begriff ein, wie auf
-[map.geo.admin.ch](https://map.geo.admin.ch), und finden Sie:
+Swiss Locator ist das Schweizer Taschenmesser von QGIS. Sein Hauptziel ist es,
+die Lösungen von swisstopo und einigen kantonalen Akteuren in QGIS zu bringen.
+
+Geben Sie in der
+[Suchleiste](https://docs.qgis.org/3.44/de/docs/user_manual/introduction/qgis_gui.html#locator-bar)
+von QGIS einen Begriff ein, wie auf [map.geo.admin.ch](https://map.geo.admin.ch),
+und finden Sie:
 
 - **Orte**: Kantone, Gemeinden, Bezirke, Postleitzahlen, Adressen, Parzellen
   und die Namen der Landeskarte;

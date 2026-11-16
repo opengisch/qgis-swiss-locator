@@ -1,8 +1,12 @@
 # Swiss Locator
 
-Swiss Locator amène le géoportail fédéral dans QGIS. Tapez dans la barre de
-localisation de QGIS, comme sur [map.geo.admin.ch](https://map.geo.admin.ch),
-et trouvez :
+Swiss Locator est le couteau suisse de QGIS, avec comme objectif principal
+d'amener les solutions proposées par swisstopo et certains acteurs cantonaux
+dans QGIS.
+
+Tapez dans la
+[barre de localisation](https://docs.qgis.org/3.44/fr/docs/user_manual/introduction/qgis_gui.html#locator-bar)
+de QGIS, comme sur [map.geo.admin.ch](https://map.geo.admin.ch), et trouvez :
 
 - des **lieux** : cantons, communes, districts, codes postaux, adresses,
   parcelles et noms de la carte nationale;
