@@ -19,6 +19,7 @@
  ***************************************************************************/
 """
 
+from qgis.PyQt import sip
 from qgis.PyQt.QtCore import QPointF, QSizeF
 from qgis.PyQt.QtGui import QColor, QTextDocument
 from qgis.core import (
@@ -52,6 +53,8 @@ class BboxPainter:
         self.transformer = transformer
         self.annotationManager = annotationManager
         self.bboxItems = {}
+        # The row numbers, among the annotations of the project
+        self.annotations: list[QgsTextAnnotation] = []
         self.numberIsVisible = True
         self.meanBboxWidth = 0
 
@@ -93,8 +96,8 @@ class BboxPainter:
             a.setFrameSizeMm(QSizeF(sizes[numberLen][0], 14))
             a.setFrameOffsetFromReferencePointMm(QPointF(-sizes[numberLen][1], -4))
             a.setMapPositionCrs(self.transformer.destinationCrs())
-            # Add annotation to annotation manager so it can be removed
             self.annotationManager.addAnnotation(a)
+            self.annotations.append(a)
 
         if self.meanBboxWidth and len(fileList.values()):
             self.meanBboxWidth = self.meanBboxWidth / len(fileList.values())
@@ -109,17 +112,22 @@ class BboxPainter:
             isVisible = round(mapScale) <= self.MAX_VISIBLE_SCALE
         if self.numberIsVisible is not isVisible:
             self.numberIsVisible = isVisible
-            # Switch visibility of all annotations
-            for ann in self.annotationManager.annotations():
+            for ann in self.ownAnnotations():
                 ann.setVisible(self.numberIsVisible)
+
+    def ownAnnotations(self) -> list[QgsTextAnnotation]:
+        """The row numbers still in the project, which deletes its annotations
+        when it is cleared or another one is opened."""
+        return [ann for ann in self.annotations if not sip.isdeleted(ann)]
 
     def removeAll(self):
         for item in self.bboxItems.values():
             item.reset()
             del item
         self.bboxItems = {}
-        for ann in self.annotationManager.annotations():
+        for ann in self.ownAnnotations():
             self.annotationManager.removeAnnotation(ann)
+        self.annotations = []
         self.numberIsVisible = True
         self.meanBboxWidth = 0
 
