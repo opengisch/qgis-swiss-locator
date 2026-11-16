@@ -24,20 +24,33 @@ from qgis.PyQt.QtGui import QFont, QStandardItem, QStandardItemModel
 from qgis.PyQt.QtWidgets import (
     QAbstractItemView,
     QAbstractScrollArea,
+    QHBoxLayout,
     QHeaderView,
+    QPushButton,
     QSizePolicy,
     QTableView,
 )
+from qgis.core import QgsApplication
 
 from swiss_locator.swissgeodownloader.api.response_objects import SgdAsset
 
 
 class FileListTable(QObject):
-    sig_selectionChanged = pyqtSignal(str, bool)
+    # Ids of the files whose check state changed, and their new state
+    sig_selectionChanged = pyqtSignal(list, bool)
 
     def __init__(self, parent, layout):
         super().__init__()
         self.parent = parent
+
+        # Buttons above the table, the dock widget adds its own ones here
+        self.buttonLayout = QHBoxLayout()
+        self.toggleAllBtn = QPushButton(self.parent)
+        self.toggleAllBtn.clicked.connect(self.onToggleAllClicked)
+        self.buttonLayout.addWidget(self.toggleAllBtn)
+        self.buttonLayout.addStretch()
+        layout.addLayout(self.buttonLayout)
+
         self.tbl = QTableView(self.parent)
         sizePolicy = QSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.MinimumExpanding
@@ -65,64 +78,93 @@ class FileListTable(QObject):
 
         self.model = QStandardItemModel(0, 0, self.tbl)
         self.tbl.setModel(self.model)
+        # Only a click on the checkbox toggles a file, not a click on the row
+        self.model.itemChanged.connect(self.onItemChanged)
 
-        self.tbl.hideColumn(0)
-        self.tbl.clicked.connect(self.onClick)
-
-        self.showEmptyMessage = False
+        self.items: dict[str, QStandardItem] = {}
+        # Set while check states are changed by code, to emit a single signal
+        self.settingCheckStates = False
+        self.updateToggleAllBtn()
 
     def fill(self, fileList: list[SgdAsset]):
-        self.model.clear()
-        self.showEmptyMessage = False
-
-        # Insert data into cells
-        for i, file in enumerate(fileList):
-            item0 = QStandardItem()
-            item1 = QStandardItem(file.displayName)
-            item1.setCheckState(Qt.CheckState.Checked)
-            item1.setCheckable(False)
-            item1.setEditable(False)
-
-            self.model.appendRow([item0, item1])
-            self.model.setData(self.model.index(i, 0), Qt.CheckState.Checked)
-            self.model.setData(self.model.index(i, 1), file.id)
+        self.clear()
+        for file in fileList:
+            item = QStandardItem(file.id)
+            item.setCheckable(True)
+            item.setCheckState(Qt.CheckState.Checked)
+            item.setEditable(False)
+            self.model.appendRow(item)
+            self.items[file.id] = item
 
         self.tbl.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.tbl.hideColumn(0)
+        self.updateToggleAllBtn()
 
-    def onClick(self, itemIdx):
-        if self.showEmptyMessage:
+    def onItemChanged(self, item: QStandardItem):
+        if self.settingCheckStates or not item.isCheckable():
             return
+        self.updateToggleAllBtn()
+        self.sig_selectionChanged.emit(
+            [item.text()], item.checkState() == Qt.CheckState.Checked
+        )
 
-        fileId = itemIdx.data()
-        FileIdItem = self.model.item(itemIdx.row(), itemIdx.column())
+    def allChecked(self) -> bool:
+        return all(
+            item.checkState() == Qt.CheckState.Checked for item in self.items.values()
+        )
 
-        checkStateIdx = self.model.index(itemIdx.row(), 0)
-        checkStateData = self.model.data(checkStateIdx)
+    def setChecked(self, fileIds: list[str], checked: bool):
+        state = Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked
+        changed = [
+            fileId
+            for fileId in fileIds
+            if fileId in self.items and self.items[fileId].checkState() != state
+        ]
+        if not changed:
+            return
+        self.settingCheckStates = True
+        try:
+            for fileId in changed:
+                self.items[fileId].setCheckState(state)
+        finally:
+            self.settingCheckStates = False
+        self.updateToggleAllBtn()
+        self.sig_selectionChanged.emit(changed, checked)
 
-        if checkStateData == Qt.CheckState.Checked:
-            self.model.setData(checkStateIdx, Qt.CheckState.Unchecked)
-            FileIdItem.setCheckState(Qt.CheckState.Unchecked)
-            self.sig_selectionChanged.emit(fileId, False)
+    def onToggleAllClicked(self):
+        self.setChecked(list(self.items), not self.allChecked())
+
+    def updateToggleAllBtn(self):
+        self.toggleAllBtn.setEnabled(bool(self.items))
+        if self.items and self.allChecked():
+            self.toggleAllBtn.setText(self.tr("Deselect all"))
+            self.toggleAllBtn.setIcon(
+                QgsApplication.getThemeIcon("/mActionDeselectAll.svg")
+            )
         else:
-            self.model.setData(checkStateIdx, Qt.CheckState.Checked)
-            FileIdItem.setCheckState(Qt.CheckState.Checked)
-            self.sig_selectionChanged.emit(fileId, True)
+            self.toggleAllBtn.setText(self.tr("Select all"))
+            self.toggleAllBtn.setIcon(
+                QgsApplication.getThemeIcon("/mActionSelectAll.svg")
+            )
+
+    def showFile(self, fileId: str):
+        """Selects the row of a file and scrolls to it."""
+        if fileId in self.items:
+            index = self.items[fileId].index()
+            self.tbl.selectRow(index.row())
+            self.tbl.scrollTo(index)
 
     def onEmptyList(self, message):
-        self.model.clear()
-        item0 = QStandardItem()
-        item1 = QStandardItem(message)
-        item1.setEditable(False)
+        self.clear()
+        item = QStandardItem(message)
+        item.setEditable(False)
         italicFont = QFont()
         italicFont.setItalic(True)
-        item1.setFont(italicFont)
+        item.setFont(italicFont)
 
-        self.model.appendRow([item0, item1])
-        self.showEmptyMessage = True
+        self.model.appendRow(item)
         self.tbl.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.tbl.hideColumn(0)
 
     def clear(self):
         self.model.clear()
-        self.showEmptyMessage = False
+        self.items = {}
+        self.updateToggleAllBtn()

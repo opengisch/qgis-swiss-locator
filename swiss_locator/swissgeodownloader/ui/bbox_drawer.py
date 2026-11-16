@@ -123,10 +123,15 @@ class BboxPainter:
         self.numberIsVisible = True
         self.meanBboxWidth = 0
 
-    def switchSelectState(self, fileId):
+    def setSelectState(self, fileId, selected: bool):
         if fileId in self.bboxItems:
-            bbox = self.bboxItems[fileId]
-            bbox.switchSelectState()
+            self.bboxItems[fileId].setSelected(selected)
+
+    def fileIdsAt(self, point: QgsPointXY) -> list[str]:
+        """Ids of the files whose bbox contains a point in map coordinates."""
+        return [
+            fileId for fileId, bbox in self.bboxItems.items() if bbox.isInside(point)
+        ]
 
 
 class BboxMapItem(QgsRubberBand):
@@ -160,14 +165,15 @@ class BboxMapItem(QgsRubberBand):
             self.xMin <= point.x() <= self.xMax and self.yMin <= point.y() <= self.yMax
         )
 
-    def switchSelectState(self):
-        if self.selected:
-            # Unselect
-            self.setColor(self.COLOR_BORDER_UNSELECTED)
-            self.setFillColor(self.COLOR_UNSELECT)
-        else:
-            # Select
+    def setSelected(self, selected: bool):
+        if selected == self.selected:
+            return
+        if selected:
             self.setColor(self.COLOR_BORDER)
             self.setFillColor(self.COLOR_SELECT)
-        self.selected = not self.selected
-        self.canvas.refresh()
+        else:
+            self.setColor(self.COLOR_BORDER_UNSELECTED)
+            self.setFillColor(self.COLOR_UNSELECT)
+        self.selected = selected
+        # Repaint the rubber band only, not the map layers
+        self.update()

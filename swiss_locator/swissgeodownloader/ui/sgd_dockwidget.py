@@ -22,8 +22,8 @@
 import os
 
 from qgis.PyQt import uic
-from qgis.PyQt.QtCore import pyqtSignal
-from qgis.PyQt.QtWidgets import QFileDialog, QMessageBox
+from qgis.PyQt.QtCore import Qt, pyqtSignal
+from qgis.PyQt.QtWidgets import QFileDialog, QMessageBox, QPushButton
 from qgis.core import (
     QgsRasterLayer,
     QgsVectorLayer,
@@ -31,10 +31,16 @@ from qgis.core import (
     QgsApplication,
     QgsCoordinateReferenceSystem,
     QgsCoordinateTransform,
+    QgsPointXY,
     QgsProject,
     QgsRectangle,
 )
-from qgis.gui import QgsDockWidget, QgisInterface, QgsExtentGroupBox
+from qgis.gui import (
+    QgsDockWidget,
+    QgisInterface,
+    QgsExtentGroupBox,
+    QgsMapToolEmitPoint,
+)
 
 from swiss_locator.swissgeodownloader.api.api_caller_task import (
     GetCollectionsTask,
@@ -139,6 +145,23 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
 
         self.fileListTbl = FileListTable(self, self.guiFileListLayout)
         self.fileListTbl.sig_selectionChanged.connect(self.onFileSelectionChange)
+
+        # Map tool to select and deselect files by clicking their bbox
+        self.mapSelectBtn = QPushButton(
+            QgsApplication.getThemeIcon("/mActionSelectRectangle.svg"),
+            self.tr("Select on map"),
+            self,
+        )
+        self.mapSelectBtn.setToolTip(
+            self.tr("Click a file footprint on the map to select or deselect it")
+        )
+        self.mapSelectBtn.setCheckable(True)
+        self.mapSelectBtn.clicked.connect(self.onMapSelectBtnClicked)
+        self.fileListTbl.buttonLayout.insertWidget(1, self.mapSelectBtn)
+        self.mapSelectTool = QgsMapToolEmitPoint(self.canvas)
+        # Unchecks the button when another map tool is chosen
+        self.mapSelectTool.setButton(self.mapSelectBtn)
+        self.mapSelectTool.canvasClicked.connect(self.onMapClickedForSelection)
 
         # Create spinners to indicate data loading
         # Spinner for getCollections request
@@ -487,6 +510,7 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
 
     def onUnselectCollection(self):
         self.currentCollection = None
+        self.stopMapSelect()
 
         self.onReceiveFileList([])
         self.guiGroupExtent.setDisabled(True)
@@ -701,11 +725,37 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
                     # Only reset one filter at a time
                     break
 
-    def onFileSelectionChange(self, fileId, isChecked):
-        self.fileListFiltered[fileId].selected = isChecked
-        self.bboxPainter.switchSelectState(fileId)
+    def onFileSelectionChange(self, fileIds: list[str], isChecked: bool):
+        for fileId in fileIds:
+            self.fileListFiltered[fileId].selected = isChecked
+            self.bboxPainter.setSelectState(fileId, isChecked)
         self.updateSummary()
         self.updateDownloadBtnState()
+
+    def onMapSelectBtnClicked(self, checked: bool):
+        if checked:
+            self.canvas.setMapTool(self.mapSelectTool)
+        else:
+            self.stopMapSelect()
+
+    def stopMapSelect(self):
+        if self.canvas.mapTool() is self.mapSelectTool:
+            self.iface.actionPan().trigger()
+
+    def onMapClickedForSelection(self, point: QgsPointXY, button):
+        if button != Qt.MouseButton.LeftButton:
+            return
+        # Several files can share the same bbox (e.g. one per year)
+        fileIds = [
+            fileId
+            for fileId in self.bboxPainter.fileIdsAt(point)
+            if fileId in self.fileListFiltered
+        ]
+        if not fileIds:
+            return
+        select = not all(self.fileListFiltered[fileId].selected for fileId in fileIds)
+        self.fileListTbl.setChecked(fileIds, select)
+        self.fileListTbl.showFile(fileIds[0])
 
     def updateSummary(self):
         if self.fileListFiltered:
@@ -862,6 +912,7 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
             )
 
     def cleanCanvas(self):
+        self.stopMapSelect()
         if self.bboxPainter:
             self.bboxPainter.removeAll()
 
