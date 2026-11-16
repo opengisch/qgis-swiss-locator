@@ -133,6 +133,15 @@ class BboxPainter:
             fileId for fileId, bbox in self.bboxItems.items() if bbox.isInside(point)
         ]
 
+    def fileIdsIntersecting(self, rectangle: QgsRectangle) -> list[str]:
+        """Ids of the files whose bbox intersects a rectangle in map
+        coordinates."""
+        return [
+            fileId
+            for fileId, bbox in self.bboxItems.items()
+            if bbox.rectangle.intersects(rectangle)
+        ]
+
 
 class BboxMapItem(QgsRubberBand):
     """Creates a rectangle from a QgsRubberBand in the map."""

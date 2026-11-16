@@ -20,9 +20,10 @@
 """
 
 import os
+import sys
 
 from qgis.PyQt import uic
-from qgis.PyQt.QtCore import Qt, pyqtSignal
+from qgis.PyQt.QtCore import pyqtSignal
 from qgis.PyQt.QtWidgets import QFileDialog, QMessageBox, QPushButton
 from qgis.core import (
     QgsRasterLayer,
@@ -35,12 +36,7 @@ from qgis.core import (
     QgsProject,
     QgsRectangle,
 )
-from qgis.gui import (
-    QgsDockWidget,
-    QgisInterface,
-    QgsExtentGroupBox,
-    QgsMapToolEmitPoint,
-)
+from qgis.gui import QgsDockWidget, QgisInterface, QgsExtentGroupBox
 
 from swiss_locator.swissgeodownloader.api.api_caller_task import (
     GetCollectionsTask,
@@ -57,6 +53,7 @@ from swiss_locator.swissgeodownloader.api.response_objects import (
 )
 from swiss_locator.swissgeodownloader.api.stac_catalog import API_EPSG, ApiStacCatalog
 from swiss_locator.swissgeodownloader.ui.bbox_drawer import BboxPainter
+from swiss_locator.swissgeodownloader.ui.bbox_select_tool import BboxSelectTool
 from swiss_locator.swissgeodownloader.ui.collection_list_table import (
     CollectionListTable,
 )
@@ -146,22 +143,30 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
         self.fileListTbl = FileListTable(self, self.guiFileListLayout)
         self.fileListTbl.sig_selectionChanged.connect(self.onFileSelectionChange)
 
-        # Map tool to select and deselect files by clicking their bbox
+        # Map tool to select and deselect files by their bbox on the map
         self.mapSelectBtn = QPushButton(
             QgsApplication.getThemeIcon("/mActionSelectRectangle.svg"),
             self.tr("Select on map"),
             self,
         )
+        # Qt maps the Ctrl modifier to the Cmd key on macOS
+        deselectKey = "⌘" if sys.platform == "darwin" else "Ctrl"
         self.mapSelectBtn.setToolTip(
-            self.tr("Click a file footprint on the map to select or deselect it")
+            self.tr(
+                "Select the files to download on the map:\n"
+                "• click a footprint to select or deselect its files\n"
+                "• drag a rectangle to select the files it touches\n"
+                "• hold {} while dragging to deselect them"
+            ).format(deselectKey)
         )
         self.mapSelectBtn.setCheckable(True)
         self.mapSelectBtn.clicked.connect(self.onMapSelectBtnClicked)
         self.fileListTbl.buttonLayout.insertWidget(1, self.mapSelectBtn)
-        self.mapSelectTool = QgsMapToolEmitPoint(self.canvas)
+        self.mapSelectTool = BboxSelectTool(self.canvas)
         # Unchecks the button when another map tool is chosen
         self.mapSelectTool.setButton(self.mapSelectBtn)
-        self.mapSelectTool.canvasClicked.connect(self.onMapClickedForSelection)
+        self.mapSelectTool.sig_clicked.connect(self.onMapClickedForSelection)
+        self.mapSelectTool.sig_rectangle.connect(self.onMapRectangleForSelection)
 
         # Create spinners to indicate data loading
         # Spinner for getCollections request
@@ -742,9 +747,7 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
         if self.canvas.mapTool() is self.mapSelectTool:
             self.iface.actionPan().trigger()
 
-    def onMapClickedForSelection(self, point: QgsPointXY, button):
-        if button != Qt.MouseButton.LeftButton:
-            return
+    def onMapClickedForSelection(self, point: QgsPointXY):
         # Several files can share the same bbox (e.g. one per year)
         fileIds = [
             fileId
@@ -755,6 +758,17 @@ class SwissGeoDownloaderDockWidget(QgsDockWidget, FORM_CLASS):
             return
         select = not all(self.fileListFiltered[fileId].selected for fileId in fileIds)
         self.fileListTbl.setChecked(fileIds, select)
+        self.fileListTbl.showFile(fileIds[0])
+
+    def onMapRectangleForSelection(self, rectangle: QgsRectangle, deselect: bool):
+        fileIds = [
+            fileId
+            for fileId in self.bboxPainter.fileIdsIntersecting(rectangle)
+            if fileId in self.fileListFiltered
+        ]
+        if not fileIds:
+            return
+        self.fileListTbl.setChecked(fileIds, not deselect)
         self.fileListTbl.showFile(fileIds[0])
 
     def updateSummary(self):
