@@ -124,6 +124,29 @@ class TestLocatorFilterSTAC(unittest.TestCase):
         results_upper = _filter.perform_local_search("SWISSALTI3D")
         self.assertEqual(results_lower, results_upper)
 
+    def test_local_search_by_description_and_keywords(self):
+        """Description and keywords match too, after the titles and ids"""
+        surface3d = self.collection(
+            "ch.swisstopo.swisssurface3d", "swissSURFACE3D", ApiDataGeoAdmin
+        )
+        surface3d.setDescription("Lidar data: a classified point cloud")
+        pully = self.collection(
+            "lidar-pully", "Classified point cloud of Pully", ApiViageo
+        )
+        cartolacote = self.collection(
+            "cartolacote", "Point cloud LiDAR 2023 (Cartolacôte)", ApiViageo
+        )
+        waste = self.collection("AFRB", "Abfuhrzonen", ApiBaselStadt)
+        waste.setKeywords(["Abfall", "Müll"])
+        collections = {c.id(): c for c in (surface3d, pully, cartolacote, waste)}
+        _filter = self._make_filter(collections=collections)
+
+        self.assertEqual(
+            _filter.perform_local_search("LiDAR"),
+            ["cartolacote", "lidar-pully", "ch.swisstopo.swisssurface3d"],
+        )
+        self.assertEqual(_filter.perform_local_search("müll"), ["AFRB"])
+
     def test_copc_asset_also_offered_streamed(self):
         """A COPC point cloud can be downloaded or streamed from its URL."""
         _filter = self._make_filter()

@@ -91,6 +91,10 @@ class TestStacHelpers(unittest.TestCase):
                 key, None, None, [], None, QgsStacExtent()
             )
             cls.collections[key].setTitle(title)
+        cls.collections["ch.swisstopo.swissalti3d"].setDescription(
+            "Digital Elevation Model"
+        )
+        cls.collections["ch.bakom.mobilnetz-2g"].setKeywords(["Mobilfunk", "GSM"])
 
     def test_collections_to_searchable_strings(self):
         search_strings, search_ids = collections_to_searchable_strings(self.collections)
@@ -98,11 +102,21 @@ class TestStacHelpers(unittest.TestCase):
         self.assertEqual(
             search_strings,
             [
-                "swissalti3d ch.swisstopo.swissalti3d",
-                "2g - gsm / edge verfügbarkeit ch.bakom.mobilnetz-2g",
-                "wasserverfügbarkeit im boden (standortwasserbilanz) ch.bafu.wald-wasserverfuegbarkeit_boden",
+                (
+                    "swissalti3d ch.swisstopo.swissalti3d",
+                    "digital elevation model",
+                ),
+                (
+                    "2g - gsm / edge verfügbarkeit ch.bakom.mobilnetz-2g",
+                    "mobilfunk gsm",
+                ),
+                (
+                    "wasserverfügbarkeit im boden (standortwasserbilanz) ch.bafu.wald-wasserverfuegbarkeit_boden",
+                    "",
+                ),
             ],
         )
+        self.assertEqual(search_ids, list(self.collections))
 
 
 if __name__ == "__main__":

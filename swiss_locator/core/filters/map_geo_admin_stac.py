@@ -2,12 +2,20 @@ from qgis.core import QgsStacCollection
 
 
 def collections_to_searchable_strings(collections: dict[str, QgsStacCollection]):
+    """For each collection, the text to search first (title and id) and the
+    text to search next (description and keywords): e.g. only the description
+    of swissSURFACE3D says it is LiDAR data."""
     collection_ids = []
     collection_search_strings = []
     for coll_id, collection in collections.items():
         collection_ids.append(coll_id)
         collection_search_strings.append(
-            (" ".join([collection.title(), coll_id])).lower()
+            (
+                " ".join([collection.title(), coll_id]).lower(),
+                " ".join(
+                    filter(None, [collection.description(), *collection.keywords()])
+                ).lower(),
+            )
         )
     return collection_search_strings, collection_ids
 
