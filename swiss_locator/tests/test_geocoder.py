@@ -6,9 +6,19 @@ geocoder is replaced by canned SearchServer responses.
 """
 
 import copy
+import socket
 from unittest.mock import patch
 
-from qgis.PyQt.QtCore import QUrlQuery
+from qgis.PyQt.QtCore import (
+    QEventLoop,
+    QObject,
+    Qt,
+    QThread,
+    QTimer,
+    QUrl,
+    QUrlQuery,
+    pyqtSignal,
+)
 from qgis.PyQt.QtNetwork import QNetworkRequest
 from qgis.core import (
     QgsBlockingNetworkRequest,
@@ -17,6 +27,7 @@ from qgis.core import (
     QgsFeedback,
     QgsGeocoderContext,
     QgsGeometry,
+    QgsNetworkAccessManager,
     QgsNetworkRequestParameters,
     QgsRectangle,
 )
@@ -785,6 +796,75 @@ class TestSwissGeocoderFetchRetry(unittest.TestCase):
         with self.assertRaises(GeocoderRequestError):
             self.geocoder.fetch_json(self.request, feedback)
         self.assertEqual(FakeBlockingRequest.calls, 1)
+
+
+class MainThreadCanceller(QObject):
+    """Cancels a feedback in the main thread, the emitting thread waiting meanwhile."""
+
+    cancel = pyqtSignal()
+
+
+class GeocoderThread(QThread):
+    def __init__(self, request: QNetworkRequest, feedback: QgsFeedback):
+        super().__init__()
+        self.request = request
+        self.feedback = feedback
+        self.error = None
+
+    def run(self):
+        try:
+            SwissGeocoder(retries=0).fetch_json(self.request, self.feedback)
+        except GeocoderRequestError as e:
+            self.error = str(e)
+
+
+class TestSwissGeocoderCancelFromMainThread(unittest.TestCase):
+    def test_cancel_while_the_request_is_sent(self):
+        # The locator and processing run the geocoder in a worker thread and
+        # cancel its feedback from the main thread. When it happened while the
+        # request was being sent, QgsBlockingNetworkRequest waited forever.
+        server = socket.create_server(("127.0.0.1", 0))  # never answers
+        self.addCleanup(server.close)
+        url = QUrl(f"http://127.0.0.1:{server.getsockname()[1]}/")
+
+        feedback = QgsFeedback()
+        canceller = MainThreadCanceller()
+        canceller.cancel.connect(
+            feedback.cancel, Qt.ConnectionType.BlockingQueuedConnection
+        )
+
+        def cancel_while_sending(request):
+            if request.url() == url:
+                canceller.cancel.emit()
+
+        preprocessor = QgsNetworkAccessManager.setRequestPreprocessor(
+            cancel_while_sending
+        )
+        self.addCleanup(QgsNetworkAccessManager.removeRequestPreprocessor, preprocessor)
+
+        blocking_requests = []
+
+        class BlockingRequest(QgsBlockingNetworkRequest):
+            def __init__(self):
+                super().__init__()
+                blocking_requests.append(self)
+
+        thread = GeocoderThread(QNetworkRequest(url), feedback)
+        loop = QEventLoop()
+        thread.finished.connect(loop.quit)
+        QTimer.singleShot(5000, loop.quit)
+        with patch.object(swiss_geocoder, "QgsBlockingNetworkRequest", BlockingRequest):
+            thread.start()
+            loop.exec()
+            if not thread.isFinished():
+                # Its signal ends the wait of the request, not to leave behind
+                # a thread waiting forever
+                for blocking_request in blocking_requests:
+                    blocking_request.finished.emit()
+                thread.wait()
+                self.fail("The request was not cancelled")
+        self.assertTrue(feedback.isCanceled())
+        self.assertEqual(thread.error, "Request cancelled")
 
 
 if __name__ == "__main__":

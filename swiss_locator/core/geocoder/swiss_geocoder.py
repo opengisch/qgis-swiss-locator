@@ -327,9 +327,18 @@ class SwissGeocoder(QgsGeocoderInterface):
         """
         status = None
         message = ""
+        # The locator and processing cancel the feedback from the main thread.
+        # When it happens while QgsBlockingNetworkRequest sends the request,
+        # the request deletes its reply without aborting it and waits forever:
+        # the cancellation is relayed to a feedback of this thread, which gets
+        # it once the request waits for the reply.
+        request_feedback = None
+        if feedback is not None:
+            request_feedback = QgsFeedback()
+            feedback.canceled.connect(request_feedback.cancel)
         for attempt in range(self.retries + 1):
             blocking = QgsBlockingNetworkRequest()
-            code = blocking.get(request, forceRefresh=True, feedback=feedback)
+            code = blocking.get(request, forceRefresh=True, feedback=request_feedback)
             if feedback is not None and feedback.isCanceled():
                 raise GeocoderRequestError("Request cancelled")
             reply = blocking.reply()
