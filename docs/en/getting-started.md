@@ -7,8 +7,10 @@ In QGIS, open **Plugins ▸ Manage and Install Plugins**, search for
 newer, QGIS 4 included.
 
 At its first launch, the plugin asks which local data catalogues to search, on
-top of that of the geoportal: [viageo.ch](downloads/viageo.md) for the canton of
-Vaud and its municipalities, and [Basel-Stadt](downloads/basel-stadt.md). Check
+top of that of the geoportal: [geodienste.ch](downloads/geodienste.md) for the
+data of the cantons, [viageo.ch](downloads/viageo.md) for the canton of Vaud and
+its municipalities, and [Basel-Stadt](downloads/basel-stadt.md).
+geodienste.ch is checked by default. Check
 those you need and click **OK**, or **Open Settings** for the
 [configuration](configuration.md#in-the-plugin) of the plugin, where the choice
 can be changed later.
@@ -39,7 +41,7 @@ Start with a prefix and a space to run only one of them:
 | `chw` | [WMTS layers](layers/wmts.md) |
 | `chb` | [Base maps](layers/base-maps.md), as vector tiles |
 | `chf` | [Features](search/features.md) |
-| `chd` | [Downloading data](downloads/swisstopo.md), from the geoportal, viageo.ch and Basel-Stadt |
+| `chd` | [Downloading data](downloads/swisstopo.md), from the geoportal, geodienste.ch, viageo.ch and Basel-Stadt |
 
 For instance, `chs Lausanne` only searches the places named Lausanne.
 

@@ -26,6 +26,7 @@ nav:
       - Basiskarten: layers/base-maps.md
   - Daten herunterladen (STAC):
       - swisstopo: downloads/swisstopo.md
+      - geodienste.ch: downloads/geodienste.md
       - viageo.ch: downloads/viageo.md
       - Basel-Stadt: downloads/basel-stadt.md
   - Höhenprofil: elevation-profile.md

@@ -3,6 +3,7 @@ from qgis.PyQt.QtWidgets import QCheckBox, QVBoxLayout, QWidget
 from ..swissgeodownloader.api.catalogs import (
     LOCAL_STAC_CATALOGS,
     ApiBaselStadt,
+    ApiGeodienste,
     ApiViageo,
 )
 
@@ -13,6 +14,7 @@ class LocalCatalogsWidget(QWidget):
     def __init__(self, parent: QWidget = None):
         super().__init__(parent)
         titles = {
+            ApiGeodienste.CATALOG_ID: self.tr("geodienste.ch (geodata of the cantons)"),
             ApiViageo.CATALOG_ID: self.tr(
                 "viageo.ch (canton of Vaud and its municipalities)"
             ),
@@ -36,3 +38,10 @@ class LocalCatalogsWidget(QWidget):
     def set_catalog_ids(self, catalog_ids: list[str]):
         for catalog_id, check_box in self.check_boxes.items():
             check_box.setChecked(catalog_id in catalog_ids)
+
+    def set_bold(self, catalog_ids: list[str]):
+        """Highlight catalogs, e.g. those new to the user"""
+        for catalog_id, check_box in self.check_boxes.items():
+            font = check_box.font()
+            font.setBold(catalog_id in catalog_ids)
+            check_box.setFont(font)

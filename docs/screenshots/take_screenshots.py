@@ -77,6 +77,8 @@ LAUTERBRUNNEN = (2636500, 1157000, SCALE[10])
 ALETSCH = (2643000, 1142000, SCALE[20])
 LANGNAU = (2626900, 1197600, SCALE[5])
 BASEL = (2611500, 1267500, SCALE[10])
+# The cantons of Bern and Fribourg
+BERN_REGION = (2600600, 1199700, SCALE[20])
 
 # What is typed in the locator bar, by language
 LAYER_SEARCH = {
@@ -84,6 +86,14 @@ LAYER_SEARCH = {
     "fr": "randonnée",
     "de": "Wanderwege",
     "it": "escursionistici",
+}
+# The zoning plans on geodienste.ch, whose titles follow the language, German
+# for English
+ZONING_SEARCH = {
+    "en": "Nutzungsplanung",
+    "fr": "affectation",
+    "de": "Nutzungsplanung",
+    "it": "utilizzazione",
 }
 # A layer of a cantonal service, referenced by opendata.swiss: what is typed,
 # a part of the URL of the service to pick, and where to look
@@ -567,6 +577,28 @@ def shot_downloads_basel():
     close_locator()
 
 
+def shot_downloads_geodienste():
+    stac = stac_filter("geodienste")
+    wait_until(lambda: stac.available_collections)
+    base_map_background(BERN_REGION)
+    search(f"chd {ZONING_SEARCH[LANG]}")
+    trigger(find_result(data="npl_nutzungsplanung"))
+    wait_for_map()
+    dock = plugins["swiss_locator"].stac_filter_widget
+    request = dock.findChild(QPushButton, "guiRequestListBtn")
+    wait_until(request.isEnabled)
+    request.click()
+    wait_until(
+        lambda: not dock.findChild(QPushButton, "guiRequestCancelBtn").isVisible()
+    )
+    # A file per canton and format: show the GeoPackages
+    file_type = dock.guiFileType
+    file_type.setCurrentIndex(file_type.findData("geopackage+sqlite3"))
+    wait_for_map()
+    save("downloads-geodienste", markers=[center_of(file_type)])
+    dock.close()
+
+
 def shot_geocoding():
     import processing
 
@@ -720,6 +752,7 @@ SHOTS = {
     "downloads": shot_downloads,
     "downloads_viageo": shot_downloads_viageo,
     "downloads_basel": shot_downloads_basel,
+    "downloads_geodienste": shot_downloads_geodienste,
     "geocoding": shot_geocoding,
     "profile": shot_profile,
     "configuration": shot_configuration,

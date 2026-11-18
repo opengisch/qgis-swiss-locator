@@ -143,11 +143,16 @@ def layersOfZippedDatasets(zipPath: str) -> list[QgsVectorLayer | QgsRasterLayer
     options = QgsProviderSublayerDetails.LayerOptions(QgsCoordinateTransformContext())
     layers = []
     for dataset in zippedDatasets(zipPath):
+        member = dataset.removeprefix(f"/vsizip/{zipPath}/")
         for sublayer in QgsProviderRegistry.instance().querySublayers(dataset):
             if sublayer.type() not in (Qgis.LayerType.Vector, Qgis.LayerType.Raster):
                 continue
             layer = sublayer.toLayer(options)
             if layer and layer.isValid():
+                # A file of a single layer is named after its path in the zip,
+                #  e.g. shapefiles/wildruhezonen_v2_1/routennetz.shp
+                if layer.name() == member:
+                    layer.setName(os.path.splitext(os.path.basename(member))[0])
                 layers.append(layer)
     return layers
 

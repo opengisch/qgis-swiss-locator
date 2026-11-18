@@ -10,6 +10,7 @@ cantoni. Richiede una connessione a Internet.
 | [wmts.geo.admin.ch](https://wmts.geo.admin.ch) | layer WMTS |
 | [vectortiles.geo.admin.ch](https://vectortiles.geo.admin.ch) | mappe di base |
 | [data.geo.admin.ch](https://data.geo.admin.ch) | download di dati |
+| [geodienste.ch](https://geodienste.ch) | download di dati |
 | [viageo.ch](https://viageo.ch) | download di dati |
 | [geo.bs.ch](https://www.geo.bs.ch) | download di dati |
 | [opendata.swiss](https://opendata.swiss) e i servizi WMS che vi sono referenziati | layer |
@@ -20,8 +21,11 @@ verificarne le condizioni d'uso.
 
 ## I cataloghi dei dati (STAC)
 
-Il [download di dati](downloads/swisstopo.md) attinge a tre cataloghi di dati:
-quello del geoportale federale, [data.geo.admin.ch](https://data.geo.admin.ch);
+Il [download di dati](downloads/swisstopo.md) attinge a quattro cataloghi di
+dati: quello del geoportale federale,
+[data.geo.admin.ch](https://data.geo.admin.ch);
+[geodienste.ch](https://geodienste.ch), che pubblica i geodati dei cantoni nei
+modelli di dati della Confederazione;
 [viageo.ch](https://viageo.ch), che pubblica i geodati di cantoni e comuni; e
 quello del Cantone di Basilea Città, [geo.bs.ch](https://www.geo.bs.ch). Tutti
 seguono lo standard STAC (SpatioTemporal Asset Catalog) e organizzano i dati in:
@@ -35,7 +39,8 @@ seguono lo standard STAC (SpatioTemporal Asset Catalog) e organizzano i dati in:
 All'avvio di QGIS, il plugin scarica l'elenco delle collection di ogni catalogo
 in background. I titoli e le descrizioni di data.geo.admin.ch nella lingua del
 plugin provengono dal catalogo di metadati [geocat.ch](https://www.geocat.ch);
-quelli di viageo.ch sono in francese, quelli di Basilea Città in tedesco. Una
+geodienste.ch ha i propri, in tedesco, francese e italiano; quelli di viageo.ch
+sono in francese, quelli di Basilea Città in tedesco. Una
 ricerca cerca il testo nei titoli e negli identificativi di questi elenchi,
 senza richieste. Per ogni collection trovata, il plugin chiede poi i suoi primi
 file: se sono pochi, o i formati di un solo item come a Basilea Città, vengono

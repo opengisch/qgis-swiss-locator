@@ -17,6 +17,7 @@ und finden Sie:
 - **Objekte** aus den Layern des Geoportals, etwa eine Haltestelle des
   öffentlichen Verkehrs oder eine Berghütte;
 - **Dateien zum Herunterladen** aus den Datenkatalogen des Geoportals, von
+  [geodienste.ch](https://geodienste.ch) für die Daten der Kantone, von
   [viageo.ch](https://viageo.ch) für Kantone und Gemeinden und von
   [Basel-Stadt](https://www.geo.bs.ch) (STAC).
 

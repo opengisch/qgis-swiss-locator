@@ -7,6 +7,7 @@ from qgis.core import QgsPointCloudClassifiedRenderer, QgsStacAsset
 from qgis.testing import start_app
 
 from swiss_locator.core.results import STACResult
+from swiss_locator.swissgeodownloader.api.catalogs import ApiGeodienste
 from swiss_locator.swissgeodownloader.api.response_objects import (
     FILETYPE_STREAMED,
     SgdAsset,
@@ -225,6 +226,34 @@ class TestZippedDatasets(unittest.TestCase):
         task = QgisLayerCreatorTask("test", [asset])
         self.assertTrue(task.run())
         self.assertEqual(task.layerList, [])
+
+    def test_geodienste_zip_is_added(self):
+        """geodienste.ch zips each format with READMEs, the dataset in a
+        folder: it is added under the name of its file."""
+        name = "wildruhezonen_v2_1_AR_csv_lv95.zip"
+        path = self.createZip(
+            name,
+            {
+                "README_de.txt": b"Wildruhezonen",
+                "csv/wildruhezonen_v2_1/wildruhezonen.csv": (
+                    "\ufefft_id;nummer;wildruhezone\n"
+                    "10395;1_02_AR;S\u00fcdliches Appenzeller Hinterland\n"
+                    "10396;1_03_AR;Hundwiler H\u00f6chi\n"
+                ).encode(),
+            },
+        )
+        mediaType = ApiGeodienste().mediaType("csv_zip", "application/zip")
+        asset = createAsset("csv_zip", mediaType, f"https://x/AR/deu/{name}", path)
+        self.assertTrue(isZippedDataset(asset))
+        task = QgisLayerCreatorTask("test", [asset])
+        self.assertTrue(task.run())
+        self.assertEqual(
+            [
+                (layer.name(), layer.featureCount(), layer.fields().names())
+                for layer in task.layerList
+            ],
+            [("wildruhezonen", 2, ["t_id", "nummer", "wildruhezone"])],
+        )
 
 
 class FakePointCloudLayer:

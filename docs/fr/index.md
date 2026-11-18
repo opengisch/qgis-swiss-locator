@@ -16,6 +16,7 @@ de QGIS, comme sur [map.geo.admin.ch](https://map.geo.admin.ch), et trouvez :
 - des **objets** des couches du géoportail, comme un arrêt de transports
   publics ou une cabane de montagne;
 - des **fichiers à télécharger** des catalogues de données du géoportail, de
+  [geodienste.ch](https://geodienste.ch) pour les données des cantons, de
   [viageo.ch](https://viageo.ch) pour les cantons et les communes, et de
   [Bâle-Ville](https://www.geo.bs.ch) (STAC).
 

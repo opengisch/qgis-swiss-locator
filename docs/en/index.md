@@ -15,6 +15,7 @@ of QGIS, as you would on [map.geo.admin.ch](https://map.geo.admin.ch), and find:
 - **features** of the layers of the geoportal, such as a public transport stop
   or a mountain hut;
 - **files to download** from the data catalogues of the geoportal, of
+  [geodienste.ch](https://geodienste.ch) for the data of the cantons, of
   [viageo.ch](https://viageo.ch) for cantons and municipalities, and of
   [Basel-Stadt](https://www.geo.bs.ch) (STAC).
 

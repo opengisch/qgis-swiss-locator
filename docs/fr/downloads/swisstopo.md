@@ -2,19 +2,22 @@
 
 Préfixe : `chd`
 
-Téléchargez des fichiers et ajoutez-les à la carte, depuis trois catalogues de
+Téléchargez des fichiers et ajoutez-les à la carte, depuis quatre catalogues de
 données :
 
 - celui du géoportail fédéral, [data.geo.admin.ch](https://data.geo.admin.ch),
   exploité par swisstopo : modèles altimétriques, images aériennes, limites,
   cartes et plus encore ;
+- [geodienste.ch](https://geodienste.ch), les géodonnées de
+  [tous les cantons](geodienste.md), dans les modèles de données de la
+  Confédération ;
 - [viageo.ch](https://viageo.ch), les géodonnées des
   [cantons et des communes](viageo.md) ;
 - [geo.bs.ch](https://www.geo.bs.ch), les géodonnées du canton de
   [Bâle-Ville](basel-stadt.md).
 
-Le géoportail est toujours recherché ; viageo.ch et Bâle-Ville une fois
-choisis, au premier lancement de l'extension ou dans sa
+Le géoportail est toujours recherché, geodienste.ch par défaut ; les autres
+une fois choisis, au premier lancement de l'extension ou dans sa
 [configuration](../configuration.md#in-the-plugin).
 
 La recherche porte sur les noms des jeux de données. Chaque catalogue liste ses
@@ -41,7 +44,7 @@ GeoTIFF et les Cloud Optimized Point Cloud (COPC), sont listés deux fois : la
 seconde entrée, marquée *streamed*, ajoute le fichier à la carte sans le
 télécharger.
 
-## Un jeu de données de nombreux fichiers
+## Un jeu de données de nombreux fichiers {#a-dataset-with-many-files}
 
 Tapez `chd swissalti3d`. Le modèle altimétrique est découpé en tuiles d'un
 kilomètre carré, trop nombreuses pour être listées : le résultat ouvre un

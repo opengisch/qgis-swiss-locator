@@ -7,8 +7,10 @@ In QGIS, aprire **Plugins ▸ Gestisci ed Installa Plugin...**, cercare
 o successivo, QGIS 4 compreso.
 
 Al primo avvio, il plugin chiede quali cataloghi di dati locali cercare, oltre a
-quello del geoportale: [viageo.ch](downloads/viageo.md) per il Canton Vaud e i
-suoi comuni, e [Basilea Città](downloads/basel-stadt.md). Selezionare quelli
+quello del geoportale: [geodienste.ch](downloads/geodienste.md) per i dati dei
+cantoni, [viageo.ch](downloads/viageo.md) per il Canton Vaud e i suoi comuni, e
+[Basilea Città](downloads/basel-stadt.md).
+geodienste.ch è selezionato per impostazione predefinita. Selezionare quelli
 desiderati e fare clic su **OK**, oppure su **Open Settings** per la
 [configurazione](configuration.md#in-the-plugin) del plugin, dove la scelta può
 essere modificata in seguito.
@@ -41,7 +43,7 @@ QGIS. Iniziare con un prefisso seguito da uno spazio per eseguirne una sola:
 | `chw` | [Layer WMTS](layers/wmts.md) |
 | `chb` | [Mappe di base](layers/base-maps.md), in tile vettoriali |
 | `chf` | [Oggetti](search/features.md) |
-| `chd` | [Scaricare dati](downloads/swisstopo.md), dal geoportale, da viageo.ch e da Basilea Città |
+| `chd` | [Scaricare dati](downloads/swisstopo.md), dal geoportale, da geodienste.ch, da viageo.ch e da Basilea Città |
 
 Ad esempio, `chs Lausanne` cerca solo i luoghi di nome Lausanne.
 

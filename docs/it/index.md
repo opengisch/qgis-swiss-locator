@@ -15,6 +15,7 @@ di QGIS, come su [map.geo.admin.ch](https://map.geo.admin.ch), per trovare:
 - **oggetti** dei layer del geoportale, come una fermata dei trasporti pubblici
   o una capanna alpina;
 - **file da scaricare** dai cataloghi dei dati del geoportale, di
+  [geodienste.ch](https://geodienste.ch) per i dati dei cantoni, di
   [viageo.ch](https://viageo.ch) per cantoni e comuni, e di
   [Basilea Città](https://www.geo.bs.ch) (STAC).
 

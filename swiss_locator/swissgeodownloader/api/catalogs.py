@@ -1,4 +1,8 @@
-from swiss_locator.core.constants import BASEL_STADT_STAC_URL, VIAGEO_STAC_URL
+from swiss_locator.core.constants import (
+    BASEL_STADT_STAC_URL,
+    GEODIENSTE_STAC_URL,
+    VIAGEO_STAC_URL,
+)
 from swiss_locator.swissgeodownloader.api.datageoadmin import ApiDataGeoAdmin
 from swiss_locator.swissgeodownloader.api.stac_catalog import ApiStacCatalog
 
@@ -24,15 +28,49 @@ class ApiBaselStadt(ApiStacCatalog):
         return f"{collectionId}_{itemId}_{assetId}.zip"
 
 
+class ApiGeodienste(ApiStacCatalog):
+    """Geodata of the cantons on geodienste.ch, in the data models of the
+    Confederation: an item per canton, each in several formats"""
+
+    CATALOG_ID = "geodienste"
+    NAME = "geodienste.ch"
+    URL = f"{GEODIENSTE_STAC_URL}/deu"
+    # The catalog, and the attributes of its files, in German, French or Italian
+    LANGUAGES = {"fr": "fra", "it": "ita"}
+    # Each format is a zip file under application/zip: give it the media type
+    #  of the dataset inside, which tells the formats apart and adds the
+    #  dataset to the project once downloaded. The INTERLIS transfer comes with
+    #  its model and is only downloaded, as those of data.geo.admin.ch.
+    ZIP_MEDIA_TYPES = {
+        "geopackage_zip": "application/geopackage+sqlite3",
+        "shapefile_zip": "application/vnd.shp",
+        "csv_zip": "text/csv",
+        "interlis": "application/x.interlis+zip",
+    }
+
+    def __init__(self, locale="en"):
+        self.URL = f"{GEODIENSTE_STAC_URL}/{self.LANGUAGES.get(locale, 'deu')}"
+        super().__init__(locale)
+
+    def mediaType(self, assetId: str, mediaType: str) -> str:
+        if mediaType == "application/zip":
+            return self.ZIP_MEDIA_TYPES.get(assetId, mediaType)
+        return mediaType
+
+
 # The STAC catalogs whose files can be searched, downloaded and streamed
 STAC_CATALOGS: dict[str, type[ApiStacCatalog]] = {
     catalog.CATALOG_ID: catalog
-    for catalog in (ApiDataGeoAdmin, ApiViageo, ApiBaselStadt)
+    for catalog in (ApiDataGeoAdmin, ApiGeodienste, ApiViageo, ApiBaselStadt)
 }
 
 # The catalogs of cantons and municipalities: the user chooses those to search
 #  in the locator, on top of data.geo.admin.ch
-LOCAL_STAC_CATALOGS: tuple[type[ApiStacCatalog], ...] = (ApiViageo, ApiBaselStadt)
+LOCAL_STAC_CATALOGS: tuple[type[ApiStacCatalog], ...] = (
+    ApiGeodienste,
+    ApiViageo,
+    ApiBaselStadt,
+)
 
 
 def createCatalogs(locale: str) -> dict[str, ApiStacCatalog]:
