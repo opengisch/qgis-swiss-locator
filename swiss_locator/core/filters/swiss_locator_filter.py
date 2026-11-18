@@ -46,6 +46,7 @@ from qgis.core import (
     QgsWkbTypes,
     QgsLocatorContext,
     QgsFeedback,
+    QgsNetworkAccessManager,
     QgsRasterLayer,
     QgsSettings,
     QgsVectorTileLayer,
@@ -126,6 +127,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
         self.nam.setRedirectPolicy(
             QNetworkRequest.RedirectPolicy.NoLessSafeRedirectPolicy
         )
+        # Without it, a reply lost on the way would keep the search waiting
+        self.nam.setTransferTimeout(QgsNetworkAccessManager.timeout())
         self.network_replies = dict()
 
         if crs:
@@ -245,9 +248,12 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 "it was likely already handled or cancelled"
             )
             return
-        reply = self.network_replies[url]
+        reply = self.network_replies.pop(url)
 
         try:
+            # Raises if PyQt invalidated the wrapper of this reply, after an
+            # object deleted in another thread had the same address
+            reply.deleteLater()
             if reply.error() != QNetworkReply.NetworkError.NoError:
                 self.info(f"could not load url: {reply.errorString()}")
             else:
@@ -270,10 +276,6 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 Qgis.MessageLevel.Critical,
             )
 
-        # clean nam
-        reply.deleteLater()
-        self.network_replies.pop(url, None)
-
         # quit loop if every nam has completed
         if len(self.network_replies) == 0:
             self.dbg_info(f"{url} no nam left, exit loop")
@@ -292,6 +294,9 @@ class SwissLocatorFilter(QgsLocatorFilter):
         if self.event_loop is None:
             self.event_loop = QEventLoop()
         feedback.canceled.connect(self.event_loop.quit)
+        if feedback.isCanceled():
+            # Cancelled before being connected: the signal is not emitted again
+            return
 
         for request in requests:
             url = request.url().url()

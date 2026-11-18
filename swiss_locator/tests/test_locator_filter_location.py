@@ -22,21 +22,17 @@
 # Unit tests for the location filter.
 #
 # These tests do NOT require network access: the network entry point of the
-# geocoder is replaced by canned SearchServer responses.
+# filter is replaced by canned SearchServer responses.
 
 import json
 from unittest.mock import patch
 
 from qgis.PyQt.QtCore import QUrlQuery
-from qgis.core import Qgis, QgsFeedback, QgsLocatorContext
+from qgis.core import QgsFeedback, QgsLocatorContext
 from qgis.testing import start_app, unittest
 
 from swiss_locator.core.filters.swiss_locator_filter_location import (
     SwissLocatorFilterLocation,
-)
-from swiss_locator.core.geocoder.swiss_geocoder import (
-    GeocoderRequestError,
-    SwissGeocoder,
 )
 from swiss_locator.core.results import LocationResult, result_from_data
 from swiss_locator.tests.test_geocoder import (
@@ -63,20 +59,24 @@ start_app()
 
 class TestLocatorFilterLocation(unittest.TestCase):
     def search(self, text, response, crs="2056"):
-        """Runs a search with a canned response, returns (results, requests)."""
+        """
+        Runs a search with a canned response, None for a failed request,
+        returns (results, requests).
+        """
         # No iface: the filter behaves as the clone used by the locator thread
         locator_filter = SwissLocatorFilterLocation(crs=crs)
         results = []
         locator_filter.resultFetched.connect(results.append)
         requests = []
 
-        def fetch(request, feedback=None):
+        def fetch(request, feedback, slot, data=None):
             requests.append(dict(QUrlQuery(request.url()).queryItems()))
-            if isinstance(response, Exception):
-                raise response
-            return response
+            if response is not None:
+                slot(json.dumps(response), feedback, data)
 
-        with patch.object(SwissGeocoder, "fetch_json", side_effect=fetch):
+        with patch.object(
+            SwissLocatorFilterLocation, "fetch_request", side_effect=fetch
+        ):
             locator_filter.fetchResults(text, QgsLocatorContext(), QgsFeedback())
         return results, requests
 
@@ -128,44 +128,20 @@ class TestLocatorFilterLocation(unittest.TestCase):
         self.assertEqual(json.loads(results[0].userData)["type"], "NoResult")
 
     def test_request_error(self):
-        error = GeocoderRequestError("Service unavailable (HTTP 503)", 503)
-        results, requests = self.search("Bern", error)
+        results, requests = self.search("Bern", None)
         self.assertEqual(len(requests), 1)
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0].displayString, "No result found.")
 
-    def warnings(self, error, cancel):
-        """Runs a failing search, returns the warnings logged by the filter."""
+    def test_search_cancelled_before_its_request(self):
+        # The locator can cancel the search before the filter connects to the
+        # feedback, whose signal is not emitted again
         locator_filter = SwissLocatorFilterLocation(crs="2056")
         feedback = QgsFeedback()
-
-        def fetch(request, feedback_=None):
-            if cancel:
-                feedback.cancel()
-            raise error
-
-        with (
-            patch.object(SwissGeocoder, "fetch_json", side_effect=fetch),
-            patch.object(SwissLocatorFilterLocation, "info") as info,
-        ):
-            locator_filter.fetchResults("Bern", QgsLocatorContext(), feedback)
-        return [
-            call.args[0]
-            for call in info.call_args_list
-            if Qgis.MessageLevel.Warning in call.args
-        ]
-
-    def test_failed_search_logs_a_warning(self):
-        error = GeocoderRequestError("Service unavailable (HTTP 503)", 503)
-        self.assertEqual(
-            self.warnings(error, cancel=False),
-            ["could not search locations: Service unavailable (HTTP 503)"],
-        )
-
-    def test_cancelled_search_logs_no_warning(self):
-        # The locator cancels the search each time the text changes
-        error = GeocoderRequestError("Request cancelled")
-        self.assertEqual(self.warnings(error, cancel=True), [])
+        feedback.cancel()
+        sent = AssertionError("request sent")
+        with patch.object(locator_filter.nam, "get", side_effect=sent):
+            locator_filter.perform_fetch_results("Bern", feedback)
 
     def test_short_search(self):
         results, requests = self.search("B", WABERN_RESPONSE)

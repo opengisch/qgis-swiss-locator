@@ -22,9 +22,6 @@ from qgis.PyQt.QtCore import QUrl
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtNetwork import QNetworkRequest
 from qgis.core import (
-    Qgis,
-    QgsCoordinateTransformContext,
-    QgsGeocoderContext,
     QgsLocatorResult,
     QgsPointXY,
     QgsGeometry,
@@ -35,6 +32,7 @@ from qgis.gui import QgisInterface
 
 from swiss_locator.core.constants import MAP_SERVER_URL
 from swiss_locator.core.filters.filter_type import FilterType
+from swiss_locator.core.filters.map_geo_admin import map_geo_admin_url
 from swiss_locator.core.filters.swiss_locator_filter import SwissLocatorFilter
 from swiss_locator.core.geocoder.swiss_geocoder import (
     FIELD_PREFIX,
@@ -59,27 +57,19 @@ class SwissLocatorFilterLocation(SwissLocatorFilter):
         return "chs"
 
     def perform_fetch_results(self, search: str, feedback: QgsFeedback):
-        # Same request and parsing as the batch geocoding, all kinds of
-        # locations, no retry so that the locator stays responsive
-        geocoder = SwissGeocoder(
-            origins=None,
-            sr=self.crs,
-            lang=self.lang,
-            limit=self.settings.filters[self.type.value]["limit"].value(),
-            retries=0,
+        limit = self.settings.filters[self.type.value]["limit"].value()
+        url, params = map_geo_admin_url(
+            search, self.type.value, self.crs, self.lang, limit
         )
-        results = geocoder.geocodeString(
-            search, QgsGeocoderContext(QgsCoordinateTransformContext()), feedback
-        )
-        for geocoder_result in results:
-            if not geocoder_result.isValid():
-                # The locator cancels the search each time the text changes
-                if not feedback.isCanceled():
-                    self.info(
-                        f"could not search locations: {geocoder_result.error()}",
-                        Qgis.MessageLevel.Warning,
-                    )
-                return
+        request = self.request_for_url(url, params, self.HEADERS)
+        self.fetch_request(request, feedback, self.handle_content, search)
+
+    def handle_content(self, content: str, feedback: QgsFeedback, search: str):
+        # Same parsing as the batch geocoding. Not its request: a
+        # QgsBlockingNetworkRequest made in Python can deadlock with the
+        # other filter threads.
+        geocoder = SwissGeocoder(origins=None, sr=self.crs)
+        for geocoder_result in geocoder.json_to_results(json.loads(content), search):
             attributes = geocoder_result.additionalAttributes()
             group_name, group_layer = self.group_info(geocoder_result.group())
 
