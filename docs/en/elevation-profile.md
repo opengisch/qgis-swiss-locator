@@ -5,6 +5,9 @@ The heights come from the profile service of the geoportal, which uses the
 elevation model swissALTI3D. No layer needs to be loaded: the profile is
 computed online for the line you draw.
 
+The profile has a height every 2 m, the mesh of the elevation model, and at
+each vertex of the line. Over 100 km, the heights are further apart.
+
 ## Draw a profile
 
 1. Open **View ▸ Elevation Profiles ▸ New Elevation Profile**.

@@ -5,6 +5,9 @@ quote provengono dal servizio di profilo del geoportale, che usa il modello
 altimetrico swissALTI3D. Non è necessario caricare alcun layer: il profilo è
 calcolato online per la linea disegnata.
 
+Il profilo ha una quota ogni 2 m, la maglia del modello altimetrico, e in
+ogni vertice della linea. Oltre 100 km, le quote sono più distanziate.
+
 ## Disegnare un profilo
 
 1. Aprire **Visualizza ▸ Profili Elevazione ▸ Nuovo Profilo Elevazione**.

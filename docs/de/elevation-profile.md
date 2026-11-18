@@ -5,6 +5,9 @@ swisstopo. Die Höhen stammen vom Profildienst des Geoportals, der das
 Höhenmodell swissALTI3D verwendet. Es muss kein Layer geladen werden: Das
 Profil wird für die von Ihnen gezeichnete Linie online berechnet.
 
+Das Profil hat alle 2 m eine Höhe, die Maschenweite des Höhenmodells, und an
+jedem Stützpunkt der Linie. Über 100 km liegen die Höhen weiter auseinander.
+
 ## Ein Profil zeichnen
 
 1. Öffnen Sie **Ansicht ▸ Geländehöhenprofile ▸ Neues Geländehöhenprofil**.

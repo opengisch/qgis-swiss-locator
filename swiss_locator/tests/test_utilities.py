@@ -198,15 +198,15 @@ class TestOpendataSwissUrl(unittest.TestCase):
 
 class TestProfileUrl(unittest.TestCase):
     def test_url(self):
-        url, params = profile_url('{"type":"LineString","coordinates":[[0,0],[1,1]]}')
+        url, _ = profile_url(200)
         self.assertEqual(url, PROFILE_URL)
 
-    def test_geom_param(self):
-        geojson = (
-            '{"type":"LineString","coordinates":[[2600000,1200000],[2601000,1201000]]}'
-        )
-        _, params = profile_url(geojson)
-        self.assertEqual(params["geom"], geojson)
+    def test_params(self):
+        _, params = profile_url(2501)
+        self.assertEqual(params["nb_points"], "2501")
+        self.assertEqual(params["sr"], "2056")
+        # The line is posted: in the query it overflows the request line
+        self.assertNotIn("geom", params)
 
 
 # ---------------------------------------------------------------------------
