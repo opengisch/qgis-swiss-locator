@@ -5,6 +5,9 @@ Les altitudes proviennent du service de profil du géoportail, qui utilise le
 modèle altimétrique swissALTI3D. Aucune couche n'est à charger : le profil est
 calculé en ligne pour la ligne que vous dessinez.
 
+Le profil a une altitude tous les 2 m, la maille du modèle altimétrique, et à
+chaque sommet de la ligne. Au-delà de 100 km, les altitudes sont plus espacées.
+
 ## Dessiner un profil
 
 1. Ouvrez **Vue ▸ Elevation Profiles ▸ New Elevation Profile**.
