@@ -20,18 +20,15 @@ import os
 import sys
 import traceback
 
-from qgis.PyQt import sip
-
 from qgis.PyQt.QtCore import (
     QCoreApplication,
-    QEventLoop,
     Qt,
     QTimer,
     QUrl,
     pyqtSignal,
 )
 from qgis.PyQt.QtGui import QColor
-from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply, QNetworkAccessManager
+from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply
 from qgis.PyQt.QtWidgets import QLabel, QWidget
 from qgis.core import (
     QgsMessageLog,
@@ -61,6 +58,7 @@ from swiss_locator.core.constants import (
 )
 from swiss_locator.core.filters.filter_type import FilterType
 from swiss_locator.core.language import get_language
+from swiss_locator.core.network import fetch
 from swiss_locator.core.parameters import AVAILABLE_CRS
 from swiss_locator.core.results import (
     WMSLayerResult,
@@ -117,16 +115,8 @@ class SwissLocatorFilter(QgsLocatorFilter):
         self.map_tip = None
         self.current_timer = None
         self.crs = None
-        self.event_loop = None
         self.result_found = False
-        self.access_managers = {}
         self.minimum_search_length = 2
-
-        self.nam = QNetworkAccessManager()
-        self.nam.setRedirectPolicy(
-            QNetworkRequest.RedirectPolicy.NoLessSafeRedirectPolicy
-        )
-        self.network_replies = dict()
 
         if crs:
             self.crs = crs
@@ -234,28 +224,26 @@ class SwissLocatorFilter(QgsLocatorFilter):
             request.setRawHeader(k, v)
         return request
 
-    def handle_reply(self, url: str, feedback: QgsFeedback, slot, data=None):
-        if sip.isdeleted(self):
-            return
-        self.dbg_info(f"feature handle reply {url}")
-        if url not in self.network_replies:
-            # might be happening when both event_loop.quit() and reply.abort() are called
-            self.dbg_info(
-                f"url {url} missing from network_replies, "
-                "it was likely already handled or cancelled"
-            )
-            return
-        reply = self.network_replies[url]
-
+    def handle_reply(
+        self, reply: QNetworkReply, feedback: QgsFeedback, slot, data=None
+    ):
         try:
             if reply.error() != QNetworkReply.NetworkError.NoError:
                 self.info(f"could not load url: {reply.errorString()}")
+                return
+            content = reply.readAll().data()
+        except RuntimeError as e:
+            # Its wrapper invalidated by PyQt, see fetch(): the results of
+            # this request are lost
+            self.info(f"could not read a reply: {e}")
+            return
+
+        try:
+            content = content.decode("utf-8")
+            if data:
+                slot(content, feedback, data)
             else:
-                content = reply.readAll().data().decode("utf-8")
-                if data:
-                    slot(content, feedback, data)
-                else:
-                    slot(content, feedback)
+                slot(content, feedback)
 
         except Exception as e:
             self.info(e, Qgis.MessageLevel.Critical)
@@ -270,15 +258,6 @@ class SwissLocatorFilter(QgsLocatorFilter):
                 Qgis.MessageLevel.Critical,
             )
 
-        # clean nam
-        reply.deleteLater()
-        self.network_replies.pop(url, None)
-
-        # quit loop if every nam has completed
-        if len(self.network_replies) == 0:
-            self.dbg_info(f"{url} no nam left, exit loop")
-            self.event_loop.quit()
-
     def fetch_request(
         self, request: QNetworkRequest, feedback: QgsFeedback, slot, data=None
     ):
@@ -287,33 +266,14 @@ class SwissLocatorFilter(QgsLocatorFilter):
     def fetch_requests(
         self, requests: [QNetworkRequest], feedback: QgsFeedback, slot, data=None
     ):
-        # init event loop
-        # wait for all requests to end
-        if self.event_loop is None:
-            self.event_loop = QEventLoop()
-        feedback.canceled.connect(self.event_loop.quit)
-
+        """Sends the requests and waits for their replies, each given to the slot."""
         for request in requests:
-            url = request.url().url()
-            self.info(f"fetching {url}")
-            reply = self.nam.get(request)
-            reply.finished.connect(
-                lambda _url=url: self.handle_reply(_url, feedback, slot, data)
-            )
-            feedback.canceled.connect(reply.abort)
-            self.network_replies[url] = reply
-
-        # Let the requests end and catch all exceptions (and clean up requests)
-        if len(self.network_replies) > 0:
-            self.event_loop.exec(QEventLoop.ProcessEventsFlag.ExcludeUserInputEvents)
-
-        # After event loop exits (e.g. due to cancellation), clean up any
-        # remaining replies to prevent callbacks on a deleted filter object
-        for url, reply in list(self.network_replies.items()):
-            reply.finished.disconnect()
-            reply.abort()
-            reply.deleteLater()
-        self.network_replies.clear()
+            self.info(f"fetching {request.url().url()}")
+        fetch(
+            requests,
+            feedback,
+            lambda index, reply: self.handle_reply(reply, feedback, slot, data),
+        )
 
     def fetchResults(
         self, search: str, context: QgsLocatorContext, feedback: QgsFeedback

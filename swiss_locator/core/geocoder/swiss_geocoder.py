@@ -25,12 +25,12 @@ import json
 import re
 import time
 import unicodedata
+from typing import NamedTuple
 
 from qgis.PyQt.QtCore import QMetaType
-from qgis.PyQt.QtNetwork import QNetworkRequest
+from qgis.PyQt.QtNetwork import QNetworkReply, QNetworkRequest
 from qgis.core import (
     Qgis,
-    QgsBlockingNetworkRequest,
     QgsCoordinateReferenceSystem,
     QgsCoordinateTransform,
     QgsCsException,
@@ -41,6 +41,7 @@ from qgis.core import (
     QgsGeocoderInterface,
     QgsGeocoderResult,
     QgsGeometry,
+    QgsNetworkAccessManager,
     QgsNetworkRequestParameters,
     QgsPointXY,
     QgsRectangle,
@@ -48,6 +49,7 @@ from qgis.core import (
 
 from swiss_locator.core.constants import USER_AGENT_SUFFIX
 from swiss_locator.core.filters.map_geo_admin import map_geo_admin_url
+from swiss_locator.core.network import fetch
 from swiss_locator.core.parameters import AVAILABLE_CRS
 from swiss_locator.utils.html_stripper import strip_tags
 from swiss_locator.utils.utils import InvalidBox, box2geometry, url_with_param
@@ -124,6 +126,66 @@ def sleep_cancellable(seconds: float, feedback: QgsFeedback | None = None) -> bo
         if remaining <= 0:
             return True
         time.sleep(min(0.05, remaining))
+
+
+class SearchReply(NamedTuple):
+    """What fetch_json needs of a reply of the SearchServer."""
+
+    error: QNetworkReply.NetworkError
+    message: str
+    status: int | None
+    content: bytes
+    retry_after: bytes
+
+
+def send_request(
+    request: QNetworkRequest, feedback: QgsFeedback | None = None
+) -> SearchReply | None:
+    """
+    Sends the request with the network access manager of QGIS and waits for
+    its reply, in the thread of the locator filter or of the algorithm.
+
+    Not with a QgsBlockingNetworkRequest: one made in Python takes the GIL as
+    it ends, holding a lock of Qt that a thread holding the GIL can be waiting
+    for, which froze QGIS.
+
+    :return: None if cancelled
+    """
+    request.setAttribute(
+        QNetworkRequest.Attribute.CacheLoadControlAttribute,
+        QNetworkRequest.CacheLoadControl.AlwaysNetwork,
+    )
+    request.setAttribute(
+        QNetworkRequest.Attribute.RedirectPolicyAttribute,
+        QNetworkRequest.RedirectPolicy.NoLessSafeRedirectPolicy,
+    )
+    replies = []
+
+    def read(index: int, reply: QNetworkReply):
+        try:
+            replies.append(
+                SearchReply(
+                    reply.error(),
+                    reply.errorString(),
+                    reply.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute),
+                    bytes(reply.readAll()),
+                    bytes(reply.rawHeader(b"Retry-After")),
+                )
+            )
+        except RuntimeError as e:
+            # Its wrapper invalidated by PyQt, see fetch(): retried
+            replies.append(
+                SearchReply(
+                    QNetworkReply.NetworkError.UnknownNetworkError,
+                    str(e),
+                    None,
+                    b"",
+                    b"",
+                )
+            )
+
+    fetch([request], feedback, read, QgsNetworkAccessManager.instance())
+    return replies[0] if replies else None
 
 
 def normalize_text(text: str | None) -> str:
@@ -327,46 +389,36 @@ class SwissGeocoder(QgsGeocoderInterface):
         """
         status = None
         message = ""
-        # The locator and processing cancel the feedback from the main thread.
-        # When it happens while QgsBlockingNetworkRequest sends the request,
-        # the request deletes its reply without aborting it and waits forever:
-        # the cancellation is relayed to a feedback of this thread, which gets
-        # it once the request waits for the reply.
-        request_feedback = None
-        if feedback is not None:
-            request_feedback = QgsFeedback()
-            feedback.canceled.connect(request_feedback.cancel)
         for attempt in range(self.retries + 1):
-            blocking = QgsBlockingNetworkRequest()
-            code = blocking.get(request, forceRefresh=True, feedback=request_feedback)
-            if feedback is not None and feedback.isCanceled():
+            reply = send_request(request, feedback)
+            if reply is None or (feedback is not None and feedback.isCanceled()):
                 raise GeocoderRequestError("Request cancelled")
-            reply = blocking.reply()
-            status = reply.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute)
-            content = bytes(reply.content())
+            status = reply.status
 
-            if code == QgsBlockingNetworkRequest.ErrorCode.NoError:
+            if reply.error == QNetworkReply.NetworkError.NoError:
                 try:
-                    return json.loads(content.decode("utf-8"))
+                    return json.loads(reply.content.decode("utf-8"))
                 except (UnicodeDecodeError, ValueError) as e:
                     raise GeocoderRequestError(
                         f"Invalid response from the search service: {e}", status
                     ) from e
 
-            message = blocking.errorMessage() or reply.errorString()
+            message = reply.message
             retry_after = None
-            if code == QgsBlockingNetworkRequest.ErrorCode.ServerExceptionError:
+            if status is not None:
                 # The service describes the error in a JSON body, e.g.
                 # {"error": {"code": 400, "message": "Please provide a search text"}}
                 try:
-                    message = json.loads(content.decode("utf-8"))["error"]["message"]
+                    message = json.loads(reply.content.decode("utf-8"))["error"][
+                        "message"
+                    ]
                 except (UnicodeDecodeError, ValueError, KeyError, TypeError):
                     pass
-                if status is not None and status != 429 and status < 500:
+                if status != 429 and status < 500:
                     # Client errors are not worth retrying
                     raise GeocoderRequestError(f"{message} (HTTP {status})", status)
                 try:
-                    retry_after = int(bytes(reply.rawHeader(b"Retry-After")))
+                    retry_after = int(reply.retry_after)
                 except ValueError:
                     retry_after = None
 

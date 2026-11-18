@@ -7,21 +7,22 @@ geocoder is replaced by canned SearchServer responses.
 
 import copy
 import socket
+import threading
+import time
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from unittest.mock import patch
 
 from qgis.PyQt.QtCore import (
-    QEventLoop,
+    QCoreApplication,
     QObject,
     Qt,
     QThread,
-    QTimer,
     QUrl,
     QUrlQuery,
     pyqtSignal,
 )
-from qgis.PyQt.QtNetwork import QNetworkRequest
+from qgis.PyQt.QtNetwork import QNetworkReply, QNetworkRequest
 from qgis.core import (
-    QgsBlockingNetworkRequest,
     QgsCoordinateReferenceSystem,
     QgsCoordinateTransformContext,
     QgsFeedback,
@@ -41,6 +42,7 @@ from swiss_locator.core.geocoder.swiss_geocoder import (
     QUALITY_EXACT,
     QUALITY_FUZZY,
     GeocoderRequestError,
+    SearchReply,
     SwissGeocoder,
     match_quality,
     normalize_text,
@@ -649,153 +651,129 @@ class TestSwissGeocoderOptions(unittest.TestCase):
 # ---------------------------------------------------------------------------
 
 
-class FakeReply:
-    def __init__(self, status, content=b"", retry_after=b""):
-        self._status = status
-        self._content = content
-        self._retry_after = retry_after
-
-    def attribute(self, _):
-        return self._status
-
-    def content(self):
-        return self._content
-
-    def errorString(self):
-        return f"error {self._status}"
-
-    def rawHeader(self, _):
-        return self._retry_after
+def reply(status, content=b"", retry_after=b""):
+    """A reply of the SearchServer, a network error without status."""
+    if status == 200:
+        error = QNetworkReply.NetworkError.NoError
+    elif status is None:
+        error = QNetworkReply.NetworkError.HostNotFoundError
+    else:
+        error = QNetworkReply.NetworkError.UnknownServerError
+    return SearchReply(error, f"error {status}", status, content, retry_after)
 
 
-class FakeBlockingRequest:
-    """
-    Replaces QgsBlockingNetworkRequest with a scripted sequence of
-    (error code, reply) pairs shared by all instances.
-    """
+class FakeSendRequest:
+    """Replaces send_request with a scripted sequence of replies."""
 
-    ErrorCode = QgsBlockingNetworkRequest.ErrorCode
-    script = []
-    calls = 0
-    feedback_to_cancel = None
+    def __init__(self, script, feedback_to_cancel=None):
+        self.script = list(script)
+        self.calls = 0
+        self.feedback_to_cancel = feedback_to_cancel
 
-    def __init__(self):
-        self._reply = None
-
-    def get(self, request, forceRefresh=False, feedback=None):
-        type(self).calls += 1
+    def __call__(self, request, feedback=None):
+        self.calls += 1
         if self.feedback_to_cancel is not None:
             self.feedback_to_cancel.cancel()
-        code, self._reply = self.script.pop(0)
-        return code
-
-    def reply(self):
-        return self._reply
-
-    def errorMessage(self):
-        return self._reply.errorString()
+        return self.script.pop(0)
 
 
 class TestSwissGeocoderFetchRetry(unittest.TestCase):
     def setUp(self):
-        FakeBlockingRequest.script = []
-        FakeBlockingRequest.calls = 0
-        FakeBlockingRequest.feedback_to_cancel = None
-        patcher = patch.object(
-            swiss_geocoder, "QgsBlockingNetworkRequest", FakeBlockingRequest
-        )
-        patcher.start()
-        self.addCleanup(patcher.stop)
         delay_patcher = patch.object(swiss_geocoder, "RETRY_BASE_DELAY_S", 0.001)
         delay_patcher.start()
         self.addCleanup(delay_patcher.stop)
         self.geocoder = SwissGeocoder()
         self.request = self.geocoder.request("Bern")
 
+    def send(self, *script, feedback_to_cancel=None):
+        fake = FakeSendRequest(script, feedback_to_cancel)
+        patcher = patch.object(swiss_geocoder, "send_request", fake)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        return fake
+
     def test_success(self):
-        FakeBlockingRequest.script = [
-            (
-                QgsBlockingNetworkRequest.ErrorCode.NoError,
-                FakeReply(200, b'{"results": []}'),
-            )
-        ]
+        fake = self.send(reply(200, b'{"results": []}'))
         self.assertEqual(self.geocoder.fetch_json(self.request), {"results": []})
-        self.assertEqual(FakeBlockingRequest.calls, 1)
+        self.assertEqual(fake.calls, 1)
 
     def test_retry_after_429_then_success(self):
-        FakeBlockingRequest.script = [
-            (
-                QgsBlockingNetworkRequest.ErrorCode.ServerExceptionError,
-                FakeReply(429, b"", b"0"),
-            ),
-            (
-                QgsBlockingNetworkRequest.ErrorCode.NoError,
-                FakeReply(200, b'{"results": []}'),
-            ),
-        ]
+        fake = self.send(reply(429, b"", b"0"), reply(200, b'{"results": []}'))
         self.assertEqual(self.geocoder.fetch_json(self.request), {"results": []})
-        self.assertEqual(FakeBlockingRequest.calls, 2)
+        self.assertEqual(fake.calls, 2)
 
     def test_retry_after_network_error(self):
-        FakeBlockingRequest.script = [
-            (QgsBlockingNetworkRequest.ErrorCode.NetworkError, FakeReply(None)),
-            (QgsBlockingNetworkRequest.ErrorCode.TimeoutError, FakeReply(None)),
-            (
-                QgsBlockingNetworkRequest.ErrorCode.NoError,
-                FakeReply(200, b'{"results": []}'),
-            ),
-        ]
+        fake = self.send(reply(None), reply(None), reply(200, b'{"results": []}'))
         self.assertEqual(self.geocoder.fetch_json(self.request), {"results": []})
-        self.assertEqual(FakeBlockingRequest.calls, 3)
+        self.assertEqual(fake.calls, 3)
 
     def test_client_error_is_not_retried(self):
         body = b'{"error": {"code": 400, "message": "Please provide a search text"}, "success": false}'
-        FakeBlockingRequest.script = [
-            (
-                QgsBlockingNetworkRequest.ErrorCode.ServerExceptionError,
-                FakeReply(400, body),
-            )
-        ]
+        fake = self.send(reply(400, body))
         with self.assertRaises(GeocoderRequestError) as cm:
             self.geocoder.fetch_json(self.request)
         self.assertEqual(cm.exception.status, 400)
         self.assertEqual(str(cm.exception), "Please provide a search text (HTTP 400)")
-        self.assertEqual(FakeBlockingRequest.calls, 1)
+        self.assertEqual(fake.calls, 1)
 
     def test_no_retry(self):
-        FakeBlockingRequest.script = [
-            (QgsBlockingNetworkRequest.ErrorCode.ServerExceptionError, FakeReply(503))
-        ] * 2
+        fake = self.send(reply(503), reply(503))
         with self.assertRaises(GeocoderRequestError):
             SwissGeocoder(retries=0).fetch_json(self.request)
-        self.assertEqual(FakeBlockingRequest.calls, 1)
+        self.assertEqual(fake.calls, 1)
 
     def test_server_errors_exhaust_retries(self):
-        FakeBlockingRequest.script = [
-            (QgsBlockingNetworkRequest.ErrorCode.ServerExceptionError, FakeReply(503))
-        ] * 4
+        fake = self.send(*[reply(503)] * 4)
         with self.assertRaises(GeocoderRequestError) as cm:
             self.geocoder.fetch_json(self.request)
         self.assertEqual(cm.exception.status, 503)
-        self.assertEqual(FakeBlockingRequest.calls, 4)
+        self.assertEqual(fake.calls, 4)
 
     def test_invalid_json(self):
-        FakeBlockingRequest.script = [
-            (QgsBlockingNetworkRequest.ErrorCode.NoError, FakeReply(200, b"<html>"))
-        ]
+        fake = self.send(reply(200, b"<html>"))
         with self.assertRaises(GeocoderRequestError):
             self.geocoder.fetch_json(self.request)
-        self.assertEqual(FakeBlockingRequest.calls, 1)
+        self.assertEqual(fake.calls, 1)
 
     def test_cancel_stops_immediately(self):
         feedback = QgsFeedback()
-        FakeBlockingRequest.feedback_to_cancel = feedback
-        FakeBlockingRequest.script = [
-            (QgsBlockingNetworkRequest.ErrorCode.NetworkError, FakeReply(None))
-        ] * 4
+        fake = self.send(*[reply(None)] * 4, feedback_to_cancel=feedback)
         with self.assertRaises(GeocoderRequestError):
             self.geocoder.fetch_json(self.request, feedback)
-        self.assertEqual(FakeBlockingRequest.calls, 1)
+        self.assertEqual(fake.calls, 1)
+
+    def test_cancelled_request(self):
+        fake = self.send(None)
+        with self.assertRaises(GeocoderRequestError) as cm:
+            self.geocoder.fetch_json(self.request, QgsFeedback())
+        self.assertEqual(str(cm.exception), "Request cancelled")
+        self.assertEqual(fake.calls, 1)
+
+
+class JsonHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        content = b'{"results": []}'
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def log_message(self, *args):
+        pass
+
+
+def wait_for_thread(thread: QThread, timeout_s: float) -> bool:
+    """
+    Waits for the thread to be finished, events processed meanwhile. Unlike
+    QThread.wait(), without holding the GIL, which the thread can need as it
+    ends, to delete objects made in Python.
+    """
+    end = time.monotonic() + timeout_s
+    while not thread.isFinished() and time.monotonic() < end:
+        QCoreApplication.processEvents()
+        time.sleep(0.005)
+    return thread.isFinished()
 
 
 class MainThreadCanceller(QObject):
@@ -810,23 +788,67 @@ class GeocoderThread(QThread):
         self.request = request
         self.feedback = feedback
         self.error = None
+        self.data = None
 
     def run(self):
         try:
-            SwissGeocoder(retries=0).fetch_json(self.request, self.feedback)
+            self.data = SwissGeocoder(retries=0).fetch_json(self.request, self.feedback)
         except GeocoderRequestError as e:
             self.error = str(e)
 
 
-class TestSwissGeocoderCancelFromMainThread(unittest.TestCase):
+class TestSwissGeocoderRequests(unittest.TestCase):
+    """The requests sent to a local server, from a thread like the locator."""
+
+    def silent_server(self):
+        server = socket.create_server(("127.0.0.1", 0))  # never answers
+        self.addCleanup(server.close)
+        return server, QUrl(f"http://127.0.0.1:{server.getsockname()[1]}/")
+
+    def run_thread(self, thread, server=None, give_up_ms=5000):
+        thread.start()
+        if not wait_for_thread(thread, give_up_ms / 1000):
+            if server is not None:
+                # Resets the connection: the request ends
+                server.close()
+            wait_for_thread(thread, 5)
+            self.fail("The request did not end")
+
+    def test_reply(self):
+        server = ThreadingHTTPServer(("127.0.0.1", 0), JsonHandler)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        self.addCleanup(server.server_close)
+        self.addCleanup(server.shutdown)
+        url = QUrl(f"http://127.0.0.1:{server.server_address[1]}/")
+        thread = GeocoderThread(QNetworkRequest(url), QgsFeedback())
+        self.run_thread(thread)
+        self.assertIsNone(thread.error)
+        self.assertEqual(thread.data, {"results": []})
+
+    def test_reply_never_coming(self):
+        self.addCleanup(
+            QgsNetworkAccessManager.setTimeout, QgsNetworkAccessManager.timeout()
+        )
+        QgsNetworkAccessManager.setTimeout(300)
+        server, url = self.silent_server()
+        thread = GeocoderThread(QNetworkRequest(url), QgsFeedback())
+        self.run_thread(thread, server, give_up_ms=3000)
+        self.assertIsNotNone(thread.error)
+        self.assertNotEqual(thread.error, "Request cancelled")
+
+    def test_cancelled_before_the_request(self):
+        server, url = self.silent_server()
+        feedback = QgsFeedback()
+        feedback.cancel()
+        thread = GeocoderThread(QNetworkRequest(url), feedback)
+        self.run_thread(thread, server, give_up_ms=1000)
+        self.assertEqual(thread.error, "Request cancelled")
+
     def test_cancel_while_the_request_is_sent(self):
         # The locator and processing run the geocoder in a worker thread and
         # cancel its feedback from the main thread. When it happened while the
         # request was being sent, QgsBlockingNetworkRequest waited forever.
-        server = socket.create_server(("127.0.0.1", 0))  # never answers
-        self.addCleanup(server.close)
-        url = QUrl(f"http://127.0.0.1:{server.getsockname()[1]}/")
-
+        server, url = self.silent_server()
         feedback = QgsFeedback()
         canceller = MainThreadCanceller()
         canceller.cancel.connect(
@@ -842,27 +864,8 @@ class TestSwissGeocoderCancelFromMainThread(unittest.TestCase):
         )
         self.addCleanup(QgsNetworkAccessManager.removeRequestPreprocessor, preprocessor)
 
-        blocking_requests = []
-
-        class BlockingRequest(QgsBlockingNetworkRequest):
-            def __init__(self):
-                super().__init__()
-                blocking_requests.append(self)
-
         thread = GeocoderThread(QNetworkRequest(url), feedback)
-        loop = QEventLoop()
-        thread.finished.connect(loop.quit)
-        QTimer.singleShot(5000, loop.quit)
-        with patch.object(swiss_geocoder, "QgsBlockingNetworkRequest", BlockingRequest):
-            thread.start()
-            loop.exec()
-            if not thread.isFinished():
-                # Its signal ends the wait of the request, not to leave behind
-                # a thread waiting forever
-                for blocking_request in blocking_requests:
-                    blocking_request.finished.emit()
-                thread.wait()
-                self.fail("The request was not cancelled")
+        self.run_thread(thread, server)
         self.assertTrue(feedback.isCanceled())
         self.assertEqual(thread.error, "Request cancelled")
 
