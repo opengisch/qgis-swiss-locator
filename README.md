@@ -12,7 +12,7 @@ Type in the locator bar of QGIS, as you would on
 * [add layers](https://opengisch.github.io/qgis-swiss-locator/en/layers/) of
   the federal geoportal and of opendata.swiss, as WMS, WMTS or vector tiles
 * [download data](https://opengisch.github.io/qgis-swiss-locator/en/downloads/swisstopo/)
-  from the STAC catalogs of swisstopo, viageo.ch and Basel-Stadt
+  from the STAC catalogs of swisstopo, geodienste.ch, viageo.ch and Basel-Stadt
 
 It also draws the terrain of swissALTI3D in the
 [elevation profiles](https://opengisch.github.io/qgis-swiss-locator/en/elevation-profile/)

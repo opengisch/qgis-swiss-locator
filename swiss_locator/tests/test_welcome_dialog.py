@@ -8,9 +8,17 @@ from qgis.testing.mocked import get_iface
 from swiss_locator.core.filters.swiss_locator_filter_stac import SwissLocatorFilterSTAC
 from swiss_locator.core.settings import Settings
 from swiss_locator.gui.config_dialog import ConfigDialog
-from swiss_locator.gui.welcome_dialog import WELCOME_DIALOG_VERSION, WelcomeDialog
+from swiss_locator.gui.welcome_dialog import (
+    WELCOME_DIALOG_VERSION,
+    WelcomeDialog,
+    turn_on_default_catalogs,
+)
 from swiss_locator.swiss_locator_plugin import SwissLocatorPlugin
-from swiss_locator.swissgeodownloader.api.catalogs import ApiBaselStadt, ApiViageo
+from swiss_locator.swissgeodownloader.api.catalogs import (
+    ApiBaselStadt,
+    ApiGeodienste,
+    ApiViageo,
+)
 from swiss_locator.swissgeodownloader.api.datageoadmin import ApiDataGeoAdmin
 
 start_app()
@@ -18,6 +26,7 @@ start_app()
 GEOADMIN = ApiDataGeoAdmin.CATALOG_ID
 VIAGEO = ApiViageo.CATALOG_ID
 BASEL = ApiBaselStadt.CATALOG_ID
+GEODIENSTE = ApiGeodienste.CATALOG_ID
 
 
 class SettingsTestCase(unittest.TestCase):
@@ -55,6 +64,41 @@ class TestWelcomeDialog(SettingsTestCase):
         dialog = WelcomeDialog()
         self.assertTrue(dialog.local_catalogs.check_boxes[VIAGEO].isChecked())
         self.assertFalse(dialog.local_catalogs.check_boxes[BASEL].isChecked())
+
+    def test_geodienste_on_for_new_users(self):
+        turn_on_default_catalogs()
+        self.assertEqual(self.settings.stac_local_catalogs.value(), [GEODIENSTE])
+        dialog = WelcomeDialog()
+        geodienste = dialog.local_catalogs.check_boxes[GEODIENSTE]
+        self.assertTrue(geodienste.isChecked())
+        # Nothing is new to those who never saw the dialog
+        self.assertFalse(geodienste.font().bold())
+
+    def test_geodienste_on_and_bold_after_an_upgrade(self):
+        """Those who saw the first version get geodienste.ch on, in bold"""
+        self.settings.welcome_dialog_version.setValue(1)
+        self.settings.stac_local_catalogs.setValue([VIAGEO])
+        self.assertTrue(WelcomeDialog.is_due())
+        turn_on_default_catalogs()
+        self.assertEqual(
+            self.settings.stac_local_catalogs.value(), [VIAGEO, GEODIENSTE]
+        )
+        dialog = WelcomeDialog()
+        boxes = dialog.local_catalogs.check_boxes
+        self.assertEqual(
+            [(boxes[c].isChecked(), boxes[c].font().bold()) for c in boxes],
+            [(True, True), (True, False), (False, False)],
+        )
+        self.assertEqual(list(boxes), [GEODIENSTE, VIAGEO, BASEL])
+
+    def test_geodienste_unchecked_stays_off(self):
+        self.settings.welcome_dialog_version.setValue(1)
+        turn_on_default_catalogs()
+        dialog = WelcomeDialog()
+        dialog.local_catalogs.check_boxes[GEODIENSTE].setChecked(False)
+        dialog.accept()
+        turn_on_default_catalogs()
+        self.assertEqual(self.settings.stac_local_catalogs.value(), [])
 
     def test_open_settings(self):
         dialog = WelcomeDialog()

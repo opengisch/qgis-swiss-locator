@@ -7,8 +7,11 @@ Dans QGIS, ouvrez **Extensions ▸ Installer/Gérer les extensions**, recherchez
 QGIS 3.44 ou plus récent, QGIS 4 compris.
 
 À son premier lancement, l'extension demande quels catalogues de données locaux
-rechercher, en plus de celui du géoportail : [viageo.ch](downloads/viageo.md)
-pour le canton de Vaud et ses communes, et [Bâle-Ville](downloads/basel-stadt.md).
+rechercher, en plus de celui du géoportail :
+[geodienste.ch](downloads/geodienste.md) pour les données des cantons,
+[viageo.ch](downloads/viageo.md) pour le canton de Vaud et ses communes, et
+[Bâle-Ville](downloads/basel-stadt.md).
+geodienste.ch est coché par défaut.
 Cochez ceux qu'il vous faut et cliquez sur **OK**, ou sur **Open Settings** pour
 la [configuration](configuration.md#in-the-plugin) de l'extension, où le choix
 peut être modifié par la suite.
@@ -41,7 +44,7 @@ celles de QGIS. Commencez par un préfixe et un espace pour n'en lancer qu'une :
 | `chw` | [Couches WMTS](layers/wmts.md) |
 | `chb` | [Fonds de plan](layers/base-maps.md), en tuiles vectorielles |
 | `chf` | [Objets](search/features.md) |
-| `chd` | [Télécharger des données](downloads/swisstopo.md), du géoportail, de viageo.ch et de Bâle-Ville |
+| `chd` | [Télécharger des données](downloads/swisstopo.md), du géoportail, de geodienste.ch, de viageo.ch et de Bâle-Ville |
 
 Par exemple, `chs Lausanne` ne recherche que les lieux nommés Lausanne.
 

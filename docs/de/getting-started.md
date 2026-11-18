@@ -7,8 +7,11 @@ suchen Sie nach *Swiss Locator* und klicken Sie auf **Erweiterung installieren**
 Das Plugin benötigt QGIS 3.44 oder neuer, QGIS 4 inbegriffen.
 
 Beim ersten Start fragt das Plugin, welche lokalen Datenkataloge es zusätzlich
-zu jenem des Geoportals durchsuchen soll: [viageo.ch](downloads/viageo.md) für
-den Kanton Waadt und seine Gemeinden, und [Basel-Stadt](downloads/basel-stadt.md).
+zu jenem des Geoportals durchsuchen soll:
+[geodienste.ch](downloads/geodienste.md) für die Daten der Kantone,
+[viageo.ch](downloads/viageo.md) für den Kanton Waadt und seine Gemeinden, und
+[Basel-Stadt](downloads/basel-stadt.md).
+geodienste.ch ist standardmässig aktiviert.
 Aktivieren Sie die gewünschten und klicken Sie auf **OK**, oder auf
 **Open Settings** für die [Konfiguration](configuration.md#in-the-plugin) des
 Plugins, wo sich die Auswahl später ändern lässt.
@@ -41,7 +44,7 @@ mit einem Präfix und einem Leerzeichen, um nur eine davon auszuführen:
 | `chw` | [WMTS-Layer](layers/wmts.md) |
 | `chb` | [Basiskarten](layers/base-maps.md), als Vektorkacheln |
 | `chf` | [Objekte](search/features.md) |
-| `chd` | [Daten herunterladen](downloads/swisstopo.md), vom Geoportal, von viageo.ch und von Basel-Stadt |
+| `chd` | [Daten herunterladen](downloads/swisstopo.md), vom Geoportal, von geodienste.ch, von viageo.ch und von Basel-Stadt |
 
 Beispielsweise sucht `chs Lausanne` nur nach Orten namens Lausanne.
 

@@ -9,9 +9,35 @@ from qgis.PyQt.QtWidgets import (
 
 from .local_catalogs_widget import LocalCatalogsWidget
 from ..core.settings import Settings
+from ..swissgeodownloader.api.catalogs import ApiGeodienste
 
 # Bump it when the dialog asks something new: it then shows again to everyone
-WELCOME_DIALOG_VERSION = 1
+WELCOME_DIALOG_VERSION = 2
+
+# The local catalogs on by default, by the version of the dialog that brought
+#  them: turned on for those who have not seen that version yet, the dialog
+#  shows them checked, to uncheck
+CATALOGS_ON_BY_DEFAULT = {ApiGeodienste.CATALOG_ID: 2}
+
+
+def unseen_catalogs_on_by_default() -> list[str]:
+    """The catalogs on by default brought by a version of the dialog the user
+    has not seen"""
+    seen = Settings().welcome_dialog_version.value()
+    return [
+        catalog_id
+        for catalog_id, version in CATALOGS_ON_BY_DEFAULT.items()
+        if version > seen
+    ]
+
+
+def turn_on_default_catalogs():
+    """Turn on the catalogs on by default that the user was not asked about"""
+    settings = Settings()
+    catalog_ids = settings.stac_local_catalogs.value()
+    new = [c for c in unseen_catalogs_on_by_default() if c not in catalog_ids]
+    if new:
+        settings.stac_local_catalogs.setValue(catalog_ids + new)
 
 
 class WelcomeDialog(QDialog):
@@ -56,6 +82,9 @@ class WelcomeDialog(QDialog):
         catalogs_layout.addWidget(catalogs_intro)
         self.local_catalogs = LocalCatalogsWidget(catalogs)
         self.local_catalogs.set_catalog_ids(self.settings.stac_local_catalogs.value())
+        if self.settings.welcome_dialog_version.value() > 0:
+            # Seen before: what this version brings is in bold
+            self.local_catalogs.set_bold(unseen_catalogs_on_by_default())
         catalogs_layout.addWidget(self.local_catalogs)
         layout.addWidget(catalogs)
 

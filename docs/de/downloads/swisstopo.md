@@ -2,18 +2,20 @@
 
 Präfix: `chd`
 
-Laden Sie Dateien aus drei Datenkatalogen herunter und fügen Sie sie zur Karte
+Laden Sie Dateien aus vier Datenkatalogen herunter und fügen Sie sie zur Karte
 hinzu:
 
 - dem des Geoportals des Bundes, [data.geo.admin.ch](https://data.geo.admin.ch),
   betrieben von swisstopo: Höhenmodelle, Luftbilder, Grenzen, Karten und mehr;
+- [geodienste.ch](https://geodienste.ch), den Geodaten
+  [aller Kantone](geodienste.md) in den Datenmodellen des Bundes;
 - [viageo.ch](https://viageo.ch), den Geodaten von
   [Kantonen und Gemeinden](viageo.md);
 - [geo.bs.ch](https://www.geo.bs.ch), den Geodaten des Kantons
   [Basel-Stadt](basel-stadt.md).
 
-Das Geoportal wird immer durchsucht, viageo.ch und Basel-Stadt sobald sie
-gewählt sind: beim ersten Start des Plugins oder in seiner
+Das Geoportal wird immer durchsucht, geodienste.ch standardmässig, die anderen
+sobald sie gewählt sind: beim ersten Start des Plugins oder in seiner
 [Konfiguration](../configuration.md#in-the-plugin).
 
 Die Suche berücksichtigt die Namen der Datensätze. Jeder Katalog listet seine
@@ -40,7 +42,7 @@ und Cloud Optimized Point Cloud (COPC), erscheinen zweimal: Der zweite Eintrag,
 mit *gestreamt* gekennzeichnet, fügt die Datei zur Karte hinzu, ohne sie
 herunterzuladen.
 
-## Ein Datensatz mit vielen Dateien
+## Ein Datensatz mit vielen Dateien {#a-dataset-with-many-files}
 
 Geben Sie `chd swissalti3d` ein. Das Höhenmodell ist in Kacheln von einem
 Quadratkilometer unterteilt, zu viele für eine Liste: Das Resultat öffnet ein

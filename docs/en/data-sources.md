@@ -10,6 +10,7 @@ and of the cantons. It needs an internet connection.
 | [wmts.geo.admin.ch](https://wmts.geo.admin.ch) | WMTS layers |
 | [vectortiles.geo.admin.ch](https://vectortiles.geo.admin.ch) | base maps |
 | [data.geo.admin.ch](https://data.geo.admin.ch) | downloads |
+| [geodienste.ch](https://geodienste.ch) | downloads |
 | [viageo.ch](https://viageo.ch) | downloads |
 | [geo.bs.ch](https://www.geo.bs.ch) | downloads |
 | [opendata.swiss](https://opendata.swiss) and the WMS services it references | WMS layers |
@@ -20,8 +21,10 @@ publish it.
 
 ## The data catalogues (STAC)
 
-The [downloads](downloads/swisstopo.md) come from three data catalogues: that of
+The [downloads](downloads/swisstopo.md) come from four data catalogues: that of
 the federal geoportal, [data.geo.admin.ch](https://data.geo.admin.ch);
+[geodienste.ch](https://geodienste.ch), which publishes the geodata of the
+cantons in the data models of the Confederation;
 [viageo.ch](https://viageo.ch), which publishes the geodata of cantons and
 municipalities; and that of the canton of Basel-Stadt,
 [geo.bs.ch](https://www.geo.bs.ch). All follow the STAC standard
@@ -36,8 +39,9 @@ municipalities; and that of the canton of Basel-Stadt,
 When QGIS starts, the plugin downloads the list of the collections of each
 catalogue, in the background. The titles and descriptions of data.geo.admin.ch
 in the language of the plugin come from the metadata catalogue
-[geocat.ch](https://www.geocat.ch); those of viageo.ch are in French, those of
-Basel-Stadt in German. A search looks for the text in the titles and
+[geocat.ch](https://www.geocat.ch); geodienste.ch has its own, in German,
+French and Italian; those of viageo.ch are in French, those of Basel-Stadt in
+German. A search looks for the text in the titles and
 identifiers of these lists, without a request. For each collection found, the
 plugin then asks for its first files: when they are few, or the formats of a
 single item, as on Basel-Stadt, they are listed; otherwise, the collection

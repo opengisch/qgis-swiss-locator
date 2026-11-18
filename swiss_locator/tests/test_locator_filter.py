@@ -21,19 +21,38 @@ QgsLocator + SwissLocatorFilterSTAC but does NOT hit the network.
 """
 
 import json
+import os
+import tempfile
+import time
+from unittest import mock
 
 from qgis._core import QgsStacExtent
-from qgis.PyQt.QtCore import QUrlQuery
-from qgis.core import QgsFeedback, QgsStacCollection, QgsLocator
+from qgis.PyQt.QtCore import QUrl, QUrlQuery
+from qgis.PyQt.QtNetwork import QNetworkRequest
+from qgis.core import (
+    QgsFeedback,
+    QgsLocator,
+    QgsLocatorContext,
+    QgsStacCollection,
+)
 from qgis.testing import start_app, unittest
 from qgis.testing.mocked import get_iface
 
+from swiss_locator.core.filters import response_cache
+from swiss_locator.core.filters.response_cache import ResponseCache
 from swiss_locator.core.filters.map_geo_admin_stac import (
     collections_to_searchable_strings,
 )
-from swiss_locator.core.filters.swiss_locator_filter_stac import SwissLocatorFilterSTAC
+from swiss_locator.core.filters.swiss_locator_filter_stac import (
+    CatalogState,
+    SwissLocatorFilterSTAC,
+)
 from swiss_locator.core.results import result_from_data
-from swiss_locator.swissgeodownloader.api.catalogs import ApiBaselStadt, ApiViageo
+from swiss_locator.swissgeodownloader.api.catalogs import (
+    ApiBaselStadt,
+    ApiGeodienste,
+    ApiViageo,
+)
 from swiss_locator.swissgeodownloader.api.datageoadmin import ApiDataGeoAdmin
 from swiss_locator.swissgeodownloader.api.response_objects import SgdStacCollection
 
@@ -67,6 +86,12 @@ class TestLocatorFilterSTAC(unittest.TestCase):
             "DEFI": cls.collection("DEFI", "Defibrillatoren", ApiBaselStadt)
         }
         cls.basel = ApiBaselStadt("en")
+        cls.geodienste_collections = {
+            "wildruhezonen": cls.collection(
+                "wildruhezonen", "Zones de tranquillité", ApiGeodienste
+            )
+        }
+        cls.geodienste = ApiGeodienste("fr")
 
     @staticmethod
     def collection(collection_id, title, catalog) -> SgdStacCollection:
@@ -83,7 +108,9 @@ class TestLocatorFilterSTAC(unittest.TestCase):
         collections = self.collections if collections is None else collections
         search_strings, search_ids = collections_to_searchable_strings(collections)
         return SwissLocatorFilterSTAC(
-            get_iface(), None, [catalog, collections, search_strings, search_ids]
+            get_iface(),
+            None,
+            [catalog, collections, search_strings, search_ids, CatalogState()],
         )
 
     def _make_viageo_filter(self):
@@ -91,6 +118,9 @@ class TestLocatorFilterSTAC(unittest.TestCase):
 
     def _make_basel_filter(self):
         return self._make_filter(self.basel, self.basel_collections)
+
+    def _make_geodienste_filter(self):
+        return self._make_filter(self.geodienste, self.geodienste_collections)
 
     @staticmethod
     def _display_strings(_filter, items):
@@ -253,6 +283,37 @@ class TestLocatorFilterSTAC(unittest.TestCase):
             [f"DEFI_latest_{key}.zip" for key in formats],
         )
 
+    def test_formats_of_geodienste_are_told_apart(self):
+        """geodienste.ch zips each format under application/zip: the locator
+        shows the format of the dataset inside."""
+        url = "https://geodienste.ch/downloads"
+        item = {
+            "id": "wildruhezonen_v2_1-AR",
+            "collection": "wildruhezonen",
+            "assets": {
+                key: {"href": f"{url}/{path}", "type": "application/zip"}
+                for key, path in (
+                    ("interlis", "interlis/AR/wildruhezonen_v2_1_AR_lv95.zip"),
+                    ("geopackage_zip", "geopackage/AR/fra/w_AR_gpkg_lv95.zip"),
+                    ("shapefile_zip", "shapefile/AR/fra/w_AR_shp_lv95.zip"),
+                )
+            },
+        }
+        results = []
+        _filter = self._make_geodienste_filter()
+        _filter.resultFetched.connect(
+            lambda r: results.append((r.displayString, r.description))
+        )
+        _filter.handle_content(json.dumps({"features": [item]}), None)
+        self.assertEqual(
+            results,
+            [
+                ("wildruhezonen_v2_1_AR_lv95.zip", "x.interlis+zip"),
+                ("w_AR_gpkg_lv95.zip", "geopackage+sqlite3"),
+                ("w_AR_shp_lv95.zip", "vnd.shp"),
+            ],
+        )
+
     def test_files_of_a_single_item_in_one_format_open_the_filter_dialog(self):
         """data.geo.admin.ch has single items with many files of a format,
         e.g. the climate scenarios: the filter dialog is offered."""
@@ -275,12 +336,13 @@ class TestLocatorFilterSTAC(unittest.TestCase):
     def test_items_requested_from_the_catalog_of_the_filter(self):
         urls = []
 
-        def fake_fetch_requests(requests, feedback, slot, data=None):
+        def fake_fetch_requests(requests, feedback, slot, data=None, cache=None):
             urls.extend(request.url().toString().split("?")[0] for request in requests)
 
         for _filter, search in (
             (self._make_viageo_filter(), "pully"),
             (self._make_filter(), "swissalti3d"),
+            (self._make_geodienste_filter(), "tranquillité"),
         ):
             _filter.fetch_requests = fake_fetch_requests
             _filter.perform_fetch_results(search, QgsFeedback())
@@ -289,6 +351,8 @@ class TestLocatorFilterSTAC(unittest.TestCase):
             [
                 f"{ApiViageo.URL}/collections/{self.viageo_id}/items",
                 f"{ApiDataGeoAdmin.URL}/collections/ch.swisstopo.swissalti3d/items",
+                # In the language of the user
+                "https://geodienste.ch/stac/fra/collections/wildruhezonen/items",
             ],
         )
 
@@ -329,6 +393,9 @@ class TestLocatorFilterSTAC(unittest.TestCase):
         self.assertEqual(cloned.search_strings, _filter.search_strings)
         self.assertEqual(cloned.collection_ids, _filter.collection_ids)
         self.assertIs(cloned.catalog, _filter.catalog)
+        self.assertIs(cloned.state, _filter.state)
+        # Read on the clone by QGIS before it searches
+        self.assertEqual(cloned.fetchResultsDelay(), 300)
 
     def _search_single_asset_collection(self, items_over_limit: int):
         """Search a collection made of single-asset items (limit +
@@ -340,7 +407,7 @@ class TestLocatorFilterSTAC(unittest.TestCase):
         ].value()
         item_count = limit + items_over_limit
 
-        def fake_fetch_requests(requests, feedback, slot, data=None):
+        def fake_fetch_requests(requests, feedback, slot, data=None, cache=None):
             for request in requests:
                 requested = int(QUrlQuery(request.url()).queryItemValue("limit"))
                 features = [
@@ -374,3 +441,156 @@ class TestLocatorFilterSTAC(unittest.TestCase):
         first few files."""
         _limit, results = self._search_single_asset_collection(100)
         self.assertEqual(results, ["open filter dialog to choose files"])
+
+    def _search_geodienste(self, _filter, fake_fetch_requests=None) -> list[str]:
+        """Search "wild" with the filter of geodienste.ch, its requests to the
+        fake given; return the emitted display strings"""
+        if fake_fetch_requests:
+            _filter.fetch_requests = fake_fetch_requests
+        results = []
+        _filter.resultFetched.connect(lambda r: results.append(r.displayString))
+        _filter.fetchResults("wild", QgsLocatorContext(), QgsFeedback())
+        return results
+
+    def test_collections_loading_or_not_loaded_are_told(self):
+        """No collections to search: a line tells why, not "No result found." """
+        _filter = self._make_filter(self.geodienste, {})
+        self.assertEqual(
+            self._search_geodienste(_filter),
+            ["Loading the datasets of geodienste.ch: search again in a moment"],
+        )
+        _filter.state.collections_failed_at = time.monotonic()
+        self.assertEqual(
+            self._search_geodienste(_filter),
+            [
+                "The datasets of geodienste.ch could not be loaded: "
+                "search again in a minute"
+            ],
+        )
+
+    def test_collections_not_loaded_are_asked_again(self):
+        """Offline or refused when QGIS started: the collections are asked
+        again before a search, once a minute at most"""
+        _filter = self._make_filter(self.geodienste, {})
+        with mock.patch.object(_filter, "fetch_stac_collections") as fetch:
+            _filter.receive_stac_collections(Exception("Too Many Requests"))
+            _filter.clone()
+            fetch.assert_not_called()
+            _filter.state.collections_failed_at -= _filter.COLLECTIONS_RETRY
+            _filter.clone()
+            fetch.assert_called_once()
+
+    def test_items_kept_for_the_next_searches(self):
+        """The searches of the keys typed share the items received"""
+        _filter = self._make_geodienste_filter()
+        caches = []
+
+        def fake_fetch_requests(requests, feedback, slot, data=None, cache=None):
+            caches.append(cache)
+
+        clone = _filter.clone()
+        self._search_geodienste(_filter, fake_fetch_requests)
+        self._search_geodienste(clone, fake_fetch_requests)
+        self.assertIs(caches[0], _filter.state.responses)
+        self.assertIs(caches[1], _filter.state.responses)
+
+    def test_refused_requests_pause_the_catalog(self):
+        """A catalog answering 429 is not asked again for a while: the
+        searches use what was received before and tell what is missing"""
+        _filter = self._make_geodienste_filter()
+        refused = (
+            "geodienste.ch refuses requests for now: search again in a few minutes"
+        )
+        sent = []
+
+        def refusing_fetch_requests(requests, feedback, slot, data=None, cache=None):
+            for request in requests:
+                sent.append(request.url().url())
+                _filter.handle_reply_error(sent[-1], FakeReply(429))
+
+        self.assertEqual(
+            self._search_geodienste(_filter, refusing_fetch_requests), [refused]
+        )
+        self.assertEqual(len(sent), 1)
+        self.assertTrue(_filter.state.refusing())
+
+        # Paused: nothing sent
+        self.assertEqual(
+            self._search_geodienste(_filter.clone(), refusing_fetch_requests),
+            [refused],
+        )
+        self.assertEqual(len(sent), 1)
+
+        # Kept from before the pause: still passed on, nothing missing
+        _filter.state.responses.put(sent[0], json.dumps({"features": []}))
+        passed = []
+
+        def fake_fetch_requests(requests, feedback, slot, data=None, cache=None):
+            passed.extend(requests)
+
+        self.assertEqual(
+            self._search_geodienste(_filter.clone(), fake_fetch_requests),
+            ["No result found."],
+        )
+        self.assertEqual(len(passed), 1)
+
+    def test_other_errors_do_not_pause_the_catalog(self):
+        _filter = self._make_geodienste_filter()
+        _filter.handle_reply_error("https://geodienste.ch/stac", FakeReply(500))
+        self.assertFalse(_filter.state.refusing())
+
+
+class FakeReply:
+    def __init__(self, status: int):
+        self.status = status
+
+    def attribute(self, attribute):
+        return self.status
+
+    def errorString(self):
+        return f"server replied with status code {self.status}"
+
+
+class TestResponseCache(unittest.TestCase):
+    def test_kept_for_a_while(self):
+        cache = ResponseCache(max_age=60)
+        with mock.patch.object(response_cache.time, "monotonic", return_value=1000):
+            cache.put("https://example.com/a", "content")
+            self.assertEqual(cache.get("https://example.com/a"), "content")
+            self.assertIsNone(cache.get("https://example.com/b"))
+        with mock.patch.object(response_cache.time, "monotonic", return_value=1061):
+            self.assertIsNone(cache.get("https://example.com/a"))
+
+    def test_fetch_requests_sends_once(self):
+        """What the cache keeps is passed on without being requested again,
+        unless the slot failed on it"""
+        _filter = SwissLocatorFilterSTAC(
+            get_iface(), None, [ApiGeodienste("de"), {}, [], [], CatalogState()]
+        )
+        cache = ResponseCache()
+        with tempfile.TemporaryDirectory() as folder:
+            path = os.path.join(folder, "items.json")
+            with open(path, "w") as file:
+                file.write('{"features": []}')
+            request = QNetworkRequest(QUrl.fromLocalFile(path))
+
+            def failing_slot(content, feedback):
+                raise ValueError(content)
+
+            _filter.fetch_requests([request], QgsFeedback(), failing_slot, cache=cache)
+            self.assertIsNone(cache.get(request.url().url()))
+
+            received = []
+
+            def slot(content, feedback):
+                received.append(content)
+
+            _filter.fetch_requests([request], QgsFeedback(), slot, cache=cache)
+            os.remove(path)
+            # Not readable anymore: only the cache can answer
+            _filter.fetch_requests([request], QgsFeedback(), slot, cache=cache)
+        self.assertEqual(received, ['{"features": []}'] * 2)
+
+
+if __name__ == "__main__":
+    unittest.main()
