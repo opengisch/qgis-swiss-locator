@@ -26,6 +26,7 @@ nav:
       - Fonds de plan: layers/base-maps.md
   - Télécharger des données (STAC):
       - swisstopo: downloads/swisstopo.md
+      - geodienste.ch: downloads/geodienste.md
       - viageo.ch: downloads/viageo.md
       - Bâle-Ville: downloads/basel-stadt.md
   - Profil altimétrique: elevation-profile.md

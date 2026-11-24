@@ -1,9 +1,11 @@
 import json
 import os
+import time
 from copy import deepcopy
 
 from qgis.PyQt import sip
 from qgis.PyQt.QtCore import pyqtSignal
+from qgis.PyQt.QtNetwork import QNetworkReply, QNetworkRequest
 from qgis.core import (
     QgsTask,
     QgsProject,
@@ -21,12 +23,14 @@ from swiss_locator.core.filters.map_geo_admin_stac import (
     collections_to_searchable_strings,
     stac_items_url,
 )
+from swiss_locator.core.filters.response_cache import ResponseCache
 from swiss_locator.core.filters.swiss_locator_filter import SwissLocatorFilter
-from swiss_locator.core.results import STACResult
+from swiss_locator.core.results import NoResult, STACResult
 from swiss_locator.swissgeodownloader.api.api_caller_task import DownloadFilesTask
 from swiss_locator.swissgeodownloader.api.catalogs import (
     STAC_CATALOGS,
     ApiBaselStadt,
+    ApiGeodienste,
     ApiViageo,
 )
 from swiss_locator.swissgeodownloader.api.datageoadmin import ApiDataGeoAdmin
@@ -66,6 +70,27 @@ FILE_TYPE_ICONS = {
 }
 
 
+class CatalogState:
+    """What the filter of a catalog shares with its clones, which search in
+    other threads"""
+
+    # Seconds without requests to a catalog that refused them as too many
+    PAUSE = 300
+
+    def __init__(self):
+        # The first files of each collection, asked for at each key typed
+        self.responses = ResponseCache()
+        # When the collections could not be loaded, None while they load
+        self.collections_failed_at: float | None = None
+        self.refused_until = 0.0
+
+    def refuse(self):
+        self.refused_until = time.monotonic() + self.PAUSE
+
+    def refusing(self) -> bool:
+        return time.monotonic() < self.refused_until
+
+
 class SwissLocatorFilterSTAC(SwissLocatorFilter):
     """
     Handles filtering and downloading files from a STAC data catalog: the
@@ -77,6 +102,8 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
     """
 
     HEADERS = {b"User-Agent": USER_AGENT}
+    # Seconds before collections that could not be loaded are asked again
+    COLLECTIONS_RETRY = 60
 
     # Catalog id, collection id
     show_filter_widget = pyqtSignal(str, str)
@@ -96,8 +123,11 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
         self.available_collections: dict[str, SgdStacCollection] = {}
         self.search_strings = []
         self.collection_ids = []
+        # A key typed meanwhile cancels the search before it requests anything
+        self.setFetchResultsDelay(300)
 
         if not data:
+            self.state = CatalogState()
             self.catalog: ApiStacCatalog = STAC_CATALOGS[catalog_id](self.lang)
             self.fetch_stac_collections()
         else:
@@ -108,6 +138,7 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
                 self.available_collections,
                 self.search_strings,
                 self.collection_ids,
+                self.state,
             ) = data
 
     def fetch_stac_collections(self):
@@ -115,6 +146,7 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
             self.catalog.NAME
         )
         self.info(description)
+        self.state.collections_failed_at = None
         self.stac_fetch_task = QgsTask.fromFunction(
             description,
             self.catalog.getCollections,
@@ -136,6 +168,7 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
                 + f": {str(exception)}",
                 Qgis.MessageLevel.Critical,
             )
+            self.state.collections_failed_at = time.monotonic()
             return
         self.available_collections = stac_collections
         self.search_strings, self.collection_ids = collections_to_searchable_strings(
@@ -143,6 +176,14 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
         )
 
     def clone(self):
+        # Called before each search, in the main thread: the collections that
+        #  could not be loaded, e.g. offline when QGIS started, are asked again
+        failed_at = self.state.collections_failed_at
+        if (
+            failed_at is not None
+            and time.monotonic() - failed_at >= self.COLLECTIONS_RETRY
+        ):
+            self.fetch_stac_collections()
         return SwissLocatorFilterSTAC(
             crs=self.crs,
             data=(
@@ -150,6 +191,7 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
                 self.available_collections,
                 self.search_strings,
                 self.collection_ids,
+                self.state,
             ),
         )
 
@@ -166,6 +208,7 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
             ApiDataGeoAdmin.CATALOG_ID: self.tr("Swiss Geoportal STAC file download"),
             ApiViageo.CATALOG_ID: self.tr("viageo.ch STAC file download"),
             ApiBaselStadt.CATALOG_ID: self.tr("Basel-Stadt STAC file download"),
+            ApiGeodienste.CATALOG_ID: self.tr("geodienste.ch STAC file download"),
         }
         return display_names[self.catalog.CATALOG_ID]
 
@@ -191,6 +234,19 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
         return [self.collection_ids[idx] for _, _, idx in sorted(matches)]
 
     def perform_fetch_results(self, search: str, feedback: QgsFeedback):
+        if not self.available_collections:
+            # Nothing to search: tell why rather than finding nothing
+            if self.state.collections_failed_at is None:
+                message = self.tr(
+                    "Loading the datasets of {}: search again in a moment"
+                )
+            else:
+                message = self.tr(
+                    "The datasets of {} could not be loaded: search again in a minute"
+                )
+            self.tell(message.format(self.catalog.NAME))
+            return
+
         result_limit = self.settings.filters[self.type.value]["limit"].value()
         files_per_result_limit = self.settings.filters[self.type.value][
             "limit_files_per_result"
@@ -208,7 +264,45 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
             )
             requests.append(self.request_for_url(url, params, self.HEADERS))
 
-        self.fetch_requests(requests, feedback, self.handle_content)
+        refusing = self.state.refusing()
+        missing = False
+        if refusing:
+            # Only what is kept from before
+            kept = [
+                request
+                for request in requests
+                if self.state.responses.get(request.url().url()) is not None
+            ]
+            missing = len(kept) < len(requests)
+            requests = kept
+
+        self.fetch_requests(
+            requests, feedback, self.handle_content, cache=self.state.responses
+        )
+
+        # Refused before this search or during it
+        if missing or (not refusing and self.state.refusing()):
+            self.tell(
+                self.tr(
+                    "{} refuses requests for now: search again in a few minutes"
+                ).format(self.catalog.NAME)
+            )
+
+    def handle_reply_error(self, url: str, reply: QNetworkReply):
+        super().handle_reply_error(url, reply)
+        status = reply.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute)
+        if status == 429:
+            # Too many requests: geodienste.ch blocks whoever insists for hours
+            self.state.refuse()
+
+    def tell(self, message: str):
+        """A line among the results telling why some are missing"""
+        result = QgsLocatorResult()
+        result.filter = self
+        result.displayString = message
+        result.userData = NoResult().as_definition()
+        self.result_found = True
+        self.resultFetched.emit(result)
 
     def handle_content(self, content, feedback: QgsFeedback):
         response = json.loads(content)
@@ -233,9 +327,9 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
         # The files of a single item, each in its own format, are the formats to
         #  choose from: all are listed (e.g. Basel-Stadt)
         media_types = {
-            asset.get("type")
+            self.catalog.mediaType(asset_id, asset.get("type"))
             for item in response["features"]
-            for asset in item["assets"].values()
+            for asset_id, asset in item["assets"].items()
         }
         formats_of_one_item = item_count == 1 and len(media_types) == file_count
 
@@ -259,7 +353,7 @@ class SwissLocatorFilterSTAC(SwissLocatorFilter):
                             asset.get("href"),
                         ),
                         asset.get("description"),
-                        asset.get("type"),
+                        self.catalog.mediaType(asset_id, asset.get("type")),
                         asset.get("href"),
                         coordsys=str(asset.get("proj:epsg") or item_epsg or ""),
                     )

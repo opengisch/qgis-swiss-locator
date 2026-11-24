@@ -20,7 +20,7 @@
 """
 
 from qgis.PyQt.QtCore import QUrl
-from qgis.core import QgsTask, Qgis, QgsStacItem
+from qgis.core import QgsTask, Qgis, QgsStacAsset, QgsStacItem
 
 from swiss_locator.swissgeodownloader.api.network_request import fetch
 from swiss_locator.swissgeodownloader.api.response_objects import (
@@ -93,6 +93,19 @@ class ApiStacCatalog:
         """Name of the file of an asset, once downloaded."""
         return assetFileName(assetId, href)
 
+    def mediaType(self, assetId: str, mediaType: str) -> str:
+        """Media type of an asset, for the catalogs whose media types do not
+        tell the formats apart, e.g. application/zip for every format."""
+        return mediaType
+
+    def _assetWithMediaType(self, assetId: str, asset: QgsStacAsset) -> QgsStacAsset:
+        mediaType = self.mediaType(assetId, asset.mediaType())
+        if mediaType == asset.mediaType():
+            return asset
+        return QgsStacAsset(
+            asset.href(), asset.title(), asset.description(), mediaType, asset.roles()
+        )
+
     def analyseCollectionItems(
         self, task: QgsTask, collection: SgdStacCollection
     ) -> SgdStacCollection:
@@ -126,8 +139,10 @@ class ApiStacCatalog:
                 if task.isCanceled():
                     raise Exception("User canceled")
 
-                # Don't request again if we have this estimate already
-                if assetId in estimate.keys():
+                # Don't request again if we have this estimate already, e.g. for
+                #  the hundreds of files of a canton on geodienste.ch
+                asset = self._assetWithMediaType(assetId, asset)
+                if asset.mediaType() in estimate:
                     continue
                 # Check Content-Length header: Make a HEAD request to get the file size
                 try:
@@ -199,7 +214,7 @@ class ApiStacCatalog:
                     raise Exception("User canceled")
 
                 # Create file object
-                file = SgdAsset(assetId, asset)
+                file = SgdAsset(assetId, self._assetWithMediaType(assetId, asset))
                 file.id = self.fileName(collectionId, item.id(), assetId, file.href)
                 file.properties = additionalAssetProperties.get(assetId, {})
 

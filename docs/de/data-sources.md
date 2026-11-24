@@ -10,6 +10,7 @@ der Kantone ab. Es benötigt eine Internetverbindung.
 | [wmts.geo.admin.ch](https://wmts.geo.admin.ch) | WMTS-Layer |
 | [vectortiles.geo.admin.ch](https://vectortiles.geo.admin.ch) | Basiskarten |
 | [data.geo.admin.ch](https://data.geo.admin.ch) | Daten herunterladen |
+| [geodienste.ch](https://geodienste.ch) | Daten herunterladen |
 | [viageo.ch](https://viageo.ch) | Daten herunterladen |
 | [geo.bs.ch](https://www.geo.bs.ch) | Daten herunterladen |
 | [opendata.swiss](https://opendata.swiss) und die dort referenzierten WMS-Dienste | WMS-Layer |
@@ -20,9 +21,11 @@ bevor Sie die Daten veröffentlichen.
 
 ## Die Datenkataloge (STAC)
 
-Das [Herunterladen von Daten](downloads/swisstopo.md) greift auf drei Datenkataloge
+Das [Herunterladen von Daten](downloads/swisstopo.md) greift auf vier Datenkataloge
 zu: den des Geoportals des Bundes,
-[data.geo.admin.ch](https://data.geo.admin.ch); [viageo.ch](https://viageo.ch),
+[data.geo.admin.ch](https://data.geo.admin.ch);
+[geodienste.ch](https://geodienste.ch), das die Geodaten der Kantone in den
+Datenmodellen des Bundes veröffentlicht; [viageo.ch](https://viageo.ch),
 das die Geodaten von Kantonen und Gemeinden veröffentlicht; und den des Kantons
 Basel-Stadt, [geo.bs.ch](https://www.geo.bs.ch). Alle folgen dem Standard STAC
 (SpatioTemporal Asset Catalog) und gliedern die Daten in:
@@ -36,7 +39,8 @@ Basel-Stadt, [geo.bs.ch](https://www.geo.bs.ch). Alle folgen dem Standard STAC
 Beim Start von QGIS lädt das Plugin die Liste der Collections jedes Katalogs im
 Hintergrund herunter. Die Titel und Beschreibungen von data.geo.admin.ch in der
 Sprache des Plugins stammen aus dem Metadatenkatalog
-[geocat.ch](https://www.geocat.ch); die von viageo.ch sind französisch, die von
+[geocat.ch](https://www.geocat.ch); geodienste.ch hat eigene, deutsch,
+französisch und italienisch; die von viageo.ch sind französisch, die von
 Basel-Stadt deutsch. Eine Suche sucht den Text in den Titeln und Kennungen
 dieser Listen, ohne Anfrage. Für jede gefundene Collection fragt das Plugin
 dann ihre ersten Dateien ab: Sind es wenige, oder die Formate eines einzigen

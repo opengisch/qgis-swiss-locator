@@ -88,7 +88,7 @@ swiss_locator=true
 
 [plugins]
 swiss_locator_plugin\\welcome_dialog_version={welcome_dialog_version()}
-swiss_locator_plugin\\stac_local_catalogs=viageo, baselstadt
+swiss_locator_plugin\\stac_local_catalogs=geodienste, viageo, baselstadt
 
 [qgis]
 checkVersion=false

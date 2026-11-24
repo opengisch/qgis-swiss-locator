@@ -2,17 +2,20 @@
 
 Prefisso: `chd`
 
-Scaricare file e aggiungerli alla mappa, da tre cataloghi di dati:
+Scaricare file e aggiungerli alla mappa, da quattro cataloghi di dati:
 
 - quello del geoportale federale, [data.geo.admin.ch](https://data.geo.admin.ch),
   gestito da swisstopo: modelli altimetrici, immagini aeree, confini, carte e
   altro ancora;
+- [geodienste.ch](https://geodienste.ch), i geodati di
+  [tutti i cantoni](geodienste.md), nei modelli di dati della Confederazione;
 - [viageo.ch](https://viageo.ch), i geodati di
   [cantoni e comuni](viageo.md);
 - [geo.bs.ch](https://www.geo.bs.ch), i geodati del Cantone di
   [Basilea Città](basel-stadt.md).
 
-Il geoportale è sempre cercato; viageo.ch e Basilea Città una volta scelti,
+Il geoportale è sempre cercato, geodienste.ch per impostazione predefinita; gli
+altri una volta scelti,
 al primo avvio del plugin o nella sua
 [configurazione](../configuration.md#in-the-plugin).
 
@@ -38,7 +41,7 @@ I file che QGIS può leggere via rete, come i Cloud Optimized GeoTIFF e i Cloud
 Optimized Point Cloud (COPC), sono elencati due volte: la seconda voce,
 contrassegnata con *streamed*, aggiunge il file alla mappa senza scaricarlo.
 
-## Un set di dati con molti file
+## Un set di dati con molti file {#a-dataset-with-many-files}
 
 Digitare `chd swissalti3d`. Il modello altimetrico è suddiviso in riquadri di un
 chilometro quadrato, troppi per essere elencati: il risultato apre un pannello

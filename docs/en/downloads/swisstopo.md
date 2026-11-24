@@ -2,16 +2,19 @@
 
 Prefix: `chd`
 
-Download files and add them to the map, from three data catalogues:
+Download files and add them to the map, from four data catalogues:
 
 - that of the federal geoportal, [data.geo.admin.ch](https://data.geo.admin.ch),
   run by swisstopo: elevation models, aerial images, boundaries, maps and more;
+- [geodienste.ch](https://geodienste.ch), the geodata of
+  [all cantons](geodienste.md), in the data models of the Confederation;
 - [viageo.ch](https://viageo.ch), the geodata of
   [cantons and municipalities](viageo.md);
 - [geo.bs.ch](https://www.geo.bs.ch), the geodata of the canton of
   [Basel-Stadt](basel-stadt.md).
 
-The geoportal is always searched; viageo.ch and Basel-Stadt once chosen, at
+The geoportal is always searched, geodienste.ch by default; the others once
+chosen, at
 the first launch of the plugin or in its
 [configuration](../configuration.md#in-the-plugin).
 

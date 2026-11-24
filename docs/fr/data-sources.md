@@ -10,6 +10,7 @@ des cantons. Elle nécessite une connexion Internet.
 | [wmts.geo.admin.ch](https://wmts.geo.admin.ch) | couches WMTS |
 | [vectortiles.geo.admin.ch](https://vectortiles.geo.admin.ch) | fonds de plan |
 | [data.geo.admin.ch](https://data.geo.admin.ch) | téléchargement de données |
+| [geodienste.ch](https://geodienste.ch) | téléchargement de données |
 | [viageo.ch](https://viageo.ch) | téléchargement de données |
 | [geo.bs.ch](https://www.geo.bs.ch) | téléchargement de données |
 | [opendata.swiss](https://opendata.swiss) et les services WMS qu'il référence | couches |
@@ -20,9 +21,11 @@ d'utilisation avant de les publier.
 
 ## Les catalogues de données (STAC)
 
-Le [téléchargement de données](downloads/swisstopo.md) puise dans trois catalogues
+Le [téléchargement de données](downloads/swisstopo.md) puise dans quatre catalogues
 de données : celui du géoportail fédéral,
 [data.geo.admin.ch](https://data.geo.admin.ch) ;
+[geodienste.ch](https://geodienste.ch), qui publie les géodonnées des cantons
+dans les modèles de données de la Confédération ;
 [viageo.ch](https://viageo.ch), qui publie les géodonnées des cantons et des
 communes ; et celui du canton de Bâle-Ville,
 [geo.bs.ch](https://www.geo.bs.ch). Tous suivent le standard STAC
@@ -37,8 +40,9 @@ communes ; et celui du canton de Bâle-Ville,
 Au démarrage de QGIS, l'extension télécharge la liste des collections de chaque
 catalogue, en arrière-plan. Les titres et descriptions de data.geo.admin.ch
 dans la langue de l'extension viennent du catalogue de métadonnées
-[geocat.ch](https://www.geocat.ch) ; ceux de viageo.ch sont en français, ceux
-de Bâle-Ville en allemand. Une recherche cherche le texte dans les titres et
+[geocat.ch](https://www.geocat.ch) ; geodienste.ch a les siens, en allemand,
+français et italien ; ceux de viageo.ch sont en français, ceux de Bâle-Ville
+en allemand. Une recherche cherche le texte dans les titres et
 identifiants de ces listes, sans requête. Pour chaque collection trouvée,
 l'extension demande ensuite ses premiers fichiers : s'ils sont peu nombreux, ou
 les formats d'un seul item, comme à Bâle-Ville, ils sont listés ; sinon, la

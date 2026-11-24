@@ -61,6 +61,7 @@ from swiss_locator.core.constants import (
     USER_AGENT,
 )
 from swiss_locator.core.filters.filter_type import FilterType
+from swiss_locator.core.filters.response_cache import ResponseCache
 from swiss_locator.core.language import get_language
 from swiss_locator.core.parameters import AVAILABLE_CRS
 from swiss_locator.core.results import (
@@ -237,7 +238,14 @@ class SwissLocatorFilter(QgsLocatorFilter):
             request.setRawHeader(k, v)
         return request
 
-    def handle_reply(self, url: str, feedback: QgsFeedback, slot, data=None):
+    def handle_reply(
+        self,
+        url: str,
+        feedback: QgsFeedback,
+        slot,
+        data=None,
+        cache: ResponseCache | None = None,
+    ):
         if sip.isdeleted(self):
             return
         self.dbg_info(f"feature handle reply {url}")
@@ -255,13 +263,16 @@ class SwissLocatorFilter(QgsLocatorFilter):
             # object deleted in another thread had the same address
             reply.deleteLater()
             if reply.error() != QNetworkReply.NetworkError.NoError:
-                self.info(f"could not load url: {reply.errorString()}")
+                self.handle_reply_error(url, reply)
             else:
                 content = reply.readAll().data().decode("utf-8")
                 if data:
                     slot(content, feedback, data)
                 else:
                     slot(content, feedback)
+                if cache is not None:
+                    # Once handled: a content the slot fails on is asked again
+                    cache.put(url, content)
 
         except Exception as e:
             self.info(e, Qgis.MessageLevel.Critical)
@@ -281,14 +292,25 @@ class SwissLocatorFilter(QgsLocatorFilter):
             self.dbg_info(f"{url} no nam left, exit loop")
             self.event_loop.quit()
 
+    def handle_reply_error(self, url: str, reply: QNetworkReply):
+        self.info(f"could not load url: {reply.errorString()}")
+
     def fetch_request(
         self, request: QNetworkRequest, feedback: QgsFeedback, slot, data=None
     ):
         return self.fetch_requests([request], feedback, slot, data)
 
     def fetch_requests(
-        self, requests: [QNetworkRequest], feedback: QgsFeedback, slot, data=None
+        self,
+        requests: [QNetworkRequest],
+        feedback: QgsFeedback,
+        slot,
+        data=None,
+        cache: ResponseCache | None = None,
     ):
+        """Pass the content of each reply to the slot. With a cache, the
+        contents it keeps are passed without sending their requests, and those
+        received are kept."""
         # init event loop
         # wait for all requests to end
         if self.event_loop is None:
@@ -300,10 +322,18 @@ class SwissLocatorFilter(QgsLocatorFilter):
 
         for request in requests:
             url = request.url().url()
+            content = cache.get(url) if cache is not None else None
+            if content is not None:
+                self.dbg_info(f"{url} from the cache")
+                if data:
+                    slot(content, feedback, data)
+                else:
+                    slot(content, feedback)
+                continue
             self.info(f"fetching {url}")
             reply = self.nam.get(request)
             reply.finished.connect(
-                lambda _url=url: self.handle_reply(_url, feedback, slot, data)
+                lambda _url=url: self.handle_reply(_url, feedback, slot, data, cache)
             )
             feedback.canceled.connect(reply.abort)
             self.network_replies[url] = reply

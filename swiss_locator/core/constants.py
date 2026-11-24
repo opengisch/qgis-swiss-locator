@@ -14,6 +14,8 @@ STAC_BASE_URL = "https://data.geo.admin.ch/api/stac/v1"
 # Cantonal and communal geodata
 VIAGEO_STAC_URL = "https://viageo.ch/api/catalog/stac"
 BASEL_STADT_STAC_URL = "https://api.geo.bs.ch/stac/v1"
+# Followed by the language: deu, fra or ita
+GEODIENSTE_STAC_URL = "https://geodienste.ch/stac"
 
 VECTOR_TILES_BASE_URL = "https://vectortiles.geo.admin.ch"
 

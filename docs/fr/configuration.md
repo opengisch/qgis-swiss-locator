@@ -14,7 +14,8 @@ l'extension y est listée, avec son préfixe :
 
 Le téléchargement de données a une recherche par catalogue, avec le même
 préfixe : **Swiss Geoportal STAC file download**, plus
-**viageo.ch STAC file download** et **Basel-Stadt STAC file download** pour les
+**geodienste.ch STAC file download**, **viageo.ch STAC file download** et
+**Basel-Stadt STAC file download** pour les
 [catalogues locaux choisis](#in-the-plugin).
 
 ![Les options du localisateur de QGIS](assets/screenshots/options-locator.png)
@@ -51,9 +52,10 @@ Chaque recherche, sauf les fonds de plan, a son onglet :
     de les lister.
 
 **Local data catalogs** (téléchargement de données)
-:   Les catalogues recherchés en plus de celui du géoportail : viageo.ch, pour
-    le canton de Vaud et ses communes, et Bâle-Ville. L'extension le demande à
-    son premier lancement.
+:   Les catalogues recherchés en plus de celui du géoportail : geodienste.ch,
+    pour les données des cantons, viageo.ch, pour le canton de Vaud et ses
+    communes, et Bâle-Ville. L'extension le demande à
+    son premier lancement ; geodienste.ch est activé par défaut.
 
 | Recherche | Priorité | Résultats |
 |-----------|----------|-----------|

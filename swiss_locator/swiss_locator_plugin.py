@@ -50,7 +50,7 @@ from swiss_locator.core.filters.swiss_locator_filter_wmts import SwissLocatorFil
 from swiss_locator.core.language import get_language
 from swiss_locator.core.settings import PLUGIN_NAME, Settings
 from swiss_locator.gui.config_dialog import ConfigDialog
-from swiss_locator.gui.welcome_dialog import WelcomeDialog
+from swiss_locator.gui.welcome_dialog import WelcomeDialog, turn_on_default_catalogs
 from swiss_locator.map_geo_admin.layers import SEARCHABLE_LAYERS
 from swiss_locator.processing.provider import SwissLocatorProcessingProvider
 from swiss_locator.swissgeodownloader.api.catalogs import STAC_CATALOGS
@@ -114,6 +114,7 @@ class SwissLocatorPlugin:
             SwissLocatorFilterFeature,
         ):
             self.register_filter(_filter(self.iface))
+        turn_on_default_catalogs()
         self.update_stac_filters()
 
         if Qgis.QGIS_VERSION_INT >= 33700:

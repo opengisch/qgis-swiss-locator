@@ -23,7 +23,7 @@ import json
 
 from qgis.PyQt.QtCore import QByteArray, QEventLoop, QUrl, QUrlQuery
 from qgis.PyQt.QtNetwork import QNetworkReply, QNetworkRequest
-from qgis.core import QgsTask, QgsBlockingNetworkRequest, QgsFileDownloader
+from qgis.core import Qgis, QgsTask, QgsBlockingNetworkRequest, QgsFileDownloader
 
 from swiss_locator.swissgeodownloader.utils.utilities import translate, log
 
@@ -115,10 +115,7 @@ def fetchFile(
 
     log(translate("SGD", "Start download of {}").format(callUrl.toString()))
     fileFetcher = QgsFileDownloader(callUrl, filePath)
-
-    def onError():
-        task.exception = translate("SGD", "Error when downloading {}").format(filename)
-        return False
+    errors = []
 
     def onProgress(bytesReceived, bytesTotal):
         if task.isCanceled():
@@ -134,12 +131,15 @@ def fetchFile(
 
     # Run file download in separate event loop
     eventLoop = QEventLoop()
-    fileFetcher.downloadError.connect(onError)
-    fileFetcher.downloadCanceled.connect(eventLoop.quit)
-    fileFetcher.downloadCompleted.connect(eventLoop.quit)
+    fileFetcher.downloadError.connect(errors.extend)
+    # Exited once completed, canceled or failed, e.g. a file that needs a login
+    fileFetcher.downloadExited.connect(eventLoop.quit)
     fileFetcher.downloadProgress.connect(onProgress)
     eventLoop.exec(QEventLoop.ProcessEventsFlag.ExcludeUserInputEvents)
-    fileFetcher.downloadCompleted.disconnect(eventLoop.quit)
+    if errors and not task.isCanceled():
+        log("\n".join(errors), Qgis.MessageLevel.Critical)
+        task.exception = translate("SGD", "Error when downloading {}").format(filename)
+        raise Exception(task.exception)
 
 
 def createUrl(baseUrl: QUrl | str, urlParams: dict | None) -> QUrl:
