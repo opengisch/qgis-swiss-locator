@@ -348,6 +348,11 @@
     <name>LocalCatalogsWidget</name>
     <message>
         <location filename="../gui/local_catalogs_widget.py"/>
+        <source>geodienste.ch (geodata of the cantons)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/local_catalogs_widget.py"/>
         <source>viageo.ch (canton of Vaud and its municipalities)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -404,13 +409,13 @@
     </message>
     <message>
         <location filename="../swissgeodownloader/api/network_request.py"/>
-        <source>Error when downloading {}</source>
-        <translation>Fehler beim Herunterladen von {}</translation>
+        <source>Download of {} was canceled</source>
+        <translation>Download von {} abgebrochen</translation>
     </message>
     <message>
         <location filename="../swissgeodownloader/api/network_request.py"/>
-        <source>Download of {} was canceled</source>
-        <translation>Download von {} abgebrochen</translation>
+        <source>Error when downloading {}</source>
+        <translation>Fehler beim Herunterladen von {}</translation>
     </message>
     <message>
         <location filename="../swissgeodownloader/ui/qgis_utilities.py"/>
@@ -710,6 +715,26 @@ Weitere Informationen:
         <location filename="../core/filters/swiss_locator_filter_stac.py"/>
         <source>Basel-Stadt STAC file download</source>
         <translation>Basel-Stadt STAC Datei-Download</translation>
+    </message>
+    <message>
+        <location filename="../core/filters/swiss_locator_filter_stac.py"/>
+        <source>geodienste.ch STAC file download</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/filters/swiss_locator_filter_stac.py"/>
+        <source>Loading the datasets of {}: search again in a moment</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/filters/swiss_locator_filter_stac.py"/>
+        <source>The datasets of {} could not be loaded: search again in a minute</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/filters/swiss_locator_filter_stac.py"/>
+        <source>{} refuses requests for now: search again in a few minutes</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../core/filters/swiss_locator_filter_stac.py"/>
